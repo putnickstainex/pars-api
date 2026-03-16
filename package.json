@@ -1,0 +1,8 @@
+{
+  "name": "pars-api",
+  "version": "1.0.0",
+  "description": "PARS Trading Intelligence - Yahoo Finance API Proxy",
+  "engines": {
+    "node": ">=18"
+  }
+}
