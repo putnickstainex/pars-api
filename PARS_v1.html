@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PARS · Trading Intelligence</title>
+<script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --bg0: #080a0f;
+  --bg1: #0c0f16;
+  --bg2: #10141e;
+  --bg3: #141826;
+  --bg4: #1a1f2e;
+  --line: #1e2436;
+  --line2: #252c40;
+  --acc: #00d4ff;
+  --acc2: #0099cc;
+  --acc-glow: rgba(0,212,255,0.08);
+  --acc-dim: rgba(0,212,255,0.15);
+  --green: #00e676;
+  --green-dim: rgba(0,230,118,0.1);
+  --red: #ff3d57;
+  --red-dim: rgba(255,61,87,0.1);
+  --amber: #ffab00;
+  --amber-dim: rgba(255,171,0,0.1);
+  --txt0: #e8edf5;
+  --txt1: #8892aa;
+  --txt2: #3d4560;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'IBM Plex Sans', sans-serif;
+  --r: 6px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg0);
+  color: var(--txt0);
+  font-family: var(--sans);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── HEADER ─────────────────────────────────────── */
+header {
+  height: 48px;
+  background: var(--bg1);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-right: 8px;
+}
+
+/* PARS leopard SVG icon */
+.brand-icon {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+}
+
+.brand-name {
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: var(--acc);
+}
+
+.brand-sub {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--txt2);
+  letter-spacing: 1px;
+}
+
+.divider {
+  width: 1px;
+  height: 24px;
+  background: var(--line);
+}
+
+/* symbol search */
+.search-box {
+  display: flex;
+  align-items: center;
+  background: var(--bg3);
+  border: 1px solid var(--line2);
+  border-radius: var(--r);
+  height: 32px;
+  padding: 0 10px;
+  gap: 6px;
+  transition: border-color .2s;
+}
+.search-box:focus-within { border-color: var(--acc); box-shadow: 0 0 0 3px var(--acc-dim); }
+.search-box span { font-family: var(--mono); font-size: 11px; color: var(--txt2); }
+#symbolInput {
+  background: none; border: none; outline: none;
+  font-family: var(--mono); font-size: 13px; font-weight: 600;
+  color: var(--txt0); width: 80px; text-transform: uppercase;
+}
+#symbolInput::placeholder { color: var(--txt2); font-weight: 400; }
+
+.btn {
+  height: 32px;
+  padding: 0 14px;
+  border: none;
+  border-radius: var(--r);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all .2s;
+}
+.btn-primary { background: var(--acc); color: var(--bg0); }
+.btn-primary:hover { background: #33ddff; }
+.btn-primary:disabled { opacity:.4; cursor:not-allowed; }
+
+/* timeframe */
+.tf-row {
+  display: flex;
+  background: var(--bg3);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  overflow: hidden;
+}
+.tf {
+  background: none; border: none;
+  font-family: var(--mono); font-size: 10px; font-weight: 600;
+  color: var(--txt1);
+  padding: 0 10px; height: 32px;
+  cursor: pointer; transition: all .15s;
+  border-right: 1px solid var(--line);
+  letter-spacing: .5px;
+}
+.tf:last-child { border-right: none; }
+.tf:hover { color: var(--txt0); background: var(--bg4); }
+.tf.active { background: var(--acc); color: var(--bg0); }
+
+/* ticker */
+#ticker {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+.tk-sym { font-family: var(--mono); font-size: 11px; color: var(--txt1); }
+.tk-price { font-family: var(--mono); font-size: 14px; font-weight: 700; }
+.tk-chg {
+  font-family: var(--mono); font-size: 10px; font-weight: 600;
+  padding: 2px 6px; border-radius: 4px;
+}
+.tk-chg.up { color: var(--green); background: var(--green-dim); }
+.tk-chg.dn { color: var(--red); background: var(--red-dim); }
+
+/* status */
+.status {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 10px; color: var(--txt1);
+  margin-left: auto;
+}
+.status-dot { width:6px; height:6px; border-radius:50%; background: var(--txt2); }
+.status-dot.on { background: var(--green); animation: blink 2s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+/* ── LAYOUT ─────────────────────────────────────── */
+.layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── LEFT PANEL ─────────────────────────────────── */
+.left {
+  width: 188px;
+  flex-shrink: 0;
+  background: var(--bg1);
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.panel-title {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--txt2);
+  padding: 12px 14px 8px;
+  text-transform: uppercase;
+}
+
+/* watchlist */
+.wl-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 14px;
+  cursor: pointer;
+  border-left: 2px solid transparent;
+  transition: all .15s;
+}
+.wl-item:hover { background: var(--bg3); }
+.wl-item.active { background: var(--acc-glow); border-left-color: var(--acc); }
+.wl-sym { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--txt0); }
+.wl-chg { font-family: var(--mono); font-size: 10px; font-weight: 600; }
+.wl-chg.up { color: var(--green); }
+.wl-chg.dn { color: var(--red); }
+.wl-chg.na { color: var(--txt2); }
+
+.sep { height: 1px; background: var(--line); margin: 4px 0; }
+
+/* indicator toggles */
+.ind-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 14px; cursor: pointer; transition: background .15s;
+}
+.ind-row:hover { background: var(--bg3); }
+.ind-lbl { font-family: var(--mono); font-size: 10px; }
+
+.tog {
+  width: 26px; height: 14px;
+  background: var(--line2);
+  border-radius: 7px;
+  position: relative;
+  transition: background .2s;
+  flex-shrink: 0;
+}
+.tog.on { background: var(--acc); }
+.tog::after {
+  content:''; position:absolute;
+  width:10px; height:10px;
+  background:white; border-radius:50%;
+  top:2px; left:2px; transition: transform .2s;
+}
+.tog.on::after { transform: translateX(12px); }
+
+/* atr block */
+.atr-block {
+  padding: 10px 14px;
+  border-top: 1px solid var(--line);
+}
+.atr-label { font-family: var(--mono); font-size: 9px; color: var(--txt2); letter-spacing: 1px; margin-bottom: 4px; }
+.atr-val { font-family: var(--mono); font-size: 13px; font-weight: 600; color: var(--txt0); }
+.atr-adr { font-family: var(--mono); font-size: 10px; color: var(--amber); margin-top: 2px; }
+.atr-sl { font-family: var(--mono); font-size: 10px; color: var(--red); margin-top: 2px; }
+
+/* ── CENTER ─────────────────────────────────────── */
+.center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.chart-bar {
+  height: 34px;
+  background: var(--bg1);
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.ohlc {
+  display: flex; gap: 14px;
+  font-family: var(--mono); font-size: 11px;
+}
+.oh-item { display: flex; gap: 4px; }
+.oh-k { color: var(--txt2); }
+.oh-v { color: var(--txt0); font-weight: 500; }
+.oh-v.up { color: var(--green); }
+.oh-v.dn { color: var(--red); }
+
+.chart-label {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--txt2);
+}
+
+.chart-wrap {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+#mainChart { width:100%; height:100%; }
+
+/* empty / loading */
+.overlay {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 14px; background: var(--bg0);
+  z-index: 10;
+}
+.overlay.hidden { display: none; }
+
+.spinner {
+  width: 32px; height: 32px;
+  border: 2px solid var(--line2);
+  border-top-color: var(--acc);
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.overlay-text { font-family: var(--mono); font-size: 11px; color: var(--txt1); }
+
+.empty-icon { opacity: .15; }
+.empty-icon svg { width:48px; height:48px; }
+
+/* sub charts */
+.sub-charts {
+  flex-shrink: 0;
+  border-top: 1px solid var(--line);
+}
+.sub-hdr {
+  height: 26px;
+  background: var(--bg1);
+  border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 14px;
+}
+.sub-lbl { font-family: var(--mono); font-size: 9px; letter-spacing: 1.5px; color: var(--txt2); }
+.sub-val { font-family: var(--mono); font-size: 11px; font-weight: 600; }
+#rsiChart { width:100%; height:90px; }
+#volChart { width:100%; height:70px; }
+
+/* ── RIGHT PANEL ─────────────────────────────────── */
+.right {
+  width: 210px;
+  flex-shrink: 0;
+  background: var(--bg1);
+  border-left: 1px solid var(--line);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* confluence score */
+.score-box {
+  padding: 14px;
+  border-bottom: 1px solid var(--line);
+}
+.score-top {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 10px;
+}
+.score-title { font-family: var(--mono); font-size: 9px; letter-spacing: 2px; color: var(--txt2); }
+.score-num { font-family: var(--mono); font-size: 22px; font-weight: 700; line-height: 1; }
+.score-denom { font-family: var(--mono); font-size: 11px; color: var(--txt2); }
+.score-track {
+  height: 3px; background: var(--line2); border-radius: 2px; overflow: hidden; margin-bottom: 8px;
+}
+.score-fill { height:100%; border-radius:2px; transition: width .5s ease; }
+.score-msg { font-family: var(--mono); font-size: 9px; line-height: 1.5; }
+
+/* signal cards */
+.signals {
+  padding: 14px;
+  border-bottom: 1px solid var(--line);
+}
+.sig-card {
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: 9px 10px;
+  margin-bottom: 5px;
+}
+.sig-card:last-child { margin-bottom: 0; }
+.sig-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; }
+.sig-name { font-family: var(--mono); font-size: 10px; font-weight: 600; color: var(--txt0); }
+.badge {
+  font-family: var(--mono); font-size: 8px; font-weight: 700;
+  letter-spacing: .5px; padding: 2px 6px; border-radius: 3px;
+}
+.b-bull { background: var(--green-dim); color: var(--green); }
+.b-bear { background: var(--red-dim); color: var(--red); }
+.b-wait { background: var(--amber-dim); color: var(--amber); }
+.b-na { background: var(--bg4); color: var(--txt2); }
+.sig-detail { font-family: var(--sans); font-size: 10px; color: var(--txt1); line-height: 1.4; }
+
+/* stats */
+.stats {
+  padding: 14px;
+}
+.stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:5px; }
+.stat {
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: 7px 8px;
+}
+.stat-k { font-family: var(--mono); font-size: 8px; letter-spacing: .8px; color: var(--txt2); margin-bottom: 3px; }
+.stat-v { font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--txt0); }
+.stat-v.up { color: var(--green); }
+.stat-v.dn { color: var(--red); }
+
+/* ── TOAST ───────────────────────────────────────── */
+.toast {
+  position: fixed; bottom: 18px; left: 50%;
+  transform: translateX(-50%) translateY(50px);
+  background: var(--bg3); border: 1px solid var(--line2);
+  border-radius: var(--r);
+  padding: 9px 16px;
+  font-family: var(--mono); font-size: 11px; color: var(--txt0);
+  z-index: 999; transition: transform .3s; white-space: nowrap;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.ok { border-color: var(--green); color: var(--green); }
+.toast.err { border-color: var(--red); color: var(--red); }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--line2); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="brand">
+    <!-- Pars (Leopard) SVG Icon -->
+    <svg class="brand-icon" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Body -->
+      <ellipse cx="15" cy="17" rx="9" ry="7" fill="#00d4ff" opacity=".15"/>
+      <!-- Head -->
+      <circle cx="15" cy="10" r="5.5" fill="#00d4ff" opacity=".2"/>
+      <!-- Face outline -->
+      <circle cx="15" cy="10" r="5.5" stroke="#00d4ff" stroke-width="1.2" fill="none"/>
+      <!-- Body outline -->
+      <ellipse cx="15" cy="17" rx="9" ry="7" stroke="#00d4ff" stroke-width="1.2" fill="none"/>
+      <!-- Ears -->
+      <polygon points="10.5,5.5 8,2 12,4" stroke="#00d4ff" stroke-width="1" fill="#00d4ff" opacity=".3"/>
+      <polygon points="19.5,5.5 22,2 18,4" stroke="#00d4ff" stroke-width="1" fill="#00d4ff" opacity=".3"/>
+      <!-- Eyes -->
+      <circle cx="12.5" cy="9.5" r="1.2" fill="#00d4ff"/>
+      <circle cx="17.5" cy="9.5" r="1.2" fill="#00d4ff"/>
+      <!-- Pupils -->
+      <circle cx="12.5" cy="9.5" r=".5" fill="#080a0f"/>
+      <circle cx="17.5" cy="9.5" r=".5" fill="#080a0f"/>
+      <!-- Nose -->
+      <path d="M14.2 11.5 L15 12.5 L15.8 11.5" stroke="#00d4ff" stroke-width=".8" fill="none" stroke-linecap="round"/>
+      <!-- Spots -->
+      <circle cx="11" cy="16" r="1" fill="#00d4ff" opacity=".4"/>
+      <circle cx="15" cy="15" r=".8" fill="#00d4ff" opacity=".4"/>
+      <circle cx="19" cy="16" r="1" fill="#00d4ff" opacity=".4"/>
+      <circle cx="13" cy="19" r=".7" fill="#00d4ff" opacity=".4"/>
+      <circle cx="17" cy="19" r=".7" fill="#00d4ff" opacity=".4"/>
+      <!-- Tail -->
+      <path d="M24 18 Q28 15 27 22 Q26 26 24 24" stroke="#00d4ff" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+      <!-- Legs -->
+      <line x1="9" y1="22" x2="8" y2="28" stroke="#00d4ff" stroke-width="1.2" stroke-linecap="round"/>
+      <line x1="12" y1="23" x2="11.5" y2="28" stroke="#00d4ff" stroke-width="1.2" stroke-linecap="round"/>
+      <line x1="18" y1="23" x2="18.5" y2="28" stroke="#00d4ff" stroke-width="1.2" stroke-linecap="round"/>
+      <line x1="21" y1="22" x2="22" y2="28" stroke="#00d4ff" stroke-width="1.2" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <div class="brand-name">PARS</div>
+      <div class="brand-sub">TRADING INTELLIGENCE</div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="search-box">
+    <span>$</span>
+    <input id="symbolInput" type="text" placeholder="AAPL" value="AAPL" maxlength="12">
+  </div>
+
+  <div class="tf-row">
+    <button class="tf" data-tf="1d">1G</button>
+    <button class="tf active" data-tf="1wk">1H</button>
+    <button class="tf" data-tf="1mo">1A</button>
+  </div>
+
+  <button class="btn btn-primary" id="fetchBtn" onclick="fetchData()">ANALİZ ET</button>
+
+  <div class="divider"></div>
+
+  <div id="ticker">
+    <span class="tk-sym" id="tkSym">—</span>
+    <span class="tk-price" id="tkPrice">—</span>
+    <span class="tk-chg" id="tkChg">—</span>
+  </div>
+
+  <div class="status" id="statusBar">
+    <div class="status-dot" id="sDot"></div>
+    <span id="sTxt">hazır</span>
+  </div>
+</header>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <!-- LEFT -->
+  <div class="left">
+    <div class="panel-title">İzleme Listesi</div>
+
+    <div class="wl-item active" onclick="loadSym('AAPL', this)">
+      <span class="wl-sym">AAPL</span>
+      <span class="wl-chg na" id="wl_AAPL">—</span>
+    </div>
+    <div class="wl-item" onclick="loadSym('MSFT', this)">
+      <span class="wl-sym">MSFT</span>
+      <span class="wl-chg na" id="wl_MSFT">—</span>
+    </div>
+    <div class="wl-item" onclick="loadSym('NVDA', this)">
+      <span class="wl-sym">NVDA</span>
+      <span class="wl-chg na" id="wl_NVDA">—</span>
+    </div>
+    <div class="wl-item" onclick="loadSym('GC=F', this)">
+      <span class="wl-sym">ALTIN</span>
+      <span class="wl-chg na" id="wl_GCF">—</span>
+    </div>
+    <div class="wl-item" onclick="loadSym('BTC-USD', this)">
+      <span class="wl-sym">BTC</span>
+      <span class="wl-chg na" id="wl_BTCUSD">—</span>
+    </div>
+    <div class="wl-item" onclick="loadSym('CL=F', this)">
+      <span class="wl-sym">PETROL</span>
+      <span class="wl-chg na" id="wl_CLF">—</span>
+    </div>
+
+    <div class="sep"></div>
+    <div class="panel-title">İndikatörler</div>
+
+    <div class="ind-row" onclick="togInd('sma20')">
+      <span class="ind-lbl" style="color:#00d4ff">SMA 20</span>
+      <div class="tog on" id="t_sma20"></div>
+    </div>
+    <div class="ind-row" onclick="togInd('sma50')">
+      <span class="ind-lbl" style="color:#ffab00">SMA 50</span>
+      <div class="tog on" id="t_sma50"></div>
+    </div>
+    <div class="ind-row" onclick="togInd('sma200')">
+      <span class="ind-lbl" style="color:#c678dd">SMA 200</span>
+      <div class="tog on" id="t_sma200"></div>
+    </div>
+    <div class="ind-row" onclick="togInd('rsi')">
+      <span class="ind-lbl" style="color:var(--txt1)">RSI 14</span>
+      <div class="tog on" id="t_rsi"></div>
+    </div>
+    <div class="ind-row" onclick="togInd('vol')">
+      <span class="ind-lbl" style="color:var(--txt1)">Hacim</span>
+      <div class="tog on" id="t_vol"></div>
+    </div>
+
+    <div class="sep"></div>
+
+    <div class="atr-block">
+      <div class="atr-label">ATR (14)</div>
+      <div class="atr-val" id="atrVal">—</div>
+      <div class="atr-adr" id="adrVal">ADR: —</div>
+      <div class="atr-sl" id="slVal">SL 1.5×: —</div>
+    </div>
+  </div>
+
+  <!-- CENTER -->
+  <div class="center">
+    <div class="chart-bar">
+      <div class="ohlc">
+        <div class="oh-item"><span class="oh-k">A</span><span class="oh-v" id="oA">—</span></div>
+        <div class="oh-item"><span class="oh-k">Y</span><span class="oh-v" id="oH">—</span></div>
+        <div class="oh-item"><span class="oh-k">D</span><span class="oh-v" id="oL">—</span></div>
+        <div class="oh-item"><span class="oh-k">K</span><span class="oh-v" id="oC">—</span></div>
+        <div class="oh-item"><span class="oh-k">H</span><span class="oh-v" id="oV">—</span></div>
+      </div>
+      <span class="chart-label" id="chartLbl">PARS · Sembol Seçin</span>
+    </div>
+
+    <div class="chart-wrap">
+      <div id="mainChart"></div>
+
+      <div class="overlay" id="loadOverlay" style="display:none">
+        <div class="spinner"></div>
+        <div class="overlay-text" id="loadTxt">Veri çekiliyor...</div>
+      </div>
+
+      <div class="overlay" id="emptyOverlay">
+        <div class="empty-icon">
+          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="4" y="36" width="40" height="2" rx="1" fill="currentColor"/>
+            <rect x="4" y="8" width="2" height="30" rx="1" fill="currentColor"/>
+            <polyline points="6,30 16,18 24,24 34,12 44,16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="overlay-text" style="font-size:13px; font-weight:600; color:var(--txt1)">Sembol Girin</div>
+        <div class="overlay-text" style="color:var(--txt2); text-align:center; line-height:1.6">Yukarıdan sembol yazıp<br>ANALİZ ET'e tıklayın</div>
+      </div>
+    </div>
+
+    <div class="sub-charts">
+      <div class="sub-hdr">
+        <span class="sub-lbl">RSI · 14</span>
+        <span class="sub-val" id="rsiVal" style="color:var(--acc)">—</span>
+      </div>
+      <div id="rsiChart"></div>
+      <div class="sub-hdr" style="border-top:1px solid var(--line)">
+        <span class="sub-lbl">HACİM</span>
+        <span class="sub-val" id="volVal" style="color:var(--txt1)">—</span>
+      </div>
+      <div id="volChart"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT -->
+  <div class="right">
+
+    <div class="score-box">
+      <div class="panel-title" style="padding:0 0 10px 0">Confluence Skoru</div>
+      <div class="score-top">
+        <div>
+          <span class="score-num" id="scoreNum" style="color:var(--txt2)">—</span>
+          <span class="score-denom">/8</span>
+        </div>
+      </div>
+      <div class="score-track">
+        <div class="score-fill" id="scoreFill" style="width:0%;background:var(--txt2)"></div>
+      </div>
+      <div class="score-msg" id="scoreMsg" style="color:var(--txt2)">Analiz için sembol yükleyin</div>
+    </div>
+
+    <div class="signals">
+      <div class="panel-title" style="padding:0 0 10px 0">Sinyal Analizi</div>
+
+      <div class="sig-card">
+        <div class="sig-top">
+          <span class="sig-name">TREND</span>
+          <span class="badge b-na" id="b_trend">—</span>
+        </div>
+        <div class="sig-detail" id="d_trend">Bekleniyor</div>
+      </div>
+
+      <div class="sig-card">
+        <div class="sig-top">
+          <span class="sig-name">MOMENTUM</span>
+          <span class="badge b-na" id="b_mom">—</span>
+        </div>
+        <div class="sig-detail" id="d_mom">Bekleniyor</div>
+      </div>
+
+      <div class="sig-card">
+        <div class="sig-top">
+          <span class="sig-name">RSI</span>
+          <span class="badge b-na" id="b_rsi">—</span>
+        </div>
+        <div class="sig-detail" id="d_rsi">Bekleniyor</div>
+      </div>
+
+      <div class="sig-card">
+        <div class="sig-top">
+          <span class="sig-name">HACİM</span>
+          <span class="badge b-na" id="b_vol">—</span>
+        </div>
+        <div class="sig-detail" id="d_vol">Bekleniyor</div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="panel-title" style="padding:0 0 10px 0">İstatistikler</div>
+      <div class="stats-grid">
+        <div class="stat"><div class="stat-k">52H HIGH</div><div class="stat-v" id="s_h52">—</div></div>
+        <div class="stat"><div class="stat-k">52H LOW</div><div class="stat-v" id="s_l52">—</div></div>
+        <div class="stat"><div class="stat-k">SMA 200</div><div class="stat-v" id="s_sma200">—</div></div>
+        <div class="stat"><div class="stat-k">F/SMA200</div><div class="stat-v" id="s_ratio">—</div></div>
+        <div class="stat"><div class="stat-k">ATR %</div><div class="stat-v" id="s_atrp">—</div></div>
+        <div class="stat"><div class="stat-k">SL %</div><div class="stat-v dn" id="s_slp">—</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── CHARTS ────────────────────────────────────────────────────
+let MC, CS, S20, S50, S200, RC, RSIL, RSOb, RSOsell, VC, VS;
+let currentTF = '1wk';
+let inds = {sma20:true,sma50:true,sma200:true,rsi:true,vol:true};
+
+function initCharts(){
+  const base = {
+    layout:{ background:{color:'#080a0f'}, textColor:'#3d4560' },
+    grid:{ vertLines:{color:'#1e2436'}, horzLines:{color:'#1e2436'} },
+    crosshair:{mode:1},
+    rightPriceScale:{borderColor:'#1e2436'},
+    timeScale:{borderColor:'#1e2436',timeVisible:true},
+  };
+
+  const ce = id => document.getElementById(id);
+
+  MC = LightweightCharts.createChart(ce('mainChart'),{...base, width:ce('mainChart').clientWidth, height:ce('mainChart').clientHeight});
+  CS = MC.addCandlestickSeries({upColor:'#00e676',downColor:'#ff3d57',borderUpColor:'#00e676',borderDownColor:'#ff3d57',wickUpColor:'#00e676',wickDownColor:'#ff3d57'});
+  S20  = MC.addLineSeries({color:'#00d4ff',lineWidth:1.5,priceLineVisible:false,lastValueVisible:false});
+  S50  = MC.addLineSeries({color:'#ffab00',lineWidth:1.5,priceLineVisible:false,lastValueVisible:false});
+  S200 = MC.addLineSeries({color:'#c678dd',lineWidth:2,priceLineVisible:false,lastValueVisible:false});
+
+  RC = LightweightCharts.createChart(ce('rsiChart'),{...base,width:ce('rsiChart').clientWidth,height:90,rightPriceScale:{scaleMargins:{top:.1,bottom:.1},borderColor:'#1e2436'}});
+  RSIL    = RC.addLineSeries({color:'#00d4ff',lineWidth:1.5,priceLineVisible:false,lastValueVisible:true});
+  RSOb    = RC.addLineSeries({color:'rgba(255,61,87,.4)',lineWidth:1,lineStyle:2,priceLineVisible:false,lastValueVisible:false});
+  RSOsell = RC.addLineSeries({color:'rgba(0,230,118,.4)',lineWidth:1,lineStyle:2,priceLineVisible:false,lastValueVisible:false});
+
+  VC = LightweightCharts.createChart(ce('volChart'),{...base,width:ce('volChart').clientWidth,height:70,rightPriceScale:{scaleMargins:{top:.1,bottom:0},borderColor:'#1e2436'}});
+  VS = VC.addHistogramSeries({priceFormat:{type:'volume'},priceScaleId:''});
+
+  MC.subscribeCrosshairMove(p=>{
+    if(p?.seriesData?.get(CS)) updateOHLC(p.seriesData.get(CS));
+  });
+
+  const ro = new ResizeObserver(()=>{
+    MC.resize(ce('mainChart').clientWidth, ce('mainChart').clientHeight);
+    RC.resize(ce('rsiChart').clientWidth,90);
+    VC.resize(ce('volChart').clientWidth,70);
+  });
+  ro.observe(ce('mainChart'));
+  ro.observe(ce('rsiChart'));
+  ro.observe(ce('volChart'));
+}
+
+// ── DATA FETCH ────────────────────────────────────────────────
+// PARS API — Vercel
+const API_BASE = 'https://pars-api-caytemiz-4014s-projects.vercel.app';
+
+function apiURL(sym, tf){
+  const rangeMap = {'1d':'6mo', '1wk':'2y', '1mo':'5y'};
+  const range = rangeMap[tf] || '2y';
+  return `${API_BASE}/api/chart?symbol=${encodeURIComponent(sym)}&interval=${tf}&range=${range}`;
+}
+
+async function tryFetch(url){
+  let r;
+  try { r = await fetch(url); }
+  catch(e){ throw new Error('Bağlantı hatası: ' + e.message); }
+  if(!r.ok){
+    let msg = `Sunucu hatası: ${r.status}`;
+    try{ const j=await r.json(); if(j.error) msg=j.error; }catch(_){}
+    throw new Error(msg);
+  }
+  let data;
+  try{ data = await r.json(); }catch(e){ throw new Error('JSON parse hatası'); }
+  if(!data?.chart?.result?.[0]) throw new Error('Veri bulunamadı. Sembolü kontrol edin.');
+  return data;
+}
+
+async function fetchData(){
+  const sym = document.getElementById('symbolInput').value.trim().toUpperCase();
+  if(!sym){ toast('Sembol girin','err'); return; }
+
+  loading(true, `${sym} yükleniyor...`);
+  document.getElementById('emptyOverlay').style.display='none';
+
+  try{
+    const data = await tryFetch(apiURL(sym, currentTF));
+    const res = data.chart.result[0];
+    const ts = res.timestamp;
+    const q = res.indicators.quote[0];
+
+    if(!ts || ts.length < 5) throw new Error('Yetersiz veri');
+
+    const bars = [];
+    for(let i=0;i<ts.length;i++){
+      if(!q.open?.[i]||!q.close?.[i]) continue;
+      bars.push({
+        time: ts[i],
+        open:  +q.open[i].toFixed(5),
+        high:  +q.high[i].toFixed(5),
+        low:   +q.low[i].toFixed(5),
+        close: +q.close[i].toFixed(5),
+        volume: q.volume?.[i]||0,
+      });
+    }
+    bars.sort((a,b)=>a.time-b.time);
+
+    render(bars, sym);
+    analyze(bars, sym);
+    updateWL(sym, bars);
+    setStatus(true, sym);
+    toast(`${sym} yüklendi · ${bars.length} bar`,'ok');
+
+  } catch(e){
+    loading(false);
+    document.getElementById('emptyOverlay').style.display='flex';
+    toast(e.message, 'err');
+  }
+}
+
+// ── RENDER ────────────────────────────────────────────────────
+function render(bars, sym){
+  const closes = bars.map(b=>b.close);
+  const times  = bars.map(b=>b.time);
+  const n = bars.length;
+
+  CS.setData(bars);
+
+  const mk = (arr,per) => sma(arr,per).map((v,i)=>v!=null?{time:times[i],value:v}:null).filter(Boolean);
+  S20.setData(mk(closes,20));
+  S50.setData(mk(closes,50));
+  S200.setData(mk(closes,200));
+
+  const rsiVals = rsi(closes,14);
+  RSIL.setData(rsiVals.map((v,i)=>v!=null?{time:times[i],value:v}:null).filter(Boolean));
+  RSOb.setData(times.map(t=>({time:t,value:70})));
+  RSOsell.setData(times.map(t=>({time:t,value:30})));
+
+  const lastRSI = rsiVals[n-1];
+  const rv = document.getElementById('rsiVal');
+  if(lastRSI!=null){
+    rv.textContent = lastRSI.toFixed(1);
+    rv.style.color = lastRSI>70?'var(--red)':lastRSI<30?'var(--green)':'var(--acc)';
+  }
+
+  VS.setData(bars.map(b=>({time:b.time,value:b.volume,color:b.close>=b.open?'rgba(0,230,118,.45)':'rgba(255,61,87,.45)'})));
+  document.getElementById('volVal').textContent = fvol(bars[n-1]?.volume);
+
+  const last=bars[n-1], prev=bars[n-2];
+  if(last&&prev){
+    const ch = (last.close-prev.close)/prev.close*100;
+    document.getElementById('ticker').style.display='flex';
+    document.getElementById('tkSym').textContent=sym;
+    document.getElementById('tkPrice').textContent=fp(last.close);
+    const el=document.getElementById('tkChg');
+    el.textContent=`${ch>=0?'+':''}${ch.toFixed(2)}%`;
+    el.className=`tk-chg ${ch>=0?'up':'dn'}`;
+  }
+
+  document.getElementById('chartLbl').textContent=`${sym} · ${currentTF.toUpperCase()}`;
+  MC.timeScale().fitContent();
+  RC.timeScale().fitContent();
+  VC.timeScale().fitContent();
+  loading(false);
+}
+
+// ── ANALYZE ───────────────────────────────────────────────────
+function analyze(bars, sym){
+  const closes  = bars.map(b=>b.close);
+  const highs   = bars.map(b=>b.high);
+  const lows    = bars.map(b=>b.low);
+  const vols    = bars.map(b=>b.volume);
+  const n = bars.length;
+
+  const sma20a  = sma(closes,20);
+  const sma50a  = sma(closes,50);
+  const sma200a = sma(closes,200);
+  const rsiVals = rsi(closes,14);
+  const atrVals = atr(highs,lows,closes,14);
+
+  const last    = closes[n-1];
+  const s20     = sma20a[n-1];
+  const s50     = sma50a[n-1];
+  const s200    = sma200a[n-1];
+  const lastRSI = rsiVals[n-1];
+  const lastATR = atrVals[n-1];
+  const adrPct  = lastATR&&last ? lastATR/last*100 : 0;
+  const slPct   = adrPct*1.5;
+
+  // 52H
+  const slice = bars.slice(-52);
+  const h52 = Math.max(...slice.map(b=>b.high));
+  const l52 = Math.min(...slice.map(b=>b.low));
+
+  // Stats
+  g('s_h52').textContent = fp(h52);
+  g('s_l52').textContent = fp(l52);
+  g('s_sma200').textContent = s200?fp(s200):'—';
+  const ratio = s200?(last/s200-1)*100:null;
+  const re = g('s_ratio');
+  re.textContent = ratio!=null?`${ratio>=0?'+':''}${ratio.toFixed(1)}%`:'—';
+  re.className = `stat-v ${ratio!=null?(ratio>=0?'up':'dn'):''}`;
+  g('s_atrp').textContent = adrPct?`${adrPct.toFixed(2)}%`:'—';
+  g('s_slp').textContent = slPct?`${slPct.toFixed(2)}%`:'—';
+  g('atrVal').textContent = lastATR?fp(lastATR):'—';
+  g('adrVal').textContent = adrPct?`ADR: %${adrPct.toFixed(2)}`:'ADR: —';
+  g('slVal').textContent  = slPct?`SL 1.5×: %${slPct.toFixed(2)}`:'SL: —';
+
+  let score = 0;
+
+  // TREND
+  let ts='na',td='',tscore=0;
+  if(last&&s200){
+    if(last>s200&&s50>s200&&s20>s50){ts='bull';td=`Fiyat SMA20>50>200 üstünde. Güçlü uptrend.`;tscore=2;}
+    else if(last>s200){ts='bull';td=`Fiyat SMA200 üstünde. Trend pozitif.`;tscore=1;}
+    else if(last<s200&&s50<s200){ts='bear';td=`Fiyat SMA200 altında. Downtrend.`;tscore=0;}
+    else{ts='wait';td=`Karışık sinyal. Trend henüz netleşmedi.`;tscore=0;}
+  }
+  score+=tscore; setSig('trend',ts,td);
+
+  // MOMENTUM
+  let ms='na',md='',mscore=0;
+  if(n>=6){
+    const s20Up=s20>sma20a[n-5];
+    const s50Up=s50>sma50a[n-5];
+    const recentUp=closes[n-1]>closes[n-4];
+    if(s20Up&&s50Up&&recentUp){ms='bull';md='SMA20 & 50 yükseliyor. Momentum güçlü.';mscore=2;}
+    else if(s20Up){ms='bull';md='Kısa vadeli momentum pozitif.';mscore=1;}
+    else if(!s20Up&&!s50Up){ms='bear';md='SMA20 & 50 düşüyor. Momentum negatif.';mscore=0;}
+    else{ms='wait';md='Momentum nötr. Yön bekleniyor.';mscore=0;}
+  }
+  score+=mscore; setSig('mom',ms,md);
+
+  // RSI
+  let rs='na',rd='',rscore=0;
+  if(lastRSI!=null){
+    if(lastRSI<30){rs='bull';rd=`RSI ${lastRSI.toFixed(1)} — Aşırı satım. Long fırsat yakın.`;rscore=2;}
+    else if(lastRSI>70){rs='bear';rd=`RSI ${lastRSI.toFixed(1)} — Aşırı alım. Dikkatli.`;rscore=0;}
+    else if(lastRSI>=45&&lastRSI<=65){rs='bull';rd=`RSI ${lastRSI.toFixed(1)} — Sağlıklı trend bölgesi.`;rscore=1;}
+    else{rs='wait';rd=`RSI ${lastRSI.toFixed(1)} — Nötr bölge.`;rscore=0;}
+  }
+  score+=rscore; setSig('rsi',rs,rd);
+
+  // VOLUME
+  let vs='na',vd='',vscore=0;
+  if(vols.length>=20){
+    const avg=vols.slice(-20).reduce((a,b)=>a+b,0)/20;
+    const lv=vols[n-1];
+    const r2=lv/avg;
+    const up=bars[n-1].close>=bars[n-2]?.close;
+    if(r2>1.5&&up){vs='bull';vd=`Hacim ${r2.toFixed(1)}× ort. üstünde. Alım baskısı.`;vscore=2;}
+    else if(r2>1.5&&!up){vs='bear';vd=`Hacim ${r2.toFixed(1)}× ort. üstünde. Satış baskısı.`;vscore=0;}
+    else if(r2>1){vs='wait';vd=`Hacim ortalamanın ${r2.toFixed(1)}× üstünde.`;vscore=1;}
+    else{vs='na';vd=`Hacim ortalamanın altında. Düşük ilgi.`;vscore=0;}
+  }
+  score+=vscore; setSig('vol',vs,vd);
+
+  // SCORE
+  const pct=score/8*100;
+  let color,msg;
+  if(pct>=75){color='var(--green)';msg='✦ Güçlü setup — İşlem değerlendirilebilir';}
+  else if(pct>=50){color='var(--amber)';msg='◈ Orta setup — Ek teyit bekleyin';}
+  else{color='var(--red)';msg='✕ Zayıf setup — İşlem açmayın';}
+
+  const sn=g('scoreNum');
+  sn.textContent=score; sn.style.color=color;
+  g('scoreFill').style.width=pct+'%'; g('scoreFill').style.background=color;
+  const sm=g('scoreMsg'); sm.textContent=msg; sm.style.color=color;
+}
+
+// ── HELPERS ───────────────────────────────────────────────────
+function sma(data,p){return data.map((_,i)=>{if(i<p-1)return null;return data.slice(i-p+1,i+1).reduce((a,b)=>a+b,0)/p;});}
+
+function rsi(c,p=14){
+  const out=new Array(c.length).fill(null);
+  if(c.length<p+1)return out;
+  let ag=0,al=0;
+  for(let i=1;i<=p;i++){const d=c[i]-c[i-1];d>0?ag+=d:al-=d;}
+  ag/=p;al/=p;
+  for(let i=p;i<c.length;i++){
+    if(i>p){const d=c[i]-c[i-1];const g=Math.max(0,d),l=Math.max(0,-d);ag=(ag*(p-1)+g)/p;al=(al*(p-1)+l)/p;}
+    out[i]=al===0?100:100-(100/(1+ag/al));
+  }
+  return out;
+}
+
+function atr(h,l,c,p=14){
+  const tr=h.map((hi,i)=>i===0?hi-l[i]:Math.max(hi-l[i],Math.abs(hi-c[i-1]),Math.abs(l[i]-c[i-1])));
+  return sma(tr,p);
+}
+
+function fp(p){
+  if(p==null)return'—';
+  if(p>10000)return p.toFixed(0);
+  if(p>100)return p.toFixed(2);
+  return p.toFixed(4);
+}
+
+function fvol(v){
+  if(!v)return'—';
+  if(v>=1e9)return(v/1e9).toFixed(1)+'B';
+  if(v>=1e6)return(v/1e6).toFixed(1)+'M';
+  if(v>=1e3)return(v/1e3).toFixed(0)+'K';
+  return v.toString();
+}
+
+function g(id){return document.getElementById(id);}
+
+function updateOHLC(b){
+  g('oA').textContent=fp(b.open);
+  g('oH').textContent=fp(b.high);
+  g('oL').textContent=fp(b.low);
+  const ce=g('oC'); ce.textContent=fp(b.close);
+  ce.className='oh-v '+(b.close>=b.open?'up':'dn');
+}
+
+function loading(on, txt=''){
+  g('loadOverlay').style.display=on?'flex':'none';
+  if(txt)g('loadTxt').textContent=txt;
+  const btn=g('fetchBtn');
+  btn.disabled=on;
+  btn.textContent=on?'...':'ANALİZ ET';
+}
+
+function setStatus(on, sym=''){
+  g('sDot').className='status-dot'+(on?' on':'');
+  g('sTxt').textContent=on?sym:'hazır';
+}
+
+function setSig(key,sig,detail){
+  const labels={bull:'BOĞA',bear:'AYI',wait:'BEKLE',na:'—'};
+  const cls={bull:'b-bull',bear:'b-bear',wait:'b-wait',na:'b-na'};
+  const b=g(`b_${key}`); b.textContent=labels[sig]||'—'; b.className=`badge ${cls[sig]||'b-na'}`;
+  g(`d_${key}`).textContent=detail;
+}
+
+function toast(msg,type=''){
+  const t=g('toast');
+  t.textContent=msg; t.className=`toast ${type} show`;
+  setTimeout(()=>t.className=`toast ${type}`,3500);
+}
+
+function updateWL(sym,bars){
+  const idMap={'GC=F':'GCF','BTC-USD':'BTCUSD','CL=F':'CLF'};
+  const id='wl_'+(idMap[sym]||sym);
+  const el=g(id);
+  if(!el||bars.length<2)return;
+  const ch=(bars[bars.length-1].close-bars[bars.length-2].close)/bars[bars.length-2].close*100;
+  el.textContent=`${ch>=0?'+':''}${ch.toFixed(1)}%`;
+  el.className=`wl-chg ${ch>=0?'up':'dn'}`;
+}
+
+function loadSym(sym, el){
+  document.getElementById('symbolInput').value=sym;
+  document.querySelectorAll('.wl-item').forEach(e=>e.classList.remove('active'));
+  el?.classList.add('active');
+  fetchData();
+}
+
+function togInd(key){
+  inds[key]=!inds[key];
+  const t=g(`t_${key}`);
+  inds[key]?t.classList.add('on'):t.classList.remove('on');
+  const v=inds[key];
+  if(key==='sma20')S20?.applyOptions({visible:v});
+  if(key==='sma50')S50?.applyOptions({visible:v});
+  if(key==='sma200')S200?.applyOptions({visible:v});
+  if(key==='rsi'){g('rsiChart').parentElement.style.display=v?'':'none';}
+  if(key==='vol'){g('volChart').parentElement.style.display=v?'':'none';}
+}
+
+// TF buttons
+document.querySelectorAll('.tf').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.tf').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    currentTF=b.dataset.tf;
+    const sym=document.getElementById('symbolInput').value.trim();
+    if(sym)fetchData();
+  });
+});
+
+// Enter
+document.getElementById('symbolInput').addEventListener('keydown',e=>{
+  if(e.key==='Enter')fetchData();
+});
+
+// Boot
+window.addEventListener('load',()=>{
+  initCharts();
+  setTimeout(fetchData, 400);
+});
+</script>
+</body>
+</html>
