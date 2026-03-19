@@ -599,6 +599,11 @@ header {
   </div>
 
   <div class="tf-row">
+    <button class="tf" data-tf="1m">M1</button>
+    <button class="tf" data-tf="5m">M5</button>
+    <button class="tf" data-tf="15m">M15</button>
+    <button class="tf" data-tf="30m">M30</button>
+    <button class="tf" data-tf="1h">H1</button>
     <button class="tf" data-tf="1d">1G</button>
     <button class="tf active" data-tf="1wk">1H</button>
     <button class="tf" data-tf="1mo">1A</button>
@@ -606,6 +611,7 @@ header {
 
   <button class="btn btn-primary" id="fetchBtn" onclick="fetchData()">ANALİZ ET</button>
   <button class="btn" id="backtestBtn" onclick="openBacktest()" style="background:var(--bg3);border:1px solid var(--line2);color:var(--txt1)">BACKTEST</button>
+  <button class="btn" onclick="openScanner()" style="background:var(--bg3);border:1px solid rgba(0,230,118,.3);color:var(--green)">TARAYICI</button>
 
   <div class="divider"></div>
 
@@ -848,6 +854,70 @@ header {
   </div>
 </div>
 
+<!-- CANLI SİNYAL & TARAYICI MODAL -->
+<div id="scannerModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;overflow-y:auto">
+  <div style="max-width:1000px;margin:30px auto;background:var(--bg1);border:1px solid var(--line2);border-radius:10px;overflow:hidden">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:var(--bg2);border-bottom:1px solid var(--line)">
+      <div style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--acc)">⟨ CANLI TARAYICI ⟩</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div id="scanStatus" style="font-family:var(--mono);font-size:10px;color:var(--txt2);display:flex;align-items:center;gap:6px">
+          <div id="scanDot" style="width:6px;height:6px;border-radius:50%;background:var(--txt2)"></div>
+          <span id="scanTxt">Durduruldu</span>
+        </div>
+        <select id="scanInterval" style="background:var(--bg3);border:1px solid var(--line2);color:var(--txt0);font-family:var(--mono);font-size:11px;padding:5px 8px;border-radius:5px">
+          <option value="30">30 saniye</option>
+          <option value="60" selected>1 dakika</option>
+          <option value="300">5 dakika</option>
+          <option value="900">15 dakika</option>
+        </select>
+        <button id="scanStartBtn" onclick="startScanner()" style="background:var(--green);color:var(--bg0);border:none;border-radius:5px;padding:6px 14px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer">BASLAT</button>
+        <button onclick="stopScanner()" style="background:var(--bg4);color:var(--txt1);border:1px solid var(--line);border-radius:5px;padding:6px 12px;font-family:var(--mono);font-size:11px;cursor:pointer">DURDUR</button>
+        <button onclick="closeScanner()" style="background:var(--bg4);color:var(--txt1);border:1px solid var(--line);border-radius:5px;padding:6px 12px;font-family:var(--mono);font-size:11px;cursor:pointer">KAPAT</button>
+      </div>
+    </div>
+
+    <!-- Sembol Listesi Yönetimi -->
+    <div style="padding:12px 20px;background:var(--bg2);border-bottom:1px solid var(--line);display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <span style="font-family:var(--mono);font-size:9px;color:var(--txt2);letter-spacing:1px">SEMBOLLER:</span>
+      <div id="scanSymbolTags" style="display:flex;gap:4px;flex-wrap:wrap;flex:1"></div>
+      <input id="scanSymInput" type="text" placeholder="Sembol ekle..." 
+        style="background:var(--bg3);border:1px solid var(--line2);color:var(--txt0);font-family:var(--mono);font-size:11px;padding:4px 10px;border-radius:5px;width:130px;outline:none"
+        onkeydown="if(event.key==='Enter')addScanSymbol()">
+      <button onclick="addScanSymbol()" style="background:var(--bg3);border:1px solid var(--line2);color:var(--acc);font-family:var(--mono);font-size:11px;padding:4px 10px;border-radius:5px;cursor:pointer">+</button>
+    </div>
+
+    <!-- Son tarama zamanı -->
+    <div style="padding:8px 20px;background:var(--bg1);border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center">
+      <span style="font-family:var(--mono);font-size:9px;color:var(--txt2)">SON TARAMA: <span id="lastScanTime">—</span></span>
+      <span style="font-family:var(--mono);font-size:9px;color:var(--txt2)">AKTIF SINYAL: <span id="activeSignalCount" style="color:var(--green)">0</span></span>
+    </div>
+
+    <!-- Sinyal Grid -->
+    <div style="padding:16px 20px">
+      <div id="scanResults" style="min-height:200px">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--txt2);text-align:center;padding:40px">
+          Tarayici baslatilmadi. Sembol ekle ve BASLAT'a bas.
+        </div>
+      </div>
+    </div>
+
+    <!-- Ses ayari -->
+    <div style="padding:10px 20px;background:var(--bg2);border-top:1px solid var(--line);display:flex;align-items:center;gap:12px">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+        <input type="checkbox" id="soundEnabled" checked style="accent-color:var(--acc)">
+        <span style="font-family:var(--mono);font-size:10px;color:var(--txt1)">Ses bildirimi</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+        <input type="checkbox" id="onlyReady" checked style="accent-color:var(--acc)">
+        <span style="font-family:var(--mono);font-size:10px;color:var(--txt1)">Sadece HAZIR sinyaller</span>
+      </label>
+      <span style="font-family:var(--mono);font-size:9px;color:var(--txt2);margin-left:auto">TF: <span id="scanTFLabel">1H</span></span>
+    </div>
+  </div>
+</div>
+
 <!-- BACKTEST MODAL -->
 <div id="btModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;overflow-y:auto">
   <div style="max-width:900px;margin:30px auto;background:var(--bg1);border:1px solid var(--line2);border-radius:10px;overflow:hidden">
@@ -953,9 +1023,18 @@ function initCharts(){
 const API_BASE = 'https://pars-api-caytemiz-4014s-projects.vercel.app';
 
 function apiURL(sym, tf){
-  const rangeMap = {'1d':'6mo', '1wk':'2y', '1mo':'5y'};
-  const range = rangeMap[tf] || '2y';
-  return `${API_BASE}/api/chart?symbol=${encodeURIComponent(sym)}&interval=${tf}&range=${range}`;
+  const rangeMap = {
+    '1m':'7d', '5m':'60d', '15m':'60d', '30m':'60d',
+    '1h':'6mo', '1d':'1y', '1wk':'2y', '1mo':'5y'
+  };
+  // Yahoo Finance interval map
+  const intervalMap = {
+    '1m':'1m', '5m':'5m', '15m':'15m', '30m':'30m',
+    '1h':'1h', '1d':'1d', '1wk':'1wk', '1mo':'1mo'
+  };
+  const range = rangeMap[tf] || '1y';
+  const interval = intervalMap[tf] || tf;
+  return `${API_BASE}/api/chart?symbol=${encodeURIComponent(sym)}&interval=${interval}&range=${range}`;
 }
 
 async function tryFetch(url){
@@ -2173,6 +2252,245 @@ document.querySelectorAll('.tf').forEach(b=>{
 document.getElementById('symbolInput').addEventListener('keydown',e=>{
   if(e.key==='Enter')fetchData();
 });
+
+// ── CANLI TARAYICI ────────────────────────────────────────────────────────────
+let scanSymbols = ['AAPL','MSFT','NVDA','GC=F','BTC-USD','CL=F'];
+let scanTimer = null;
+let scanRunning = false;
+let prevSignals = {}; // onceki sinyal durumlarini takip et
+
+function openScanner(){
+  g('scannerModal').style.display='block';
+  document.body.style.overflow='hidden';
+  g('scanTFLabel').textContent = currentTF.toUpperCase();
+  renderScanTags();
+}
+
+function closeScanner(){
+  g('scannerModal').style.display='none';
+  document.body.style.overflow='';
+}
+
+function renderScanTags(){
+  const container = g('scanSymbolTags');
+  if(!container) return;
+  container.innerHTML = scanSymbols.map(s=>`
+    <span style="display:inline-flex;align-items:center;gap:4px;background:var(--bg3);border:1px solid var(--line2);border-radius:4px;padding:2px 8px;font-family:var(--mono);font-size:10px;color:var(--txt0)">
+      ${s}
+      <span onclick="removeScanSymbol('${s}')" style="cursor:pointer;color:var(--txt2);font-size:12px;line-height:1">×</span>
+    </span>`).join('');
+}
+
+function addScanSymbol(){
+  const input = g('scanSymInput');
+  const sym = input.value.trim().toUpperCase();
+  if(!sym) return;
+  if(!scanSymbols.includes(sym)){
+    scanSymbols.push(sym);
+    renderScanTags();
+  }
+  input.value='';
+}
+
+function removeScanSymbol(sym){
+  scanSymbols = scanSymbols.filter(s=>s!==sym);
+  renderScanTags();
+}
+
+async function scanOnce(){
+  if(!scanRunning) return;
+  const tf = currentTF;
+  const onlyReady = g('onlyReady')?.checked ?? true;
+  const results = [];
+
+  g('lastScanTime').textContent = new Date().toLocaleTimeString('tr-TR');
+
+  for(const sym of scanSymbols){
+    try{
+      const url = apiURL(sym, tf);
+      const data = await tryFetch(url);
+      const res = data.chart.result[0];
+      const ts = res.timestamp;
+      const q = res.indicators.quote[0];
+      if(!ts||ts.length<30) continue;
+
+      const bars = [];
+      for(let i=0;i<ts.length;i++){
+        if(!q.open?.[i]||!q.close?.[i]) continue;
+        bars.push({
+          time:ts[i],
+          open:+q.open[i].toFixed(5),
+          high:+q.high[i].toFixed(5),
+          low:+q.low[i].toFixed(5),
+          close:+q.close[i].toFixed(5),
+          volume:q.volume?.[i]||0
+        });
+      }
+      bars.sort((a,b)=>a.time-b.time);
+
+      const swings = calcSwings(bars,5);
+      const bosEvents = calcBOSCHoCH(bars,swings);
+      const stratResults = [
+        checkS2(bars,swings),
+        checkS3(bars,swings),
+        checkS5(bars,swings,bosEvents),
+        checkS6(bars,swings),
+        checkS7(bars,swings),
+        checkS9(bars,swings),
+      ].filter(Boolean);
+
+      const last = bars[bars.length-1];
+      const prev = bars[bars.length-2];
+      const chg = prev ? (last.close-prev.close)/prev.close*100 : 0;
+
+      // Sinyal filtresi
+      const filtered = onlyReady
+        ? stratResults.filter(r=>r.phase==='ready'||r.phase==='alert')
+        : stratResults;
+
+      if(filtered.length>0 || !onlyReady){
+        results.push({sym, bars, signals:filtered, last, chg, allSignals:stratResults});
+      }
+
+      // Yeni READY sinyal bildirimi
+      filtered.filter(r=>r.phase==='ready').forEach(r=>{
+        const key = `${sym}_${r.name}`;
+        if(!prevSignals[key]){
+          prevSignals[key] = true;
+          notifySignal(sym, r);
+        }
+      });
+
+      // Reset edilmis sinyalleri temizle
+      stratResults.forEach(r=>{
+        const key = `${sym}_${r.name}`;
+        if(r.phase!=='ready') delete prevSignals[key];
+      });
+
+    } catch(e){ console.warn('Scan error', sym, e.message); }
+  }
+
+  // Aktif sinyal sayisi
+  const activeCount = results.reduce((a,r)=>a+r.signals.filter(s=>s.phase==='ready').length,0);
+  if(g('activeSignalCount')) g('activeSignalCount').textContent = activeCount;
+
+  renderScanResults(results, onlyReady);
+}
+
+function notifySignal(sym, sig){
+  // Gorsel bildirim
+  toast(`SINYAL: ${sym} - ${sig.name} HAZIR!`, 'ok');
+
+  // Ses bildirimi
+  if(g('soundEnabled')?.checked){
+    try{
+      const ctx = new (window.AudioContext||window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      osc.frequency.setValueAtTime(1100, ctx.currentTime+0.1);
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.4);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime+0.4);
+    }catch(_){}
+  }
+}
+
+function renderScanResults(results, onlyReady){
+  const container = g('scanResults');
+  if(!container) return;
+
+  if(results.length===0){
+    container.innerHTML = `<div style="font-family:var(--mono);font-size:11px;color:var(--txt2);text-align:center;padding:40px">
+      ${onlyReady?'Aktif sinyal bulunamadi':'Hic sonuc yok'}
+    </div>`;
+    return;
+  }
+
+  // Once READY olanlar
+  const order = {ready:0,alert:1,forming:2,watch:3};
+  results.sort((a,b)=>{
+    const aMin = Math.min(...a.signals.map(s=>order[s.phase]??3));
+    const bMin = Math.min(...b.signals.map(s=>order[s.phase]??3));
+    return aMin-bMin;
+  });
+
+  const phaseColor = {ready:'var(--green)',alert:'var(--acc)',forming:'var(--amber)',watch:'var(--txt2)'};
+  const phaseLabel = {ready:'HAZIR',alert:'UYARI',forming:'OLUSUYOR',watch:'IZLE'};
+
+  container.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px">
+      ${results.map(r=>{
+        const topSig = r.signals.sort((a,b)=>(order[a.phase]??3)-(order[b.phase]??3))[0];
+        const hasReady = r.signals.some(s=>s.phase==='ready');
+        const borderCol = hasReady?'var(--green)':r.signals.some(s=>s.phase==='alert')?'var(--acc)':'var(--line2)';
+        
+        return `<div style="background:var(--bg2);border:1px solid ${borderCol};border-radius:8px;padding:12px;cursor:pointer"
+                  onclick="loadSymFromScanner('${r.sym}')">
+          
+          <!-- Sembol Header -->
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--acc)">${r.sym}</span>
+            <div style="display:flex;gap:6px;align-items:center">
+              <span style="font-family:var(--mono);font-size:11px;font-weight:600;color:${r.chg>=0?'var(--green)':'var(--red)'}">
+                ${r.chg>=0?'+':''}${r.chg.toFixed(2)}%
+              </span>
+              <span style="font-family:var(--mono);font-size:11px;color:var(--txt0)">${fp(r.last.close)}</span>
+            </div>
+          </div>
+
+          <!-- Sinyaller -->
+          ${r.signals.length>0
+            ? r.signals.map(s=>`
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-top:1px solid var(--line)">
+                <span style="font-family:var(--mono);font-size:10px;font-weight:700;color:${s.dir==='bull'?'var(--green)':s.dir==='bear'?'var(--red)':'var(--txt1)'}">
+                  ${s.dir==='bull'?'▲':s.dir==='bear'?'▼':'◆'} ${s.name}
+                </span>
+                <span style="font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;background:${r.last};color:${phaseColor[s.phase]||'var(--txt2)'}">
+                  ${phaseLabel[s.phase]||s.phase}
+                </span>
+              </div>
+              ${s.sl&&s.tp?`<div style="font-family:var(--mono);font-size:9px;color:var(--txt2);padding:2px 0">
+                SL:${fp(s.sl)} · TP:${fp(s.tp)} · RR:${s.rr}:1
+              </div>`:''}
+            `).join('')
+            : `<div style="font-family:var(--mono);font-size:10px;color:var(--txt2);padding:4px 0;border-top:1px solid var(--line)">Sinyal yok</div>`
+          }
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+function loadSymFromScanner(sym){
+  g('symbolInput').value=sym;
+  closeScanner();
+  fetchData();
+}
+
+function startScanner(){
+  if(scanRunning) return;
+  scanRunning=true;
+  prevSignals={};
+  const dot=g('scanDot');
+  if(dot){dot.style.background='var(--green)';dot.style.animation='blink 2s infinite';}
+  if(g('scanTxt')) g('scanTxt').textContent='Taraniyor...';
+  if(g('scanTFLabel')) g('scanTFLabel').textContent=currentTF.toUpperCase();
+
+  scanOnce(); // Hemen bir kez calistir
+  const interval = parseInt(g('scanInterval')?.value||'60')*1000;
+  scanTimer=setInterval(scanOnce, interval);
+}
+
+function stopScanner(){
+  scanRunning=false;
+  if(scanTimer){clearInterval(scanTimer);scanTimer=null;}
+  const dot=g('scanDot');
+  if(dot){dot.style.background='var(--txt2)';dot.style.animation='';}
+  if(g('scanTxt')) g('scanTxt').textContent='Durduruldu';
+}
 
 // ── BACKTEST MOTORU ──────────────────────────────────────────────────────────
 let btBars = null; // mevcut bars cache
