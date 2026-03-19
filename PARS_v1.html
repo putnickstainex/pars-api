@@ -750,6 +750,8 @@ header {
         <div class="stat"><div class="stat-k">F/SMA200</div><div class="stat-v" id="s_ratio">—</div></div>
         <div class="stat"><div class="stat-k">ATR %</div><div class="stat-v" id="s_atrp">—</div></div>
         <div class="stat"><div class="stat-k">SL %</div><div class="stat-v dn" id="s_slp">—</div></div>
+        <div class="stat"><div class="stat-k">AKTİF FVG</div><div class="stat-v" id="s_fvg">—</div></div>
+        <div class="stat"><div class="stat-k">ORDER BLOCK</div><div class="stat-v" id="s_ob">—</div></div>
       </div>
     </div>
   </div>
@@ -1072,6 +1074,59 @@ function calcHTFBias(bars, swings, bosEvents){
 }
 
 // SMC overlay'leri çiz
+// Order Block hesapla
+function calcOrderBlocks(bars, swings){
+  const obs = [];
+  const n = bars.length;
+  const highs = swings.filter(s=>s.type==='high').sort((a,b)=>a.idx-b.idx);
+  const lows  = swings.filter(s=>s.type==='low').sort((a,b)=>a.idx-b.idx);
+
+  // Bullish OB: Swing low öncesindeki son bearish mum
+  lows.slice(-6).forEach(sw=>{
+    for(let i=sw.idx-1; i>=Math.max(0,sw.idx-5); i--){
+      if(bars[i].close < bars[i].open){ // bearish mum
+        const mitigated = bars.slice(sw.idx+1).some(b=>b.low <= bars[i].low);
+        obs.push({
+          type:'bull',
+          top: bars[i].open,
+          bottom: bars[i].low,
+          time: bars[i].time,
+          idx: i,
+          mitigated
+        });
+        break;
+      }
+    }
+  });
+
+  // Bearish OB: Swing high öncesindeki son bullish mum
+  highs.slice(-6).forEach(sw=>{
+    for(let i=sw.idx-1; i>=Math.max(0,sw.idx-5); i--){
+      if(bars[i].close > bars[i].open){ // bullish mum
+        const mitigated = bars.slice(sw.idx+1).some(b=>b.high >= bars[i].high);
+        obs.push({
+          type:'bear',
+          top: bars[i].high,
+          bottom: bars[i].close,
+          time: bars[i].time,
+          idx: i,
+          mitigated
+        });
+        break;
+      }
+    }
+  });
+
+  return obs.sort((a,b)=>a.idx-b.idx);
+}
+
+function addLineSeries(color, width, style){
+  return MC.addLineSeries({
+    color, lineWidth:width, lineStyle:style,
+    priceLineVisible:false, lastValueVisible:false, crosshairMarkerVisible:false
+  });
+}
+
 function drawSMC(bars){
   // Temizle
   fvgSeries.forEach(s=>{ try{MC.removeSeries(s);}catch(_){} });
@@ -1080,113 +1135,152 @@ function drawSMC(bars){
   fvgSeries=[]; bosSeries=[]; liqSeries=[];
 
   const n = bars.length;
-  const times = bars.map(b=>b.time);
+  const lastTime = bars[n-1].time;
 
-  // ── SWING HIGH/LOW markers
+  // ── SWING HIGH/LOW + BOS/CHoCH markers
   const swings = calcSwings(bars, 5);
-  const markers = swings.map(s=>({
-    time: s.time,
-    position: s.type==='high' ? 'aboveBar' : 'belowBar',
-    color: s.type==='high' ? '#e879f9' : '#e879f9',
-    shape: s.type==='high' ? 'arrowDown' : 'arrowUp',
-    text: s.type==='high' ? 'H' : 'L',
-    size: 0.6,
-  }));
-
-  // ── BOS / CHoCH
   const bosEvents = calcBOSCHoCH(bars, swings);
-  // Son 10 event'i göster (grafik kirlenmesin)
-  const recentBOS = bosEvents.slice(-10);
+  const recentBOS = bosEvents.slice(-12);
+  const allMarkers = [];
 
-  const bosMarkers = recentBOS.map(e=>({
-    time: e.time,
-    position: e.dir==='bull' ? 'belowBar' : 'aboveBar',
-    color: e.type==='BOS' ? (e.dir==='bull'?'#4ade80':'#f87171') : (e.dir==='bull'?'#00d4ff':'#fb923c'),
-    shape: e.dir==='bull' ? 'arrowUp' : 'arrowDown',
-    text: e.type,
-    size: 0.8,
-  }));
-
-  // Tüm marker'ları birleştir ve çiz
-  const allMarkers = [...markers, ...bosMarkers].sort((a,b)=>a.time-b.time);
-  if(smcVisible.swings || smcVisible.bos){
-    const filteredMarkers = allMarkers.filter(m=>{
-      if(m.text==='H'||m.text==='L') return smcVisible.swings;
-      if(m.text==='BOS'||m.text==='CHoCH') return smcVisible.bos;
-      return true;
+  if(smcVisible.swings){
+    swings.forEach(s=>{
+      allMarkers.push({
+        time: s.time,
+        position: s.type==='high' ? 'aboveBar' : 'belowBar',
+        color: '#c084fc',
+        shape: s.type==='high' ? 'arrowDown' : 'arrowUp',
+        text: s.type==='high' ? 'H' : 'L',
+        size: 0.5,
+      });
     });
-    CS.setMarkers(filteredMarkers);
-  } else {
-    CS.setMarkers([]);
   }
 
-  // ── FVG - area series olarak çiz
-  if(smcVisible.fvg){
-    const fvgs = calcFVG(bars);
-    // Son 15 FVG'yi göster
-    const recentFVGs = fvgs.filter(f=>!f.mitigated).slice(-15);
+  if(smcVisible.bos){
+    recentBOS.forEach(e=>{
+      const isBOS = e.type==='BOS';
+      const isBull = e.dir==='bull';
+      allMarkers.push({
+        time: e.time,
+        position: isBull ? 'belowBar' : 'aboveBar',
+        color: isBOS ? (isBull?'#4ade80':'#f87171') : (isBull?'#00d4ff':'#fb923c'),
+        shape: isBull ? 'arrowUp' : 'arrowDown',
+        text: e.type,
+        size: 1,
+      });
+    });
 
-    recentFVGs.forEach(fvg=>{
+    // BOS/CHoCH yatay çizgileri
+    recentBOS.slice(-6).forEach(e=>{
       try{
-        const s = MC.addLineSeries({
-          color: fvg.type==='bull' ? 'rgba(0,230,118,0)' : 'rgba(255,61,87,0)',
-          lineWidth: 0,
-          priceLineVisible: false,
-          lastValueVisible: false,
-          crosshairMarkerVisible: false,
-        });
-
-        // FVG kutusunu çiz - top ve bottom çizgileri
-        const topLine = MC.addLineSeries({
-          color: fvg.type==='bull' ? 'rgba(0,230,118,0.6)' : 'rgba(255,61,87,0.6)',
-          lineWidth: 1,
-          lineStyle: 2,
-          priceLineVisible: false,
-          lastValueVisible: false,
-          crosshairMarkerVisible: false,
-        });
-        const botLine = MC.addLineSeries({
-          color: fvg.type==='bull' ? 'rgba(0,230,118,0.6)' : 'rgba(255,61,87,0.6)',
-          lineWidth: 1,
-          lineStyle: 2,
-          priceLineVisible: false,
-          lastValueVisible: false,
-          crosshairMarkerVisible: false,
-        });
-
-        const endTime = bars[Math.min(fvg.idx+30, n-1)].time;
-        topLine.setData([{time:fvg.time, value:fvg.top},{time:endTime, value:fvg.top}]);
-        botLine.setData([{time:fvg.time, value:fvg.bottom},{time:endTime, value:fvg.bottom}]);
-
-        fvgSeries.push(topLine, botLine);
+        const isBull = e.dir==='bull';
+        const isBOS = e.type==='BOS';
+        const col = isBOS
+          ? (isBull?'rgba(74,222,128,0.5)':'rgba(248,113,113,0.5)')
+          : (isBull?'rgba(0,212,255,0.5)':'rgba(251,146,60,0.5)');
+        const line = addLineSeries(col, 1, 2);
+        line.setData([{time:e.time, value:e.price},{time:lastTime, value:e.price}]);
+        bosSeries.push(line);
       }catch(_){}
     });
   }
 
-  // ── LİKİDİTE seviyeleri
-  if(smcVisible.liq){
-    const liqZones = calcLiquidity(swings, 0.004);
-    const recentLiq = liqZones.slice(-8);
+  allMarkers.sort((a,b)=>a.time-b.time);
+  CS.setMarkers(allMarkers);
 
-    recentLiq.forEach(liq=>{
+  // ── FVG — dolgulu kutular (top+bot çizgi + fill efekti)
+  if(smcVisible.fvg){
+    const fvgs = calcFVG(bars);
+    const activeFVGs = fvgs.filter(f=>!f.mitigated).slice(-12);
+    const mitigatedFVGs = fvgs.filter(f=>f.mitigated).slice(-5);
+
+    [...activeFVGs, ...mitigatedFVGs].forEach(fvg=>{
       try{
-        const line = MC.addLineSeries({
-          color: liq.type==='high' ? 'rgba(250,204,21,0.7)' : 'rgba(250,204,21,0.7)',
-          lineWidth: 1,
-          lineStyle: 3,
-          priceLineVisible: false,
-          lastValueVisible: false,
-          crosshairMarkerVisible: false,
-        });
-        const endTime = bars[n-1].time;
-        line.setData([{time:liq.time, value:liq.price},{time:endTime, value:liq.price}]);
-        liqSeries.push(line);
+        const isBull = fvg.type==='bull';
+        const isMit = fvg.mitigated;
+        const baseAlpha = isMit ? 0.15 : 0.45;
+        const col = isBull
+          ? `rgba(0,230,118,${baseAlpha})`
+          : `rgba(255,61,87,${baseAlpha})`;
+        const borderCol = isBull
+          ? `rgba(0,230,118,${isMit?0.2:0.7})`
+          : `rgba(255,61,87,${isMit?0.2:0.7})`;
+
+        const endIdx = Math.min(fvg.idx+40, n-1);
+        const endTime = bars[endIdx].time;
+
+        // Top çizgi
+        const top = addLineSeries(borderCol, isMit?1:1.5, isMit?3:0);
+        top.setData([{time:fvg.time,value:fvg.top},{time:endTime,value:fvg.top}]);
+
+        // Bottom çizgi
+        const bot = addLineSeries(borderCol, isMit?1:1.5, isMit?3:0);
+        bot.setData([{time:fvg.time,value:fvg.bottom},{time:endTime,value:fvg.bottom}]);
+
+        // Orta dolgu çizgisi (fill efekti için)
+        const mid = (fvg.top+fvg.bottom)/2;
+        const fill = addLineSeries(col, 4, 0);
+        fill.setData([{time:fvg.time,value:mid},{time:endTime,value:mid}]);
+
+        // Etiket
+        if(!isMit){
+          const lbl = addLineSeries('rgba(0,0,0,0)', 0, 0);
+          lbl.setData([{time:fvg.time,value:fvg.top}]);
+          fvgSeries.push(lbl);
+        }
+
+        fvgSeries.push(top, bot, fill);
+      }catch(_){}
+    });
+  }
+
+  // ── ORDER BLOCKS
+  if(smcVisible.fvg){ // FVG toggle ile birlikte
+    const obs = calcOrderBlocks(bars, swings);
+    const activeOBs = obs.filter(o=>!o.mitigated).slice(-6);
+
+    activeOBs.forEach(ob=>{
+      try{
+        const isBull = ob.type==='bull';
+        const borderCol = isBull?'rgba(0,212,255,0.8)':'rgba(251,146,60,0.8)';
+        const fillCol = isBull?'rgba(0,212,255,0.08)':'rgba(251,146,60,0.08)';
+
+        const top = addLineSeries(borderCol, 1.5, 0);
+        const bot = addLineSeries(borderCol, 1.5, 0);
+        const fill = addLineSeries(fillCol, 8, 0);
+        const mid = (ob.top+ob.bottom)/2;
+
+        top.setData([{time:ob.time,value:ob.top},{time:lastTime,value:ob.top}]);
+        bot.setData([{time:ob.time,value:ob.bottom},{time:lastTime,value:ob.bottom}]);
+        fill.setData([{time:ob.time,value:mid},{time:lastTime,value:mid}]);
+
+        fvgSeries.push(top, bot, fill);
+      }catch(_){}
+    });
+  }
+
+  // ── LİKİDİTE seviyeleri — noktalı çizgi + label
+  if(smcVisible.liq){
+    const liqZones = calcLiquidity(swings, 0.005);
+    liqZones.slice(-10).forEach(liq=>{
+      try{
+        const isHigh = liq.type==='high';
+        const col = isHigh?'rgba(250,204,21,0.8)':'rgba(250,204,21,0.8)';
+
+        const line = addLineSeries(col, 1, 3);
+        line.setData([{time:liq.time,value:liq.price},{time:lastTime,value:liq.price}]);
+
+        // Gölge çizgisi
+        const shadow = addLineSeries(isHigh?'rgba(250,204,21,0.08)':'rgba(250,204,21,0.08)', 6, 0);
+        shadow.setData([{time:liq.time,value:liq.price},{time:lastTime,value:liq.price}]);
+
+        liqSeries.push(line, shadow);
       }catch(_){}
     });
   }
 
   // ── HTF BIAS güncelle
-  const bosEventsAll = calcBOSCHoCH(bars, swings);
+  const bosEventsAll = bosEvents;
   const bias = calcHTFBias(bars, swings, bosEventsAll);
 
   const arrowEl = g('biasArrow');
@@ -1195,11 +1289,11 @@ function drawSMC(bars){
   g('biasLabel').textContent = bias.label;
   g('biasSub').textContent = bias.sub;
 
-  // Chips güncelle
   const bosCount = bias.bullBOS + bias.bearBOS;
   const chochCount = bias.bullCHoCH + bias.bearCHoCH;
   const fvgCount = calcFVG(bars).filter(f=>!f.mitigated).length;
-  const liqCount = calcLiquidity(swings,0.004).length;
+  const liqCount = calcLiquidity(swings,0.005).length;
+  const obCount = calcOrderBlocks(bars,swings).filter(o=>!o.mitigated).length;
 
   const bc = (id, val, cls) => {
     const el = g(id);
@@ -1208,7 +1302,7 @@ function drawSMC(bars){
 
   bc('bc_bos', `BOS ${bosCount}`, bosCount>0?(bias.bullBOS>bias.bearBOS?'bull':'bear'):'');
   bc('bc_choch', `CHoCH ${chochCount}`, chochCount>0?'neut':'');
-  bc('bc_fvg', `FVG ${fvgCount}`, fvgCount>3?'bull':fvgCount>0?'neut':'');
+  bc('bc_fvg', `FVG ${fvgCount} · OB ${obCount}`, fvgCount>0?'bull':'');
   bc('bc_liq', `LIQ ${liqCount}`, liqCount>2?'neut':'');
 
   return {swings, bosEvents: bosEventsAll, bias};
@@ -1305,6 +1399,17 @@ function analyze(bars, sym){
   g('atrVal').textContent = lastATR?fp(lastATR):'—';
   g('adrVal').textContent = adrPct?`ADR: %${adrPct.toFixed(2)}`:'ADR: —';
   g('slVal').textContent  = slPct?`SL 1.5×: %${slPct.toFixed(2)}`:'SL: —';
+
+  // FVG ve OB istatistikleri
+  try{
+    const swingsA = calcSwings(bars,5);
+    const fvgsAll = calcFVG(bars);
+    const obsAll  = calcOrderBlocks(bars, swingsA);
+    const activeFVG = fvgsAll.filter(f=>!f.mitigated).length;
+    const activeOB  = obsAll.filter(o=>!o.mitigated).length;
+    if(g('s_fvg')) g('s_fvg').textContent = activeFVG;
+    if(g('s_ob'))  g('s_ob').textContent  = activeOB;
+  }catch(_){}
 
   let score = 0;
 
