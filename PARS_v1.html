@@ -960,13 +960,18 @@ header {
       <div style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--acc)">⟨ BACKTEST MOTORU ⟩</div>
       <div style="display:flex;gap:10px;align-items:center">
         <select id="btStrategy" style="background:var(--bg3);border:1px solid var(--line2);color:var(--txt0);font-family:var(--mono);font-size:11px;padding:5px 10px;border-radius:5px">
-          <option value="all">Tüm Stratejiler</option>
+          <option value="all">Tum Stratejiler</option>
+          <option value="S1">S1 - FVG Accumulation</option>
           <option value="S2">S2 - Base Deviation</option>
           <option value="S3">S3 - Cift Engulfing</option>
+          <option value="S4">S4 - Order Block</option>
           <option value="S5">S5 - CHoCH + Fib</option>
           <option value="S6">S6 - Range Deviation</option>
           <option value="S7">S7 - Trendline</option>
+          <option value="S8">S8 - Sharp Trend FVG</option>
           <option value="S9">S9 - SFP</option>
+          <option value="S10">S10 - Wick Mumu</option>
+          <option value="S11">S11 - Elliott Wave</option>
         </select>
         <button onclick="runBacktest()" style="background:var(--acc);color:var(--bg0);border:none;border-radius:5px;padding:6px 14px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer">CALISTIR</button>
         <button onclick="closeBacktest()" style="background:var(--bg4);color:var(--txt1);border:1px solid var(--line);border-radius:5px;padding:6px 12px;font-family:var(--mono);font-size:11px;cursor:pointer">KAPAT</button>
@@ -1272,12 +1277,16 @@ function calcDivergence(bars, rsiVals, lookback=14){
 function calcSwings(bars, length=5){
   const swings = [];
   const n = bars.length;
-  for(let i=length; i<n-length; i++){
+  // Dinamik length: az bar varsa daha kisa pencere
+  const L = Math.min(length, Math.floor(n/6));
+  if(L < 2) return swings;
+  for(let i=L; i<n-L; i++){
     const h = bars[i].high;
     const l = bars[i].low;
     let isHH = true, isLL = true;
-    for(let j=i-length; j<=i+length; j++){
+    for(let j=i-L; j<=i+L; j++){
       if(j===i) continue;
+      if(j<0||j>=n) continue;
       if(bars[j].high >= h) isHH = false;
       if(bars[j].low <= l) isLL = false;
     }
@@ -1335,46 +1344,61 @@ function calcBOSCHoCH(bars, swings){
     }
   }
 
-  return events.sort((a,b)=>a.idx-b.idx);
+  // Duplicate filtreleme - ayni fiyat seviyesinde birden fazla event olmasin
+  const seen = new Set();
+  const unique = events.filter(e=>{
+    const key = `${e.dir}_${e.type}_${e.price.toFixed(4)}`;
+    if(seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  return unique.sort((a,b)=>a.idx-b.idx);
 }
 
 // Fair Value Gap tespiti
 function calcFVG(bars){
   const fvgs = [];
-  for(let i=1; i<bars.length-1; i++){
+  const n = bars.length;
+  // Minimum FVG buyuklugu: son fiyatin %0.1'i
+  const minSize = bars[n-1]?.close * 0.001 || 0;
+
+  for(let i=1; i<n-1; i++){
     const prev = bars[i-1];
     const curr = bars[i];
     const next = bars[i+1];
 
     // Bullish FVG: onceki high < sonraki low
-    if(prev.high < next.low){
-      const mitigated = bars.slice(i+2).some(b => b.low <= prev.high);
+    if(prev.high < next.low && (next.low - prev.high) > minSize){
+      const mitigated = bars.slice(i+2).some(b => b.low <= prev.high+minSize);
       fvgs.push({
         type: 'bull',
         top: next.low,
         bottom: prev.high,
+        size: next.low - prev.high,
         time: curr.time,
-        timeEnd: bars[Math.min(i+20, bars.length-1)].time,
+        timeEnd: bars[Math.min(i+30, n-1)].time,
         mitigated,
         idx: i
       });
     }
 
     // Bearish FVG: onceki low > sonraki high
-    if(prev.low > next.high){
-      const mitigated = bars.slice(i+2).some(b => b.high >= prev.low);
+    if(prev.low > next.high && (prev.low - next.high) > minSize){
+      const mitigated = bars.slice(i+2).some(b => b.high >= prev.low-minSize);
       fvgs.push({
         type: 'bear',
         top: prev.low,
         bottom: next.high,
+        size: prev.low - next.high,
         time: curr.time,
-        timeEnd: bars[Math.min(i+20, bars.length-1)].time,
+        timeEnd: bars[Math.min(i+30, n-1)].time,
         mitigated,
         idx: i
       });
     }
   }
-  return fvgs;
+  // Buyukluge gore sirala - en buyuk FVG'ler oncelikli
+  return fvgs.sort((a,b)=>b.size-a.size).sort((a,b)=>a.idx-b.idx);
 }
 
 // Likidite seviyeleri tespiti (yakin swing high/low kumeleri)
@@ -1821,22 +1845,398 @@ function checkS2(bars, swings){
 }
 
 // Tum stratejileri calistir ve guncelle
+// S4: HTF Engulfing + Order Block Short Setup
+function checkS4(bars, swings){
+  const n = bars.length;
+  if(n < 10) return null;
+
+  // HTF engulfing tespit - son 20 barda
+  const window = bars.slice(-20);
+  let engulfIdx = -1;
+  let isBullEngulf = false;
+
+  for(let i=1; i<window.length; i++){
+    const prev = window[i-1];
+    const curr = window[i];
+    // Bullish engulfing
+    if(prev.close < prev.open && curr.close > curr.open &&
+       curr.close > prev.open && curr.open < prev.close){
+      engulfIdx = i; isBullEngulf = true;
+    }
+    // Bearish engulfing
+    if(prev.close > prev.open && curr.close < curr.open &&
+       curr.close < prev.open && curr.open > prev.close){
+      engulfIdx = i; isBullEngulf = false;
+    }
+  }
+
+  if(engulfIdx < 0) return {name:'S4', phase:'watch', detail:'HTF engulfing bekleniyor', dir:'neut'};
+
+  const engulfBar = window[engulfIdx];
+  const prevBar   = window[engulfIdx-1];
+
+  // Order block: engulfing oncesindeki kirmizi mumun govdesi
+  const obTop    = isBullEngulf ? prevBar.open : prevBar.close;
+  const obBottom = isBullEngulf ? prevBar.close : prevBar.open;
+  const importantLevel = isBullEngulf ? obBottom : obTop; // giris seviyesi
+
+  const lastClose = bars[n-1].close;
+  const lastBar   = bars[n-1];
+
+  // Fiyat import area'ya girdi mi?
+  const inImportArea = isBullEngulf
+    ? (lastClose >= obBottom && lastClose <= obTop)
+    : (lastClose >= obBottom && lastClose <= obTop);
+
+  // Zayiflik kontrolu: ilk 2 mum import area altinda/ustunde mi kapandi?
+  const post = bars.slice(-(Math.min(3, n)));
+  const showsWeakness = isBullEngulf
+    ? post.some(b=>b.close < importantLevel)
+    : post.some(b=>b.close > importantLevel);
+
+  if(!inImportArea && !showsWeakness){
+    return {
+      name:'S4', phase:'alert',
+      detail:`Engulfing tespit edildi. Order Block: ${fp(obBottom)}-${fp(obTop)}. Giris bekleniyor.`,
+      dir: isBullEngulf?'bull':'bear'
+    };
+  }
+
+  if(inImportArea || showsWeakness){
+    const sl = isBullEngulf ? obTop*1.002 : obBottom*0.998;
+    const tp = isBullEngulf
+      ? Math.max(...bars.slice(-15).map(b=>b.high))*1.005
+      : Math.min(...bars.slice(-15).map(b=>b.low))*0.995;
+    const rr = Math.abs((tp-lastClose)/(lastClose-sl)).toFixed(1);
+    return {
+      name:'S4', phase:'ready',
+      detail:`Order Block bolgesi! ${isBullEngulf?'Long':'Short'} setup. OB: ${fp(obBottom)}-${fp(obTop)}`,
+      dir: isBullEngulf?'bull':'bear', sl, tp, rr
+    };
+  }
+
+  return {name:'S4', phase:'watch', detail:'S4 kosullari olusmaedi', dir:'neut'};
+}
+
+// S8: Sharp Trend + FVG + Breaker Block
+function checkS8(bars, swings){
+  const n = bars.length;
+  if(n < 20) return null;
+
+  // Guclu trend tespit - son 20 barda net yonluluk
+  const recent = bars.slice(-20);
+  const firstClose = recent[0].close;
+  const lastClose  = bars[n-1].close;
+  const trendPct   = (lastClose - firstClose) / firstClose * 100;
+
+  const isSharpDown = trendPct < -5;
+  const isSharpUp   = trendPct > 5;
+
+  if(!isSharpDown && !isSharpUp){
+    return {name:'S8', phase:'watch', detail:'Guclu trend yok (5% alti hareket)', dir:'neut'};
+  }
+
+  // Son swing point ve oncesindeki FVG
+  const recentHighs = swings.filter(s=>s.type==='high').slice(-3);
+  const recentLows  = swings.filter(s=>s.type==='low').slice(-3);
+  const lastSwing   = isSharpDown ? recentHighs[recentHighs.length-1] : recentLows[recentLows.length-1];
+
+  if(!lastSwing) return {name:'S8', phase:'watch', detail:'Swing point bulunamadi', dir:isSharpDown?'bear':'bull'};
+
+  // FVG kontrol - lastSwing oncesinde
+  const fvgs = calcFVG(bars);
+  const nearFVG = fvgs.filter(f=>
+    !f.mitigated &&
+    f.idx < lastSwing.idx &&
+    f.idx > lastSwing.idx - 10 &&
+    f.type === (isSharpDown?'bear':'bull')
+  ).slice(-1)[0];
+
+  if(!nearFVG){
+    return {name:'S8', phase:'forming', detail:`${isSharpDown?'Dusus':'Yukselis'} trendi var. FVG + swing point bekleniyor.`, dir:isSharpDown?'bear':'bull'};
+  }
+
+  // Fiyat FVG'ye yaklasiyor mu?
+  const inFVG = isSharpDown
+    ? (lastClose <= nearFVG.top && lastClose >= nearFVG.bottom)
+    : (lastClose >= nearFVG.bottom && lastClose <= nearFVG.top);
+
+  const nearFVG2 = isSharpDown
+    ? (lastClose > nearFVG.bottom && lastClose < nearFVG.top * 1.01)
+    : (lastClose < nearFVG.top && lastClose > nearFVG.bottom * 0.99);
+
+  if(inFVG){
+    const sl = isSharpDown ? nearFVG.top * 1.002 : nearFVG.bottom * 0.998;
+    const tp = isSharpDown
+      ? Math.min(...bars.slice(-10).map(b=>b.low)) * 0.995
+      : Math.max(...bars.slice(-10).map(b=>b.high)) * 1.005;
+    const rr = Math.abs((tp-lastClose)/(lastClose-sl)).toFixed(1);
+    return {
+      name:'S8', phase:'ready',
+      detail:`FVG bolgesi! Breaker block giris. FVG: ${fp(nearFVG.bottom)}-${fp(nearFVG.top)}`,
+      dir:isSharpDown?'bear':'bull', sl, tp, rr
+    };
+  }
+
+  if(nearFVG2){
+    return {
+      name:'S8', phase:'alert',
+      detail:`Guclu trend + FVG tespit. FVG yaklasiliyor: ${fp(nearFVG.bottom)}-${fp(nearFVG.top)}`,
+      dir:isSharpDown?'bear':'bull'
+    };
+  }
+
+  return {
+    name:'S8', phase:'forming',
+    detail:`${isSharpDown?'Sharp dusus':'Sharp yukselis'} + FVG: ${fp(nearFVG.bottom)}-${fp(nearFVG.top)}. Yaklasma bekleniyor.`,
+    dir:isSharpDown?'bear':'bull'
+  };
+}
+
+// S10: Trend Ici 4H Wick Mumu + FVG
+function checkS10(bars, swings){
+  const n = bars.length;
+  if(n < 10) return null;
+
+  // Trend kontrolu
+  const sma200arr = sma(bars.map(b=>b.close), 200);
+  const s200 = sma200arr[n-1];
+  const lastClose = bars[n-1].close;
+  const isUptrend = s200 ? lastClose > s200 : false;
+
+  // Ust wicki uzun yesil mum tespit (uptrend icin)
+  // Kural: upper wick > body ve upper wick > lower wick
+  let triggerBar = null;
+  let triggerIdx = -1;
+
+  for(let i=n-5; i<n-1; i++){
+    if(i<0) continue;
+    const b = bars[i];
+    const body      = Math.abs(b.close - b.open);
+    const upperWick = b.high - Math.max(b.close, b.open);
+    const lowerWick = Math.min(b.close, b.open) - b.low;
+    const isBullBar = b.close > b.open;
+
+    if(isUptrend && isBullBar && upperWick > body && upperWick > lowerWick*1.5){
+      triggerBar = b;
+      triggerIdx = i;
+    }
+    if(!isUptrend && !isBullBar && lowerWick > body && lowerWick > upperWick*1.5){
+      triggerBar = b;
+      triggerIdx = i;
+    }
+  }
+
+  if(!triggerBar){
+    return {name:'S10', phase:'watch', detail:`Trend ici wick mumu bekleniyor (${isUptrend?'uptrend':'downtrend'})`, dir:isUptrend?'bull':'bear'};
+  }
+
+  // Bu mumun FVG'si var mi?
+  const fvgs = calcFVG(bars);
+  const triggerFVG = fvgs.filter(f=>
+    Math.abs(f.idx - triggerIdx) <= 2 &&
+    f.type === (isUptrend?'bull':'bear') &&
+    !f.mitigated
+  ).slice(-1)[0];
+
+  if(!triggerFVG){
+    return {name:'S10', phase:'forming', detail:`Wick mumu tespit edildi (bar ${triggerIdx}). FVG olusumu bekleniyor.`, dir:isUptrend?'bull':'bear'};
+  }
+
+  // Fiyat FVG'ye geldi mi?
+  const inFVG = lastClose >= triggerFVG.bottom && lastClose <= triggerFVG.top;
+  const nearFVG = isUptrend
+    ? lastClose > triggerFVG.bottom * 0.998 && lastClose < triggerFVG.top * 1.01
+    : lastClose < triggerFVG.top * 1.002 && lastClose > triggerFVG.bottom * 0.99;
+
+  if(inFVG){
+    const sl = isUptrend ? triggerFVG.bottom * 0.998 : triggerFVG.top * 1.002;
+    const tp = isUptrend
+      ? triggerBar.high * 1.005
+      : triggerBar.low  * 0.995;
+    const rr = Math.abs((tp-lastClose)/(lastClose-sl)).toFixed(1);
+    return {
+      name:'S10', phase:'ready',
+      detail:`Wick mumu FVG'sinde! ${isUptrend?'Long':'Short'} giris. FVG: ${fp(triggerFVG.bottom)}-${fp(triggerFVG.top)}`,
+      dir:isUptrend?'bull':'bear', sl, tp, rr
+    };
+  }
+
+  if(nearFVG){
+    return {name:'S10', phase:'alert', detail:`FVG'ye yaklasiliyor: ${fp(triggerFVG.bottom)}-${fp(triggerFVG.top)}`, dir:isUptrend?'bull':'bear'};
+  }
+
+  return {name:'S10', phase:'forming', detail:`Wick mumu + FVG hazir. Geri donus bekleniyor. FVG: ${fp(triggerFVG.bottom)}-${fp(triggerFVG.top)}`, dir:isUptrend?'bull':'bear'};
+}
+
+// S11: Elliott Wave Giris (Wave 2 sonrasi C ve Wave 4 sonrasi)
+function checkS11(bars, swings){
+  const n = bars.length;
+  if(n < 20) return null;
+
+  const ew = detectElliottWave(bars, swings);
+  if(!ew || ew.waveType==='unknown'){
+    return {name:'S11', phase:'watch', detail:'Elliott Wave sayimi yapilamiyor', dir:'neut'};
+  }
+
+  const lastClose = bars[n-1].close;
+
+  // Wave 2 tamamlandi, Wave 3 baslayacak
+  if(ew.waveType==='impulse_up' && ew.currentWave===2){
+    const wave1High = ew.waves.find(w=>w.num==='1')?.price;
+    const wave2Low  = ew.waves.find(w=>w.num==='2')?.price;
+    if(!wave1High||!wave2Low) return null;
+
+    const fib618 = parseFloat(wave1High) - (parseFloat(wave1High)-parseFloat(wave2Low))*0.382;
+    const near618 = Math.abs(lastClose - fib618) / fib618 < 0.02;
+
+    if(near618){
+      const sl = parseFloat(wave2Low) * 0.997;
+      const tp = parseFloat(wave1High) * 1.618;
+      const rr = Math.abs((tp-lastClose)/(lastClose-sl)).toFixed(1);
+      return {
+        name:'S11', phase:'ready',
+        detail:`Wave 2 duzeltmesi tamamlandi! Wave 3 baslayabilir. Fib 0.618: ${fp(fib618)}`,
+        dir:'bull', sl, tp, rr
+      };
+    }
+    return {name:'S11', phase:'alert', detail:`Wave 2 duzeltmesi. Fib 0.618 bekleniyor: ${fp(fib618)}`, dir:'bull'};
+  }
+
+  // Wave 4 tamamlandi, Wave 5 baslayacak
+  if(ew.waveType==='impulse_up' && ew.currentWave===4){
+    const wave3High = ew.waves.find(w=>w.num==='3')?.price;
+    const wave4Low  = ew.waves.find(w=>w.num==='4')?.price;
+    if(!wave3High||!wave4Low) return null;
+
+    const fib382 = parseFloat(wave3High) - (parseFloat(wave3High)-parseFloat(wave4Low))*0.382;
+    const nearSupport = lastClose > parseFloat(wave4Low) && lastClose < fib382*1.02;
+
+    if(nearSupport){
+      const sl = parseFloat(wave4Low) * 0.997;
+      const tp = parseFloat(wave3High) * 1.272;
+      const rr = Math.abs((tp-lastClose)/(lastClose-sl)).toFixed(1);
+      return {
+        name:'S11', phase:'ready',
+        detail:`Wave 4 duzeltmesi! Wave 5 icin giris. Destek: ${fp(parseFloat(wave4Low))}`,
+        dir:'bull', sl, tp, rr
+      };
+    }
+    return {name:'S11', phase:'alert', detail:`Wave 4 duzeltmesi. ${fp(parseFloat(wave4Low))}-${fp(fib382)} bolgesi bekleniyor.`, dir:'bull'};
+  }
+
+  // Downtrend icin
+  if(ew.waveType==='impulse_down'){
+    return {name:'S11', phase:'forming', detail:`Impulsive dusus - Dalga ${ew.currentWave}. Short firsatlari izleniyor.`, dir:'bear'};
+  }
+
+  // ABC duzeltme
+  if(ew.waveType==='corrective'){
+    return {name:'S11', phase:'forming', detail:`ABC duzeltme tespit edildi. C dalgasi ${ew.bias==='bear'?'aagi':'yukari'} yonlu.`, dir:ew.bias};
+  }
+
+  return {name:'S11', phase:'watch', detail:`Elliott: ${ew.description}`, dir:ew.bias};
+}
+
+// S1: 15m FVG + 1m Accumulation (Higher TF simulation)
+function checkS1(bars, swings){
+  const n = bars.length;
+  if(n < 15) return null;
+
+  // Uptrend kontrolu
+  const sma50arr = sma(bars.map(b=>b.close), Math.min(50,n-1));
+  const s50 = sma50arr[n-1];
+  const lastClose = bars[n-1].close;
+  const isUp = s50 ? lastClose > s50 : false;
+
+  if(!isUp) return {name:'S1', phase:'watch', detail:'Uptrend yok - S1 sadece uptrend'de', dir:'bull'};
+
+  // FVG tespit
+  const fvgs = calcFVG(bars);
+  const bullFVGs = fvgs.filter(f=>f.type==='bull'&&!f.mitigated).slice(-3);
+
+  if(bullFVGs.length===0){
+    return {name:'S1', phase:'watch', detail:'Bullish FVG bekleniyor (uptrend icinde)', dir:'bull'};
+  }
+
+  const nearestFVG = bullFVGs[bullFVGs.length-1];
+
+  // Equal highs kontrol - son barlarda
+  const recentHighs = swings.filter(s=>s.type==='high').slice(-4);
+  let hasEqualHighs = false;
+  for(let i=0; i<recentHighs.length-1; i++){
+    const diff = Math.abs(recentHighs[i].price - recentHighs[i+1].price)/recentHighs[i].price;
+    if(diff < 0.005){ hasEqualHighs=true; break; }
+  }
+
+  // Accumulation: son 5-10 barda dar range
+  const accBars = bars.slice(-8);
+  const accHigh = Math.max(...accBars.map(b=>b.high));
+  const accLow  = Math.min(...accBars.map(b=>b.low));
+  const accRange = (accHigh-accLow)/accLow;
+  const isAccumulating = accRange < 0.03; // %3'ten dar range
+
+  // Fiyat FVG'de mi?
+  const inFVG = lastClose >= nearestFVG.bottom && lastClose <= nearestFVG.top;
+  const belowFVG = lastClose < nearestFVG.bottom;
+
+  if(inFVG && isAccumulating){
+    const sl = nearestFVG.bottom * 0.997;
+    const tp = hasEqualHighs
+      ? Math.max(...recentHighs.map(h=>h.price)) * 1.005
+      : nearestFVG.top + (nearestFVG.top - nearestFVG.bottom) * 2;
+    const rr = Math.abs((tp-lastClose)/(lastClose-sl)).toFixed(1);
+    return {
+      name:'S1', phase:'ready',
+      detail:`FVG + Accumulation! Equal highs: ${hasEqualHighs?'VAR':'YOK'}. FVG: ${fp(nearestFVG.bottom)}-${fp(nearestFVG.top)}`,
+      dir:'bull', sl, tp, rr
+    };
+  }
+
+  if(belowFVG && isAccumulating){
+    return {
+      name:'S1', phase:'alert',
+      detail:`Accumulation FVG altinda. Deviation bekleniyor. FVG: ${fp(nearestFVG.bottom)}-${fp(nearestFVG.top)}`,
+      dir:'bull'
+    };
+  }
+
+  if(bullFVGs.length>0){
+    return {
+      name:'S1', phase:'forming',
+      detail:`Bullish FVG var: ${fp(nearestFVG.bottom)}-${fp(nearestFVG.top)}. Accumulation bekleniyor.`,
+      dir:'bull'
+    };
+  }
+
+  return {name:'S1', phase:'watch', detail:'S1 kosullari olusmaedi', dir:'bull'};
+}
+
 function runStrategies(bars){
   const swings = calcSwings(bars, 5);
   const bosEvents = calcBOSCHoCH(bars, swings);
 
   const results = [
+    checkS1(bars, swings),
     checkS2(bars, swings),
     checkS3(bars, swings),
+    checkS4(bars, swings),
     checkS5(bars, swings, bosEvents),
     checkS6(bars, swings),
     checkS7(bars, swings),
+    checkS8(bars, swings),
     checkS9(bars, swings),
+    checkS10(bars, swings),
+    checkS11(bars, swings),
   ].filter(Boolean);
+
+  // Watch fazindaki kartlari gizle - sadece forming ve uzeri goster
+  const filtered = results.filter(r=>r.phase!=='watch' || results.every(x=>x.phase==='watch'));
+  const displayed = filtered.length>0 ? filtered : results.slice(0,3);
 
   // Once ready/alert olanlari sirala
   const order = {ready:0, alert:1, forming:2, watch:3, invalid:4};
-  results.sort((a,b)=>(order[a.phase]||3)-(order[b.phase]||3));
+  displayed.sort((a,b)=>(order[a.phase]||3)-(order[b.phase]||3));
 
   const container = g('strategyCards');
   if(!container) return;
@@ -1846,9 +2246,9 @@ function runStrategies(bars){
     return;
   }
 
-  container.innerHTML = results.map(r=>{
+  container.innerHTML = displayed.map(r=>{
     const phaseClass = {ready:'phase-ready',alert:'phase-alert',forming:'phase-forming',watch:'phase-watch',invalid:'phase-invalid'}[r.phase]||'phase-watch';
-    const cardClass = {ready:'ready',alert:'alert',forming:'forming',watch:'',invalid:'Invalid'}[r.phase]||'';
+    const cardClass = {ready:'ready',alert:'alert',forming:'forming',watch:'',invalid:'invalid'}[r.phase]||'';
     const phaseLabel = {ready:'HAZIR',alert:'UYARI',forming:'OLUSUYOR',watch:'IZLE',invalid:'GECERSIZ'}[r.phase]||r.phase;
 
     const dirColor = r.dir==='bull'?'var(--green)':r.dir==='bear'?'var(--red)':'var(--txt2)';
@@ -2428,6 +2828,12 @@ function render(bars, sym){
       MACDC.timeScale().fitContent();
       const mel=document.getElementById('macdChart');
       if(mel) MACDC.resize(mel.clientWidth,90);
+      // Ana grafik ile sync
+      try{
+        MC.timeScale().subscribeVisibleLogicalRangeChange(range=>{
+          if(range) MACDC.timeScale().setVisibleLogicalRange(range);
+        });
+      }catch(_){}
     }
   }
 
@@ -3051,7 +3457,7 @@ function runBacktest(){
 
   const stratSel = g('btStrategy').value;
   const strategies = stratSel==='all'
-    ? ['S2','S3','S5','S6','S7','S9']
+    ? ['S1','S2','S3','S4','S5','S6','S7','S8','S9','S10','S11']
     : [stratSel];
 
   const trades = [];
