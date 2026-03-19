@@ -698,6 +698,22 @@ header {
       <span class="ind-lbl" style="color:#facc15">Likidite</span>
       <div class="tog on" id="t_liq"></div>
     </div>
+    <div class="ind-row" onclick="togInd('bb')">
+      <span class="ind-lbl" style="color:#818cf8">Bollinger</span>
+      <div class="tog on" id="t_bb"></div>
+    </div>
+    <div class="ind-row" onclick="togInd('macd')">
+      <span class="ind-lbl" style="color:#f472b6">MACD</span>
+      <div class="tog on" id="t_macd"></div>
+    </div>
+    <div class="ind-row" onclick="togInd('td9')">
+      <span class="ind-lbl" style="color:#fb923c">TD9</span>
+      <div class="tog on" id="t_td9"></div>
+    </div>
+    <div class="ind-row" onclick="togInd('ew')">
+      <span class="ind-lbl" style="color:#00e676">Elliott Wave</span>
+      <div class="tog on" id="t_ew"></div>
+    </div>
 
     <div class="sep"></div>
 
@@ -754,6 +770,15 @@ header {
         <span class="sub-val" id="volVal" style="color:var(--txt1)">—</span>
       </div>
       <div id="volChart"></div>
+      <div class="sub-hdr" style="border-top:1px solid var(--line)" id="macdHdr">
+        <span class="sub-lbl">MACD · 12,26,9</span>
+        <div style="display:flex;gap:10px">
+          <span class="sub-val" id="macdVal" style="color:var(--txt1)">—</span>
+          <span class="sub-val" id="macdSig" style="color:var(--txt2)">—</span>
+          <span class="sub-val" id="macdHist" style="color:var(--txt1)">—</span>
+        </div>
+      </div>
+      <div id="macdChart"></div>
     </div>
   </div>
 
@@ -825,6 +850,14 @@ header {
           <span class="badge b-na" id="b_vol">—</span>
         </div>
         <div class="sig-detail" id="d_vol">Bekleniyor</div>
+      </div>
+    </div>
+
+    <!-- ELLIOTT WAVE PANEL -->
+    <div class="signals">
+      <div class="panel-title" style="padding:0 0 8px 0">Elliott Wave</div>
+      <div id="elliottPanel">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--txt2);text-align:center;padding:8px">Analiz bekleniyor</div>
       </div>
     </div>
 
@@ -973,9 +1006,11 @@ header {
 <script>
 // ── CHARTS ────────────────────────────────────────────────────
 let MC, CS, S20, S50, S200, RC, RSIL, RSOb, RSOsell, VC, VS;
+let MACDC, MACDL, MACDS, MACDH; // MACD chart
+let BBU, BBM, BBL; // Bollinger Bands (main chart)
 // SMC Series
 let swingMarkers = [], fvgSeries = [], bosSeries = [], liqSeries = [];
-let smcVisible = {swings:true, fvg:true, bos:true, liq:true};
+let smcVisible = {swings:true, fvg:true, bos:true, liq:true, bb:true, macd:true, td9:true, ew:true};
 let currentTF = '1wk';
 let inds = {sma20:true,sma50:true,sma200:true,rsi:true,vol:true};
 
@@ -1004,6 +1039,25 @@ function initCharts(){
   VC = LightweightCharts.createChart(ce('volChart'),{...base,width:ce('volChart').clientWidth,height:70,rightPriceScale:{scaleMargins:{top:.1,bottom:0},borderColor:'#1e2436'}});
   VS = VC.addHistogramSeries({priceFormat:{type:'volume'},priceScaleId:''});
 
+  // Bollinger Bands (ana grafik)
+  BBU = MC.addLineSeries({color:'rgba(129,140,248,0.5)',lineWidth:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false});
+  BBM = MC.addLineSeries({color:'rgba(129,140,248,0.3)',lineWidth:1,lineStyle:2,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false});
+  BBL = MC.addLineSeries({color:'rgba(129,140,248,0.5)',lineWidth:1,priceLineVisible:false,lastValueVisible:false,crosshairMarkerVisible:false});
+
+  // MACD chart
+  const macdEl = document.getElementById('macdChart');
+  if(macdEl){
+    MACDC = LightweightCharts.createChart(macdEl,{
+      ...base,
+      width:macdEl.clientWidth,
+      height:90,
+      rightPriceScale:{scaleMargins:{top:.1,bottom:.1},borderColor:'#1e2436'},
+    });
+    MACDL = MACDC.addLineSeries({color:'#f472b6',lineWidth:1.5,priceLineVisible:false,lastValueVisible:true});
+    MACDS = MACDC.addLineSeries({color:'#818cf8',lineWidth:1.5,priceLineVisible:false,lastValueVisible:true});
+    MACDH = MACDC.addHistogramSeries({priceScaleId:'',priceFormat:{type:'price',precision:4}});
+  }
+
   MC.subscribeCrosshairMove(p=>{
     if(p?.seriesData?.get(CS)) updateOHLC(p.seriesData.get(CS));
   });
@@ -1012,10 +1066,12 @@ function initCharts(){
     MC.resize(ce('mainChart').clientWidth, ce('mainChart').clientHeight);
     RC.resize(ce('rsiChart').clientWidth,90);
     VC.resize(ce('volChart').clientWidth,70);
+    const mel=ce('macdChart'); if(mel&&MACDC) MACDC.resize(mel.clientWidth,90);
   });
   ro.observe(ce('mainChart'));
   ro.observe(ce('rsiChart'));
   ro.observe(ce('volChart'));
+  const mel2=ce('macdChart'); if(mel2) ro.observe(mel2);
 }
 
 // ── DATA FETCH ────────────────────────────────────────────────
@@ -1092,6 +1148,122 @@ async function fetchData(){
     document.getElementById('emptyOverlay').style.display='flex';
     toast(e.message, 'err');
   }
+}
+
+// ── INDICATOR ALGORITHMS ─────────────────────────────────────────────────────
+
+// EMA hesapla
+function ema(data, period){
+  const k = 2/(period+1);
+  const out = new Array(data.length).fill(null);
+  let sum = 0, count = 0;
+  for(let i=0; i<data.length; i++){
+    if(data[i]==null) continue;
+    if(count < period){ sum+=data[i]; count++; if(count===period) out[i]=sum/period; }
+    else { out[i] = data[i]*k + out[i-1]*(1-k); }
+  }
+  return out;
+}
+
+// MACD hesapla (12, 26, 9)
+function calcMACD(closes, fast=12, slow=26, signal=9){
+  const emaFast = ema(closes, fast);
+  const emaSlow = ema(closes, slow);
+  const macdLine = closes.map((_,i)=>
+    emaFast[i]!=null&&emaSlow[i]!=null ? emaFast[i]-emaSlow[i] : null
+  );
+  const signalLine = ema(macdLine.map(v=>v??0), signal);
+  const histogram = macdLine.map((v,i)=>
+    v!=null&&signalLine[i]!=null ? v-signalLine[i] : null
+  );
+  return {macdLine, signalLine, histogram};
+}
+
+// Bollinger Bands hesapla (20, 2)
+function calcBB(closes, period=20, stdMult=2){
+  const upper=[], middle=[], lower=[];
+  for(let i=0; i<closes.length; i++){
+    if(i<period-1){ upper.push(null);middle.push(null);lower.push(null);continue; }
+    const slice = closes.slice(i-period+1, i+1);
+    const avg = slice.reduce((a,b)=>a+b,0)/period;
+    const variance = slice.reduce((a,b)=>a+(b-avg)**2,0)/period;
+    const std = Math.sqrt(variance);
+    middle.push(avg);
+    upper.push(avg+stdMult*std);
+    lower.push(avg-stdMult*std);
+  }
+  return {upper,middle,lower};
+}
+
+// TD9 hesapla
+function calcTD9(bars){
+  const n = bars.length;
+  const setup = new Array(n).fill(0);
+  const signals = []; // {time, type:'buy'|'sell', count:9}
+
+  let buyCount=0, sellCount=0;
+
+  for(let i=4; i<n; i++){
+    const curr = bars[i].close;
+    const ref  = bars[i-4].close;
+
+    if(curr < ref){
+      buyCount++;
+      sellCount=0;
+    } else if(curr > ref){
+      sellCount++;
+      buyCount=0;
+    } else {
+      buyCount=0;
+      sellCount=0;
+    }
+
+    setup[i] = buyCount>0 ? -buyCount : sellCount>0 ? sellCount : 0;
+
+    if(buyCount===9){
+      signals.push({time:bars[i].time, type:'buy', idx:i});
+      buyCount=0;
+    }
+    if(sellCount===9){
+      signals.push({time:bars[i].time, type:'sell', idx:i});
+      sellCount=0;
+    }
+  }
+
+  return {setup, signals};
+}
+
+// Divergence tespit (RSI)
+function calcDivergence(bars, rsiVals, lookback=14){
+  const divs = [];
+  const n = bars.length;
+
+  for(let i=lookback; i<n; i++){
+    const priceSlice = bars.slice(i-lookback, i+1);
+    const rsiSlice   = rsiVals.slice(i-lookback, i+1);
+
+    const priceLow1 = Math.min(...priceSlice.slice(0,lookback/2).map(b=>b.low));
+    const priceLow2 = Math.min(...priceSlice.slice(lookback/2).map(b=>b.low));
+    const rsiLow1   = Math.min(...rsiSlice.slice(0,lookback/2).filter(v=>v!=null));
+    const rsiLow2   = Math.min(...rsiSlice.slice(lookback/2).filter(v=>v!=null));
+
+    // Bullish divergence: fiyat dusuk dip, RSI yukari dip
+    if(priceLow2 < priceLow1 && rsiLow2 > rsiLow1+2){
+      divs.push({time:bars[i].time, type:'bull', idx:i});
+    }
+
+    const priceHigh1 = Math.max(...priceSlice.slice(0,lookback/2).map(b=>b.high));
+    const priceHigh2 = Math.max(...priceSlice.slice(lookback/2).map(b=>b.high));
+    const rsiHigh1   = Math.max(...rsiSlice.slice(0,lookback/2).filter(v=>v!=null));
+    const rsiHigh2   = Math.max(...rsiSlice.slice(lookback/2).filter(v=>v!=null));
+
+    // Bearish divergence: fiyat yuksek zirve, RSI asagi zirve
+    if(priceHigh2 > priceHigh1 && rsiHigh2 < rsiHigh1-2){
+      divs.push({time:bars[i].time, type:'bear', idx:i});
+    }
+  }
+
+  return divs.slice(-5); // Son 5 divergence
 }
 
 // ── SMC ALGORITHMS ───────────────────────────────────────────────────────────
@@ -1701,7 +1873,237 @@ function runStrategies(bars){
   }).join('');
 }
 
-// Order Block hesapla
+// ── ELLIOTT WAVE ENGINE ──────────────────────────────────────────────────────
+
+function detectElliottWave(bars, swings){
+  const n = bars.length;
+  if(n < 20) return null;
+
+  const highs = swings.filter(s=>s.type==='high').slice(-8);
+  const lows  = swings.filter(s=>s.type==='low').slice(-8);
+
+  if(highs.length < 3 || lows.length < 3) return null;
+
+  // Tum swing noktalarini zamanla sirala
+  const allSwings = [...highs,...lows].sort((a,b)=>a.idx-b.idx).slice(-10);
+
+  // En az 5 nokta lazim impulsive wave icin
+  if(allSwings.length < 5) return null;
+
+  const last = bars[n-1].close;
+  const waves = [];
+  let waveType = 'unknown';
+  let currentWave = 0;
+  let bias = 'neut';
+
+  // Basit impulsive wave tespiti: alternatif HH-HL veya LH-LL
+  const pts = allSwings.slice(-6);
+  if(pts.length >= 5){
+    // Uptrend: L1 H1 L2 H2 L3 H3 seklinde yukseliyor mu?
+    const isImpulsiveUp =
+      pts[0].type==='low' && pts[1].type==='high' &&
+      pts[2].type==='low' && pts[3].type==='high' &&
+      pts[1].price > pts[0].price &&
+      pts[2].price > pts[0].price &&
+      pts[3].price > pts[1].price;
+
+    // Downtrend: H1 L1 H2 L2 H3 L3
+    const isImpulsiveDown =
+      pts[0].type==='high' && pts[1].type==='low' &&
+      pts[2].type==='high' && pts[3].type==='low' &&
+      pts[1].price < pts[0].price &&
+      pts[2].price < pts[0].price &&
+      pts[3].price < pts[1].price;
+
+    if(isImpulsiveUp){
+      waveType = 'impulse_up';
+      bias = 'bull';
+      // Hangi dalgadayiz?
+      const lastSwing = pts[pts.length-1];
+      if(lastSwing.type==='low') currentWave = 4; // Wave 4 duzeltme
+      else currentWave = 3; // Wave 3 veya 5
+
+      // Wave 3 mi Wave 5 mi? - Wave 3 genellikle en uzun
+      const w1 = Math.abs(pts[1].price - pts[0].price);
+      const w3 = pts.length>3 ? Math.abs(pts[3].price - pts[2].price) : 0;
+      if(w3 > w1 * 1.618 && currentWave===3) currentWave = 5;
+
+      waves.push(
+        {num:'1', time:pts[0].time, price:pts[0].price},
+        {num:'2', time:pts[1].time, price:pts[1].price},
+        {num:'3', time:pts[2].time, price:pts[2].price},
+      );
+      if(pts.length>3) waves.push({num:'4', time:pts[3].time, price:pts[3].price});
+      if(pts.length>4) waves.push({num:'5', time:pts[4].time, price:pts[4].price});
+
+    } else if(isImpulsiveDown){
+      waveType = 'impulse_down';
+      bias = 'bear';
+      const lastSwing = pts[pts.length-1];
+      currentWave = lastSwing.type==='high' ? 4 : 3;
+
+      waves.push(
+        {num:'1', time:pts[0].time, price:pts[0].price},
+        {num:'2', time:pts[1].time, price:pts[1].price},
+        {num:'3', time:pts[2].time, price:pts[2].price},
+      );
+      if(pts.length>3) waves.push({num:'4', time:pts[3].time, price:pts[3].price});
+      if(pts.length>4) waves.push({num:'5', time:pts[4].time, price:pts[4].price});
+    }
+
+    // ABC duzeltme tespit
+    if(waveType==='unknown' && pts.length>=3){
+      const isABC =
+        (pts[0].type!==pts[1].type && pts[1].type!==pts[2].type);
+      if(isABC){
+        waveType = 'corrective';
+        waves.push(
+          {num:'A', time:pts[0].time, price:pts[0].price},
+          {num:'B', time:pts[1].time, price:pts[1].price},
+          {num:'C', time:pts[2].time, price:pts[2].price},
+        );
+        bias = pts[0].type==='high' ? 'bear' : 'bull';
+        currentWave = 3; // C dalgasi
+      }
+    }
+  }
+
+  if(waves.length === 0) return null;
+
+  // Fibonacci hedefleri hesapla
+  let fibTargets = [];
+  if(waveType==='impulse_up' && waves.length>=3){
+    const w1start = parseFloat(waves[0].price);
+    const w1end   = parseFloat(waves.find(w=>w.num==='2')?.price||w1start);
+    const w3start = parseFloat(waves.find(w=>w.num==='2')?.price||w1start);
+    const wRange  = Math.abs(w1end-w1start);
+    // Wave 3 hedefi: W1 boyunun 1.618'i
+    fibTargets.push({level:'1.618', price:w3start+wRange*1.618, label:'W3 Hedef'});
+    fibTargets.push({level:'2.618', price:w3start+wRange*2.618, label:'W5 Hedef'});
+    // Wave 4 destegi: Wave 1 tepesi seviyesi
+    if(waves.find(w=>w.num==='2')){
+      fibTargets.push({level:'0.382', price:w3start+(w1end-w3start)*0.382, label:'W4 Destek'});
+    }
+  }
+
+  return {
+    waveType,
+    currentWave,
+    bias,
+    waves,
+    fibTargets,
+    description: buildWaveDescription(waveType, currentWave, bias)
+  };
+}
+
+function buildWaveDescription(type, wave, bias){
+  if(type==='impulse_up'){
+    const labels = {1:'1. dalga yukselmesi',2:'2. dalga duzeltmesi',3:'3. dalga - EN GUCLU YUKSELIS',4:'4. dalga duzeltmesi - Long firsat',5:'5. dalga - Son hamle'};
+    return labels[wave]||`Impulsive yukselis - Dalga ${wave}`;
+  }
+  if(type==='impulse_down'){
+    const labels = {1:'1. dalga dusumu',2:'2. dalga duzeltmesi',3:'3. dalga - EN GUCLU DUSUS',4:'4. dalga duzeltmesi',5:'5. dalga - Son dusus'};
+    return labels[wave]||`Impulsive dusus - Dalga ${wave}`;
+  }
+  if(type==='corrective'){
+    return bias==='bear'?'ABC duzeltme - Asagi yonlu':'ABC duzeltme - Yukari yonlu';
+  }
+  return 'Dalga sayimi belirsiz';
+}
+
+// Elliott Wave'i grafige ciz
+let elliottSeries = [];
+
+function drawElliott(bars, swings){
+  // Onceki series temizle
+  elliottSeries.forEach(s=>{ try{MC.removeSeries(s);}catch(_){} });
+  elliottSeries=[];
+
+  const ew = detectElliottWave(bars, swings);
+  if(!ew || ew.waves.length < 2) return ew;
+
+  const n = bars.length;
+  const lastTime = bars[n-1].time;
+
+  // Dalga cizgisi - noktalari birlestirecek
+  try{
+    const waveLine = MC.addLineSeries({
+      color: ew.bias==='bull'?'rgba(0,230,118,0.6)':'rgba(255,61,87,0.6)',
+      lineWidth: 2,
+      lineStyle: 0,
+      priceLineVisible:false,
+      lastValueVisible:false,
+      crosshairMarkerVisible:false,
+    });
+    const waveData = ew.waves.map(w=>({time:w.time, value:parseFloat(w.price)}));
+    waveLine.setData(waveData);
+    elliottSeries.push(waveLine);
+  }catch(_){}
+
+  // Dalga etiket marker'lari
+  const ewMarkers = ew.waves.map(w=>({
+    time: w.time,
+    position: (w.num==='1'||w.num==='3'||w.num==='5'||w.num==='B')
+      ? (ew.bias==='bull'?'aboveBar':'belowBar')
+      : (ew.bias==='bull'?'belowBar':'aboveBar'),
+    color: ew.bias==='bull'?'#00e676':'#ff3d57',
+    shape: 'circle',
+    text: `(${w.num})`,
+    size: 1,
+  }));
+
+  // Mevcut marker'larla birlestir
+  try{
+    const existing = CS.markers ? CS.markers() : [];
+    CS.setMarkers([...existing, ...ewMarkers].sort((a,b)=>a.time-b.time));
+  }catch(_){}
+
+  // Fibonacci hedef cizgileri
+  ew.fibTargets.forEach(ft=>{
+    try{
+      const ftLine = MC.addLineSeries({
+        color:'rgba(250,204,21,0.5)',
+        lineWidth:1,
+        lineStyle:2,
+        priceLineVisible:false,
+        lastValueVisible:false,
+        crosshairMarkerVisible:false,
+      });
+      const startTime = ew.waves[ew.waves.length-1].time;
+      ftLine.setData([{time:startTime,value:ft.price},{time:lastTime,value:ft.price}]);
+      elliottSeries.push(ftLine);
+    }catch(_){}
+  });
+
+  return ew;
+}
+
+// Elliott sonucunu saga panele yaz
+function updateElliottPanel(ew){
+  const el = g('elliottPanel');
+  if(!el) return;
+  if(!ew){
+    el.innerHTML='<div style="font-family:var(--mono);font-size:10px;color:var(--txt2);text-align:center;padding:8px">Dalga sayimi yapilamiyor</div>';
+    return;
+  }
+  const color = ew.bias==='bull'?'var(--green)':ew.bias==='bear'?'var(--red)':'var(--txt1)';
+  const arrow = ew.bias==='bull'?'▲':ew.bias==='bear'?'▼':'◆';
+  el.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:${color}">${arrow} ${ew.waveType==='impulse_up'?'IMPULSIVE UP':ew.waveType==='impulse_down'?'IMPULSIVE DOWN':'CORRECTIVE'}</span>
+      <span style="font-family:var(--mono);font-size:10px;background:var(--bg3);padding:2px 8px;border-radius:4px;color:${color}">Dalga (${ew.currentWave})</span>
+    </div>
+    <div style="font-family:var(--sans);font-size:10px;color:var(--txt1);margin-bottom:6px;line-height:1.4">${ew.description}</div>
+    ${ew.fibTargets.map(ft=>`
+      <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:9px;padding:2px 0;border-top:1px solid var(--line)">
+        <span style="color:var(--amber)">${ft.label}</span>
+        <span style="color:var(--txt0)">${fp(ft.price)}</span>
+      </div>
+    `).join('')}
+  `;
+}
+
+// ── Order Block hesapla
 function calcOrderBlocks(bars, swings){
   const obs = [];
   const n = bars.length;
@@ -1935,6 +2337,14 @@ function drawSMC(bars){
   return {swings, bosEvents: bosEventsAll, bias};
 }
 
+// Elliott overlay - drawSMC'den sonra cagrilir
+function renderElliott(bars, swings){
+  try{
+    const ew = drawElliott(bars, swings);
+    updateElliottPanel(ew);
+  }catch(e){ console.warn('Elliott error:', e); }
+}
+
 // ── RENDER ────────────────────────────────────────────────────
 function render(bars, sym){
   const closes = bars.map(b=>b.close);
@@ -1979,11 +2389,95 @@ function render(bars, sym){
   RC.timeScale().fitContent();
   VC.timeScale().fitContent();
 
+  // Bollinger Bands
+  if(smcVisible.bb && BBU){
+    const bb = calcBB(closes, 20, 2);
+    const mkBB = arr => arr.map((v,i)=>v!=null?{time:times[i],value:v}:null).filter(Boolean);
+    BBU.setData(mkBB(bb.upper));
+    BBM.setData(mkBB(bb.middle));
+    BBL.setData(mkBB(bb.lower));
+    BBU.applyOptions({visible:true});
+    BBM.applyOptions({visible:true});
+    BBL.applyOptions({visible:true});
+  }
+
+  // MACD
+  if(MACDC && MACDL){
+    const macd = calcMACD(closes);
+    const mkM = arr => arr.map((v,i)=>v!=null?{time:times[i],value:v}:null).filter(Boolean);
+    MACDL.setData(mkM(macd.macdLine));
+    MACDS.setData(mkM(macd.signalLine));
+    const histData = macd.histogram.map((v,i)=>v!=null?{
+      time:times[i], value:v,
+      color: v>=0?'rgba(0,230,118,0.7)':'rgba(255,61,87,0.7)'
+    }:null).filter(Boolean);
+    MACDH.setData(histData);
+
+    // MACD degerlerini goster
+    const lastMACD = macd.macdLine[n-1];
+    const lastSig  = macd.signalLine[n-1];
+    const lastHist = macd.histogram[n-1];
+    if(lastMACD!=null){
+      const mv=g('macdVal'), ms=g('macdSig'), mh=g('macdHist');
+      if(mv) mv.textContent = lastMACD.toFixed(4);
+      if(ms){ ms.textContent = lastSig?.toFixed(4)||'—'; ms.style.color='#818cf8'; }
+      if(mh){ mh.textContent = lastHist?.toFixed(4)||'—'; mh.style.color=lastHist>=0?'var(--green)':'var(--red)'; }
+    }
+
+    if(MACDC){
+      MACDC.timeScale().fitContent();
+      const mel=document.getElementById('macdChart');
+      if(mel) MACDC.resize(mel.clientWidth,90);
+    }
+  }
+
+  // TD9 markers
+  if(smcVisible.td9){
+    const td = calcTD9(bars);
+    const td9Markers = td.signals.slice(-20).map(s=>({
+      time: s.time,
+      position: s.type==='buy'?'belowBar':'aboveBar',
+      color: s.type==='buy'?'#fb923c':'#fb923c',
+      shape: s.type==='buy'?'arrowUp':'arrowDown',
+      text: '9',
+      size: 1.2,
+    }));
+
+    // Mevcut marker'larla birlestir
+    const existingMarkers = CS.markers ? CS.markers() : [];
+    const combined = [...existingMarkers, ...td9Markers].sort((a,b)=>a.time-b.time);
+    CS.setMarkers(combined);
+
+    // TD9 sinyalini saga panele yaz
+    const lastSignal = td.signals[td.signals.length-1];
+    if(lastSignal && bars[bars.length-1].time - lastSignal.time < 5*86400*7){
+      // Son sinyal 5 hafta icinde
+    }
+  }
+
+  // Divergence - RSI paneline marker ekle
+  const divs = calcDivergence(bars, rsi(closes,14));
+  const divMarkers = divs.map(d=>({
+    time: d.time,
+    position: d.type==='bull'?'belowBar':'aboveBar',
+    color: d.type==='bull'?'var(--green)':'var(--red)',
+    shape: 'circle',
+    text: d.type==='bull'?'DIV+':'DIV-',
+    size: 0.8,
+  }));
+  if(RSIL && divMarkers.length>0) RSIL.setMarkers(divMarkers);
+
   // SMC overlay ciz
   const smcData = drawSMC(bars);
 
   // Strateji sinyalleri
   runStrategies(bars);
+
+  // Elliott Wave
+  try{
+    const swingsForEW = calcSwings(bars, 5);
+    renderElliott(bars, swingsForEW);
+  }catch(_){}
 
   // Backtest icin cache
   btBars = bars;
@@ -2222,6 +2716,28 @@ function togInd(key){
   if(key==='sma200')S200?.applyOptions({visible:v});
   if(key==='rsi'){g('rsiChart').parentElement.style.display=v?'':'none';}
   if(key==='vol'){g('volChart').parentElement.style.display=v?'':'none';}
+  if(key==='macd'){
+    smcVisible.macd=v;
+    const macdHdr=g('macdHdr');
+    const macdChart=g('macdChart');
+    if(macdHdr) macdHdr.style.display=v?'':'none';
+    if(macdChart) macdChart.style.display=v?'':'none';
+  }
+  if(key==='bb'){
+    smcVisible.bb=v;
+    if(BBU) BBU.applyOptions({visible:v});
+    if(BBM) BBM.applyOptions({visible:v});
+    if(BBL) BBL.applyOptions({visible:v});
+  }
+  if(key==='td9'){ smcVisible.td9=v; }
+  if(key==='ew'){
+    smcVisible.ew=v;
+    elliottSeries.forEach(s=>{try{MC.removeSeries(s);}catch(_){}});
+    elliottSeries=[];
+    if(v && btBars){ const sw=calcSwings(btBars,5); renderElliott(btBars,sw); }
+    const ep=g('elliottPanel');
+    if(ep) ep.parentElement.style.display=v?'':'none';
+  }
   // SMC toggles
   if(['swings','fvg','bos','liq'].includes(key)){
     smcVisible[key]=v;
