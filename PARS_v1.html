@@ -415,6 +415,42 @@ header {
 .stat-v.dn { color: var(--red); }
 
 /* ── TOAST ───────────────────────────────────────── */
+/* Backtest */
+.bt-stat-box {
+  background: var(--bg2);
+  padding: 10px 14px;
+}
+.bs-k {
+  font-family: var(--mono); font-size: 8px; letter-spacing: 1px;
+  color: var(--txt2); margin-bottom: 4px;
+}
+.bs-v {
+  font-family: var(--mono); font-size: 16px; font-weight: 700; color: var(--txt0);
+}
+
+.bt-row {
+  display: grid;
+  grid-template-columns: 60px 80px 70px 70px 70px 70px 1fr;
+  gap: 0;
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--line);
+  font-family: var(--mono);
+  font-size: 10px;
+  align-items: center;
+  transition: background .1s;
+}
+.bt-row:hover { background: var(--bg3); }
+.bt-row.win { border-left: 2px solid var(--green); }
+.bt-row.loss { border-left: 2px solid var(--red); }
+.bt-row.header {
+  background: var(--bg3);
+  color: var(--txt2);
+  font-size: 9px;
+  letter-spacing: .5px;
+  border-left: 2px solid transparent;
+  position: sticky; top: 0;
+}
+
 .toast {
   position: fixed; bottom: 18px; left: 50%;
   transform: translateX(-50%) translateY(50px);
@@ -569,6 +605,7 @@ header {
   </div>
 
   <button class="btn btn-primary" id="fetchBtn" onclick="fetchData()">ANALİZ ET</button>
+  <button class="btn" id="backtestBtn" onclick="openBacktest()" style="background:var(--bg3);border:1px solid var(--line2);color:var(--txt1)">BACKTEST</button>
 
   <div class="divider"></div>
 
@@ -806,6 +843,56 @@ header {
         <div class="stat"><div class="stat-k">SL %</div><div class="stat-v dn" id="s_slp">—</div></div>
         <div class="stat"><div class="stat-k">AKTİF FVG</div><div class="stat-v" id="s_fvg">—</div></div>
         <div class="stat"><div class="stat-k">ORDER BLOCK</div><div class="stat-v" id="s_ob">—</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BACKTEST MODAL -->
+<div id="btModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;overflow-y:auto">
+  <div style="max-width:900px;margin:30px auto;background:var(--bg1);border:1px solid var(--line2);border-radius:10px;overflow:hidden">
+
+    <!-- Modal Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:var(--bg2);border-bottom:1px solid var(--line)">
+      <div style="font-family:var(--mono);font-size:14px;font-weight:700;color:var(--acc)">⟨ BACKTEST MOTORU ⟩</div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <select id="btStrategy" style="background:var(--bg3);border:1px solid var(--line2);color:var(--txt0);font-family:var(--mono);font-size:11px;padding:5px 10px;border-radius:5px">
+          <option value="all">Tüm Stratejiler</option>
+          <option value="S2">S2 - Base Deviation</option>
+          <option value="S3">S3 - Cift Engulfing</option>
+          <option value="S5">S5 - CHoCH + Fib</option>
+          <option value="S6">S6 - Range Deviation</option>
+          <option value="S7">S7 - Trendline</option>
+          <option value="S9">S9 - SFP</option>
+        </select>
+        <button onclick="runBacktest()" style="background:var(--acc);color:var(--bg0);border:none;border-radius:5px;padding:6px 14px;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer">CALISTIR</button>
+        <button onclick="closeBacktest()" style="background:var(--bg4);color:var(--txt1);border:1px solid var(--line);border-radius:5px;padding:6px 12px;font-family:var(--mono);font-size:11px;cursor:pointer">KAPAT</button>
+      </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div id="btStats" style="display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--line);border-bottom:1px solid var(--line)">
+      <div class="bt-stat-box" id="bs_trades"><div class="bs-k">TOPLAM</div><div class="bs-v" id="bv_trades">—</div></div>
+      <div class="bt-stat-box" id="bs_wr"><div class="bs-k">WIN RATE</div><div class="bs-v" id="bv_wr">—</div></div>
+      <div class="bt-stat-box" id="bs_pf"><div class="bs-k">PROFIT FACTOR</div><div class="bs-v" id="bv_pf">—</div></div>
+      <div class="bt-stat-box" id="bs_avg"><div class="bs-k">ORT. RR</div><div class="bs-v" id="bv_avg">—</div></div>
+      <div class="bt-stat-box" id="bs_dd"><div class="bs-k">MAX DD</div><div class="bs-v" id="bv_dd">—</div></div>
+      <div class="bt-stat-box" id="bs_ret"><div class="bs-k">NET GETIRI</div><div class="bs-v" id="bv_ret">—</div></div>
+    </div>
+
+    <!-- Equity Curve -->
+    <div style="padding:16px 20px 8px;border-bottom:1px solid var(--line)">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--txt2);letter-spacing:1.5px;margin-bottom:8px">EQUITY CURVE</div>
+      <canvas id="eqCanvas" height="120" style="width:100%;display:block;border-radius:4px;background:var(--bg2)"></canvas>
+    </div>
+
+    <!-- Trade Log -->
+    <div style="padding:16px 20px">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--txt2);letter-spacing:1.5px;margin-bottom:10px">TRADE LOG</div>
+      <div id="btTradeLog" style="max-height:300px;overflow-y:auto">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--txt2);text-align:center;padding:20px">
+          Strateji secin ve CALISTIR'a basin
+        </div>
       </div>
     </div>
   </div>
@@ -1819,6 +1906,9 @@ function render(bars, sym){
   // Strateji sinyalleri
   runStrategies(bars);
 
+  // Backtest icin cache
+  btBars = bars;
+
   loading(false);
 }
 
@@ -2084,7 +2174,253 @@ document.getElementById('symbolInput').addEventListener('keydown',e=>{
   if(e.key==='Enter')fetchData();
 });
 
-// Boot
+// ── BACKTEST MOTORU ──────────────────────────────────────────────────────────
+let btBars = null; // mevcut bars cache
+
+function openBacktest(){
+  const sym = g('symbolInput').value.trim();
+  if(!sym || !btBars){ toast('Once sembol yukleyin','err'); return; }
+  g('btModal').style.display='block';
+  document.body.style.overflow='hidden';
+}
+
+function closeBacktest(){
+  g('btModal').style.display='none';
+  document.body.style.overflow='';
+}
+
+// Strateji sinyali uret - bars'in belirli bir noktasina kadar bak
+function getSignal(stratName, bars, idx){
+  if(idx < 30) return null;
+  const slice = bars.slice(0, idx+1);
+  const swings = calcSwings(slice, 5);
+  const bosEvents = calcBOSCHoCH(slice, swings);
+
+  let result = null;
+  if(stratName==='S2') result = checkS2(slice, swings);
+  else if(stratName==='S3') result = checkS3(slice, swings);
+  else if(stratName==='S5') result = checkS5(slice, swings, bosEvents);
+  else if(stratName==='S6') result = checkS6(slice, swings);
+  else if(stratName==='S7') result = checkS7(slice, swings);
+  else if(stratName==='S9') result = checkS9(slice, swings);
+
+  if(result && (result.phase==='ready') && result.sl && result.tp){
+    return result;
+  }
+  return null;
+}
+
+function runBacktest(){
+  if(!btBars || btBars.length < 50){
+    toast('Yeterli veri yok','err'); return;
+  }
+
+  const stratSel = g('btStrategy').value;
+  const strategies = stratSel==='all'
+    ? ['S2','S3','S5','S6','S7','S9']
+    : [stratSel];
+
+  const trades = [];
+  const n = btBars.length;
+  let inTrade = false;
+  let lastSignalIdx = -5; // cok sik sinyal uretmeyi onle
+
+  // Her bar icin sinyal kontrol
+  for(let i=30; i<n-3; i++){
+    if(inTrade) continue;
+    if(i - lastSignalIdx < 5) continue;
+
+    for(const strat of strategies){
+      const sig = getSignal(strat, btBars, i);
+      if(!sig) continue;
+
+      const entry = btBars[i].close;
+      const sl = sig.sl;
+      const tp = sig.tp;
+      if(!sl || !tp || sl<=0 || tp<=0) continue;
+      if(Math.abs(entry-sl) < 0.0001) continue;
+
+      const isBull = sig.dir==='bull';
+      const rr = Math.abs((tp-entry)/(entry-sl));
+      if(rr < 1.2) continue; // minimum RR filtresi
+
+      // Sonraki barlarda SL veya TP'ye carpma
+      let outcome = null;
+      let exitIdx = -1;
+      let exitPrice = entry;
+
+      for(let j=i+1; j<Math.min(i+30,n); j++){
+        const bar = btBars[j];
+        if(isBull){
+          if(bar.low <= sl){ outcome='loss'; exitPrice=sl; exitIdx=j; break; }
+          if(bar.high >= tp){ outcome='win'; exitPrice=tp; exitIdx=j; break; }
+        } else {
+          if(bar.high >= sl){ outcome='loss'; exitPrice=sl; exitIdx=j; break; }
+          if(bar.low <= tp){ outcome='win'; exitPrice=tp; exitIdx=j; break; }
+        }
+      }
+
+      if(!outcome){ outcome='open'; exitIdx=Math.min(i+29,n-1); exitPrice=btBars[exitIdx].close; }
+
+      const pnlPct = isBull
+        ? (exitPrice-entry)/entry*100
+        : (entry-exitPrice)/entry*100;
+
+      trades.push({
+        strat, dir:sig.dir, entry, sl, tp,
+        exitPrice, outcome, pnlPct: +pnlPct.toFixed(2),
+        rr: +rr.toFixed(1),
+        entryDate: new Date(btBars[i].time*1000).toLocaleDateString('tr-TR'),
+        exitDate: exitIdx>=0 ? new Date(btBars[exitIdx].time*1000).toLocaleDateString('tr-TR') : '-',
+        barIdx: i
+      });
+
+      inTrade = true;
+      lastSignalIdx = i;
+      setTimeout(()=>{ inTrade=false; }, 0);
+      break;
+    }
+  }
+
+  if(trades.length === 0){
+    g('btTradeLog').innerHTML = '<div style="font-family:var(--mono);font-size:11px;color:var(--txt2);text-align:center;padding:20px">Bu donemde sinyal olusmaedi</div>';
+    return;
+  }
+
+  // Istatistikler
+  const closed = trades.filter(t=>t.outcome!=='open');
+  const wins = closed.filter(t=>t.outcome==='win');
+  const losses = closed.filter(t=>t.outcome==='loss');
+  const winRate = closed.length ? (wins.length/closed.length*100).toFixed(1) : 0;
+  const grossWin = wins.reduce((a,t)=>a+t.pnlPct,0);
+  const grossLoss = Math.abs(losses.reduce((a,t)=>a+t.pnlPct,0));
+  const pf = grossLoss>0 ? (grossWin/grossLoss).toFixed(2) : '∞';
+  const avgRR = closed.length ? (closed.reduce((a,t)=>a+t.rr,0)/closed.length).toFixed(1) : 0;
+  const netPct = trades.reduce((a,t)=>a+t.pnlPct,0).toFixed(1);
+
+  // Max Drawdown
+  let peak=0, dd=0, maxDD=0, equity=100;
+  trades.forEach(t=>{
+    equity += t.pnlPct;
+    if(equity>peak) peak=equity;
+    dd = (peak-equity)/peak*100;
+    if(dd>maxDD) maxDD=dd;
+  });
+
+  // UI guncelle
+  const sv = (id,val,cls='')=>{
+    const el=g(id);
+    if(el){ el.textContent=val; if(cls) el.style.color=cls; }
+  };
+
+  sv('bv_trades', `${trades.length} islem`);
+  sv('bv_wr', `%${winRate}`, parseFloat(winRate)>=50?'var(--green)':'var(--red)');
+  sv('bv_pf', pf, parseFloat(pf)>=1.5?'var(--green)':parseFloat(pf)>=1?'var(--amber)':'var(--red)');
+  sv('bv_avg', `${avgRR}:1`);
+  sv('bv_dd', `%${maxDD.toFixed(1)}`, maxDD>20?'var(--red)':maxDD>10?'var(--amber)':'var(--green)');
+  sv('bv_ret', `${netPct>0?'+':''}${netPct}%`, parseFloat(netPct)>=0?'var(--green)':'var(--red)');
+
+  // Equity curve ciz
+  drawEquityCurve(trades);
+
+  // Trade log
+  const logHtml = `
+    <div class="bt-row header">
+      <span>STRAT</span><span>YON</span><span>GIRIS</span><span>SL</span><span>TP</span><span>PNL%</span><span>TARIH</span>
+    </div>
+    ${trades.map(t=>`
+    <div class="bt-row ${t.outcome==='win'?'win':t.outcome==='loss'?'loss':''}">
+      <span style="color:var(--acc);font-weight:700">${t.strat}</span>
+      <span style="color:${t.dir==='bull'?'var(--green)':'var(--red)'}">${t.dir==='bull'?'LONG':'SHORT'}</span>
+      <span>${fp(t.entry)}</span>
+      <span style="color:var(--red)">${fp(t.sl)}</span>
+      <span style="color:var(--green)">${fp(t.tp)}</span>
+      <span style="color:${t.pnlPct>=0?'var(--green)':'var(--red)'}">
+        ${t.pnlPct>=0?'+':''}${t.pnlPct}%
+      </span>
+      <span style="color:var(--txt2);font-size:9px">${t.entryDate}</span>
+    </div>`).join('')}`;
+
+  g('btTradeLog').innerHTML = logHtml;
+}
+
+function drawEquityCurve(trades){
+  const canvas = g('eqCanvas');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.offsetWidth || 800;
+  const H = 120;
+  canvas.width = W;
+  canvas.height = H;
+
+  // Equity data
+  const equity = [100];
+  trades.forEach(t=>{ equity.push(equity[equity.length-1] + t.pnlPct); });
+
+  const minEq = Math.min(...equity);
+  const maxEq = Math.max(...equity);
+  const range = maxEq - minEq || 1;
+
+  const toX = i => (i/(equity.length-1)) * (W-20) + 10;
+  const toY = v => H - 10 - ((v-minEq)/range) * (H-20);
+
+  ctx.clearRect(0,0,W,H);
+
+  // Grid lines
+  ctx.strokeStyle = '#1e2436';
+  ctx.lineWidth = 1;
+  [0.25,0.5,0.75].forEach(p=>{
+    const y = 10 + p*(H-20);
+    ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke();
+  });
+
+  // Zero line (baslangic)
+  const zeroY = toY(100);
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+  ctx.setLineDash([4,4]);
+  ctx.beginPath(); ctx.moveTo(0,zeroY); ctx.lineTo(W,zeroY); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Fill area
+  const lastEq = equity[equity.length-1];
+  const fillColor = lastEq >= 100 ? 'rgba(0,230,118,0.08)' : 'rgba(255,61,87,0.08)';
+  ctx.fillStyle = fillColor;
+  ctx.beginPath();
+  ctx.moveTo(toX(0), toY(100));
+  equity.forEach((v,i)=>ctx.lineTo(toX(i), toY(v)));
+  ctx.lineTo(toX(equity.length-1), H);
+  ctx.lineTo(toX(0), H);
+  ctx.closePath();
+  ctx.fill();
+
+  // Line
+  const lineColor = lastEq >= 100 ? '#00e676' : '#ff3d57';
+  ctx.strokeStyle = lineColor;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  equity.forEach((v,i)=>{
+    if(i===0) ctx.moveTo(toX(i),toY(v));
+    else ctx.lineTo(toX(i),toY(v));
+  });
+  ctx.stroke();
+
+  // Dots for trades
+  trades.forEach((t,i)=>{
+    ctx.fillStyle = t.outcome==='win'?'#00e676':'#ff3d57';
+    ctx.beginPath();
+    ctx.arc(toX(i+1), toY(equity[i+1]), 3, 0, Math.PI*2);
+    ctx.fill();
+  });
+
+  // Labels
+  ctx.fillStyle = '#3d4560';
+  ctx.font = '9px IBM Plex Mono, monospace';
+  ctx.fillText(`${maxEq.toFixed(1)}`, 2, 14);
+  ctx.fillText(`${minEq.toFixed(1)}`, 2, H-4);
+  ctx.fillText('100', 2, zeroY-3);
+}
+
+// ── BOOT ────────────────────────────────────────────────────────────────────
 window.addEventListener('load',()=>{
   initCharts();
   setTimeout(fetchData, 400);
