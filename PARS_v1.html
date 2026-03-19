@@ -955,11 +955,11 @@ function calcBOSCHoCH(bars, swings){
   const highs = swings.filter(s=>s.type==='high').sort((a,b)=>a.idx-b.idx);
   const lows  = swings.filter(s=>s.type==='low').sort((a,b)=>a.idx-b.idx);
 
-  // BOS Bullish: fiyat önceki swing high'ı kırar
+  // BOS Bullish: fiyat önceki swing high kirdi
   for(let i=1; i<highs.length; i++){
     const prevHigh = highs[i-1].price;
     const prevIdx  = highs[i-1].idx;
-    // Bu high'dan sonra fiyat prevHigh'ı kırdı mı?
+    // Bu high'dan sonra fiyat prevHigh kirdi mi?
     for(let j=prevIdx+1; j<bars.length; j++){
       if(bars[j].close > prevHigh){
         // Sonraki swing high daha yüksek mi? → BOS, değil mi? → CHoCH
@@ -977,7 +977,7 @@ function calcBOSCHoCH(bars, swings){
     }
   }
 
-  // BOS Bearish: fiyat önceki swing low'u kırar
+  // BOS Bearish: fiyat önceki swing low kirdi
   for(let i=1; i<lows.length; i++){
     const prevLow = lows[i-1].price;
     const prevIdx = lows[i-1].idx;
@@ -1131,7 +1131,7 @@ function calcHTFBias(bars, swings, bosEvents){
 // ── STRATEJİ MOTORU ──────────────────────────────────────────────────────────
 // Her strateji bars dizisini alır, sonuç objesi döner:
 // { name, phase, detail, sl, tp, rr, dir }
-// phase: 'watch' | 'forming' | 'ready' | 'alert' | 'invalid'
+// phase: watch | forming | ready | alert | invalid
 
 // S3: Çift Engulfing Support Zone
 function checkS3(bars, swings){
@@ -1161,7 +1161,7 @@ function checkS3(bars, swings){
     }
   }
 
-  if(engulf1Idx === -1) return {name:'S3', phase:'watch', detail:'İki ardışık engulfing bekleniyor', dir:'bull'};
+  if(engulf1Idx === -1) return {name:'S3', phase:'watch', detail:'Iki ardisik engulfing bekleniyor', dir:'bull'};
 
   if(engulf2Idx === -1) return {name:'S3', phase:'forming', detail:`1. Engulfing tespit edildi (bar ${engulf1Idx}). 2. bekleniyor.`, dir:'bull'};
 
@@ -1198,7 +1198,7 @@ function checkS5(bars, swings, bosEvents){
   const recentBOS = bosEvents.slice(-8);
   const lastCHoCH = recentBOS.filter(e=>e.type==='CHoCH').slice(-1)[0];
 
-  if(!lastCHoCH) return {name:'S5', phase:'watch', detail:'CHoCH bekleniyor — trend kırılımı yok', dir:'neut'};
+  if(!lastCHoCH) return {name:'S5', phase:'watch', detail:'CHoCH bekleniyor - trend kirilimi yok', dir:'neut'};
 
   // CHoCH sonrası likidite grab var mı?
   const chochIdx = bars.findIndex(b=>b.time===lastCHoCH.time);
@@ -1273,7 +1273,7 @@ function checkS6(bars, swings){
   }
 
   if(!rangeTop || !rangeBot)
-    return {name:'S6', phase:'watch', detail:'Equal high/low henüz oluşmadı', dir:'neut'};
+    return {name:'S6', phase:'watch', detail:'Equal high/low henuz olusmaedi', dir:'neut'};
 
   const rangeMid = (rangeTop + rangeBot) / 2;
   const lastClose = bars[n-1].close;
@@ -1286,14 +1286,14 @@ function checkS6(bars, swings){
     return {name:'S6', phase:'forming', detail:`Range tespit edildi: ${fp(rangeBot)}-${fp(rangeTop)}. Sapma bekleniyor.`, dir:'neut'};
 
   if((devAbove && !devBelow) || (!devAbove && devBelow)){
-    const firstDev = devAbove ? 'üst' : 'alt';
+    const firstDev = devAbove ? "ust" : "alt";
     return {name:'S6', phase:'forming', detail:`${firstDev} sapma oluştu. Karşı sapma bekleniyor.`, dir: devAbove?'bear':'bull'};
   }
 
-  // Her iki sapma da var - kırılım bekleniyor
+  // Her iki sapma da var - kirilim bekleniyor
   const broke = lastClose > rangeTop || lastClose < rangeBot;
   if(!broke)
-    return {name:'S6', phase:'alert', detail:`İki sapma tamamlandı! Kırılım bekleniyor. Mid: ${fp(rangeMid)}`, dir:'neut'};
+    return {name:'S6', phase:'alert', detail:`Iki sapma tamamlandi! Kirilim bekleniyor. Mid: ${fp(rangeMid)}`, dir:'neut'};
 
   const isBull = lastClose > rangeTop;
   const sl = isBull ? rangeBot * 0.997 : rangeTop * 1.003;
@@ -1302,7 +1302,7 @@ function checkS6(bars, swings){
 
   return {
     name:'S6', phase:'ready',
-    detail:`Kırılım! ${isBull?'Bullish':'Bearish'} setup. Destek: ${fp(isBull?rangeMid:rangeMid)}`,
+    detail:`Kirilim! ${isBull?'Bullish':'Bearish'} setup. Destek: ${fp(isBull?rangeMid:rangeMid)}`,
     dir:isBull?'bull':'bear', sl, tp, rr
   };
 }
@@ -1329,7 +1329,7 @@ function checkS7(bars, swings){
   // Trendline yükselen mi?
   const isRising = l2.price > l1.price && l3.price > l2.price;
   if(!isRising)
-    return {name:'S7', phase:'watch', detail:'Yükselen trend trendline'ı oluşmadı', dir:'bull'};
+    return {name:'S7', phase:'watch', detail:'Yukselən trend trendline olusmaedi', dir:'bull'};
 
   // Trendline slope (l1 den l2 ye)
   const slope = (l2.price - l1.price) / (l2.idx - l1.idx);
@@ -1360,7 +1360,7 @@ function checkS7(bars, swings){
 
   return {
     name:'S7', phase:'alert',
-    detail:`Trendline intakt. 4. dokunuş ve kırılım bekleniyor. Seviye: ~${fp(trendlineAtLast)}`,
+    detail:`Trendline intakt. 4. dokunuş ve kirilim bekleniyor. Seviye: ~${fp(trendlineAtLast)}`,
     dir:'bull'
   };
 }
@@ -1373,14 +1373,14 @@ function checkS9(bars, swings){
   const recentHighs = swings.filter(s=>s.type==='high').slice(-4);
   const recentLows  = swings.filter(s=>s.type==='low').slice(-4);
 
-  // Bearish SFP: yeni high yapıp geri döndü
+  // Bearish SFP: yeni high yapıp geri dondu
   if(recentHighs.length >= 2){
     const prevH = recentHighs[recentHighs.length-2];
     const lastH = recentHighs[recentHighs.length-1];
     const lastClose = bars[n-1].close;
 
     if(lastH.price > prevH.price){
-      // Son high önceki high'ı geçti ama kapanış altında mı?
+      // Son high önceki high seviyesini geçti ama kapanış altında mı?
       const lastBar = bars[n-1];
       if(lastClose < prevH.price){
         // SFP oluştu
@@ -1402,7 +1402,7 @@ function checkS9(bars, swings){
     }
   }
 
-  // Bullish SFP: yeni low yapıp geri döndü
+  // Bullish SFP: yeni low yapıp geri dondu
   if(recentLows.length >= 2){
     const prevL = recentLows[recentLows.length-2];
     const lastL = recentLows[recentLows.length-1];
@@ -1463,7 +1463,7 @@ function checkS2(bars, swings){
   if(!hasDeviation)
     return {name:'S2', phase:'forming', detail:`Base bulundu: ${fp(baseLevel)}. Deviation (sahte kırılım) bekleniyor.`, dir:'bull'};
 
-  // Fiyat base'e geri döndü mü?
+  // Fiyat base'e geri dondu mü?
   if(lastClose > baseLevel && lastClose < baseTop){
     const sl = baseLevel * 0.995;
     const tp = baseTop * 1.01;
@@ -1510,8 +1510,8 @@ function runStrategies(bars){
 
   container.innerHTML = results.map(r=>{
     const phaseClass = {ready:'phase-ready',alert:'phase-alert',forming:'phase-forming',watch:'phase-watch',invalid:'phase-invalid'}[r.phase]||'phase-watch';
-    const cardClass = {ready:'ready',alert:'alert',forming:'forming',watch:'',invalid:'invalid'}[r.phase]||'';
-    const phaseLabel = {ready:'HAZIR',alert:'UYARI',forming:'OLUŞUYOR',watch:'İZLE',invalid:'GEÇERSİZ'}[r.phase]||r.phase;
+    const cardClass = {ready:'ready',alert:'alert',forming:'forming',watch:'',invalid:'Invalid'}[r.phase]||'';
+    const phaseLabel = {ready:'HAZIR',alert:'UYARI',forming:'OLUŞUYOR',watch:'IZLE',invalid:'GEÇERSİZ'}[r.phase]||r.phase;
 
     const dirColor = r.dir==='bull'?'var(--green)':r.dir==='bear'?'var(--red)':'var(--txt2)';
     const dirArrow = r.dir==='bull'?'▲':r.dir==='bear'?'▼':'◆';
