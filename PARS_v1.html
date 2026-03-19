@@ -2149,7 +2149,7 @@ function checkS1(bars, swings){
   const lastClose = bars[n-1].close;
   const isUp = s50 ? lastClose > s50 : false;
 
-  if(!isUp) return {name:'S1', phase:'watch', detail:'Uptrend yok - S1 sadece uptrend'de', dir:'bull'};
+  if(!isUp) return {name:'S1', phase:'watch', detail:'Uptrend yok - S1 sadece uptrend icin', dir:'bull'};
 
   // FVG tespit
   const fvgs = calcFVG(bars);
