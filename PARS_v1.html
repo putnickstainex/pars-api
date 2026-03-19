@@ -428,6 +428,50 @@ header {
 .toast.ok { border-color: var(--green); color: var(--green); }
 .toast.err { border-color: var(--red); color: var(--red); }
 
+/* Strateji Kartları */
+.strat-card {
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: 8px 10px;
+  margin-bottom: 4px;
+  border-left: 3px solid var(--line2);
+  transition: border-color .2s;
+}
+.strat-card.forming { border-left-color: var(--amber); }
+.strat-card.ready   { border-left-color: var(--green); }
+.strat-card.alert   { border-left-color: var(--acc); }
+.strat-card.invalid { border-left-color: var(--red); opacity:.5; }
+
+.strat-top {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 4px;
+}
+.strat-name {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  color: var(--txt0); letter-spacing: .5px;
+}
+.strat-phase {
+  font-family: var(--mono); font-size: 8px; font-weight: 700;
+  padding: 2px 5px; border-radius: 3px; letter-spacing: .3px;
+}
+.phase-forming { background: var(--amber-dim); color: var(--amber); }
+.phase-ready   { background: var(--green-dim); color: var(--green); }
+.phase-alert   { background: var(--acc-dim);   color: var(--acc);   }
+.phase-invalid { background: var(--red-dim);   color: var(--red);   }
+.phase-watch   { background: var(--bg4);       color: var(--txt2);  }
+
+.strat-detail {
+  font-family: var(--sans); font-size: 10px; color: var(--txt1); line-height: 1.4;
+}
+.strat-levels {
+  display: flex; gap: 8px; margin-top: 5px;
+  font-family: var(--mono); font-size: 9px;
+}
+.sl-lbl { color: var(--red); }
+.tp-lbl { color: var(--green); }
+.rr-lbl { color: var(--acc); }
+
 /* HTF Bias */
 .bias-arrow {
   font-size: 28px; font-weight: 700; line-height: 1;
@@ -738,6 +782,16 @@ header {
           <span class="badge b-na" id="b_vol">—</span>
         </div>
         <div class="sig-detail" id="d_vol">Bekleniyor</div>
+      </div>
+    </div>
+
+    <!-- STRATEJİ SİNYALLERİ -->
+    <div class="signals" id="strategyPanel">
+      <div class="panel-title" style="padding:0 0 10px 0">Strateji Sinyalleri</div>
+      <div id="strategyCards">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--txt2);text-align:center;padding:10px 0">
+          Analiz bekleniyor...
+        </div>
       </div>
     </div>
 
@@ -1074,6 +1128,413 @@ function calcHTFBias(bars, swings, bosEvents){
 }
 
 // SMC overlay'leri çiz
+// ── STRATEJİ MOTORU ──────────────────────────────────────────────────────────
+// Her strateji bars dizisini alır, sonuç objesi döner:
+// { name, phase, detail, sl, tp, rr, dir }
+// phase: 'watch' | 'forming' | 'ready' | 'alert' | 'invalid'
+
+// S3: Çift Engulfing Support Zone
+function checkS3(bars, swings){
+  const n = bars.length;
+  if(n < 10) return null;
+
+  // Son 30 barda iki ardışık bullish engulfing ara
+  const window = bars.slice(-30);
+  let engulf1Idx = -1, engulf2Idx = -1;
+
+  for(let i=1; i<window.length-1; i++){
+    const prev = window[i-1];
+    const curr = window[i];
+    // Bullish engulfing: önceki bearish, şimdiki bullish ve yutuyor
+    if(prev.close < prev.open &&
+       curr.close > curr.open &&
+       curr.close > prev.open &&
+       curr.open < prev.close){
+      if(engulf1Idx === -1){
+        engulf1Idx = i;
+      } else if(i - engulf1Idx <= 5){
+        engulf2Idx = i;
+        break;
+      } else {
+        engulf1Idx = i; // reset
+      }
+    }
+  }
+
+  if(engulf1Idx === -1) return {name:'S3', phase:'watch', detail:'İki ardışık engulfing bekleniyor', dir:'bull'};
+
+  if(engulf2Idx === -1) return {name:'S3', phase:'forming', detail:`1. Engulfing tespit edildi (bar ${engulf1Idx}). 2. bekleniyor.`, dir:'bull'};
+
+  // İki engulfing bulundu - blue box hesapla
+  const e1 = window[engulf1Idx], e2 = window[engulf2Idx];
+  const boxTop = Math.max(e1.open, e2.open);
+  const boxBot = Math.min(e1.low, e2.low);
+  const lastClose = bars[n-1].close;
+
+  // Fiyat blue box'a geldi mi?
+  if(lastClose >= boxBot && lastClose <= boxTop){
+    const sl = boxBot * 0.999;
+    const tp = Math.max(...bars.slice(-10).map(b=>b.high));
+    const rr = tp && sl ? ((tp-lastClose)/(lastClose-sl)).toFixed(1) : '?';
+    return {
+      name:'S3', phase:'ready',
+      detail:`Blue box içinde! Giriş bölgesi: ${fp(boxBot)}-${fp(boxTop)}`,
+      dir:'bull', sl, tp, rr
+    };
+  }
+
+  if(lastClose > boxTop){
+    return {name:'S3', phase:'alert', detail:`Çift engulfing tamamlandı. Blue box: ${fp(boxBot)}-${fp(boxTop)}. Geri dönüş bekleniyor.`, dir:'bull'};
+  }
+
+  return {name:'S3', phase:'watch', detail:`Çift engulfing var. Blue box: ${fp(boxBot)}-${fp(boxTop)}. Fiyat yaklaşmadı.`, dir:'bull'};
+}
+
+// S5: CHoCH + Likidite Grab + Fibonacci
+function checkS5(bars, swings, bosEvents){
+  const n = bars.length;
+  if(n < 20) return null;
+
+  const recentBOS = bosEvents.slice(-8);
+  const lastCHoCH = recentBOS.filter(e=>e.type==='CHoCH').slice(-1)[0];
+
+  if(!lastCHoCH) return {name:'S5', phase:'watch', detail:'CHoCH bekleniyor — trend kırılımı yok', dir:'neut'};
+
+  // CHoCH sonrası likidite grab var mı?
+  const chochIdx = bars.findIndex(b=>b.time===lastCHoCH.time);
+  if(chochIdx < 0) return null;
+
+  const postBars = bars.slice(chochIdx);
+  const isBull = lastCHoCH.dir === 'bull';
+
+  // Yeni peak/dip oluştu mu?
+  const newExtreme = isBull
+    ? postBars.some(b=>b.high > lastCHoCH.price * 1.005)
+    : postBars.some(b=>b.low < lastCHoCH.price * 0.995);
+
+  if(!newExtreme){
+    return {name:'S5', phase:'forming', detail:`CHoCH ${isBull?'bullish':'bearish'} tespit edildi. Likidite grab bekleniyor.`, dir:isBull?'bull':'bear'};
+  }
+
+  // Fibo hesapla - CHoCH dalgasına uygula
+  const waveHigh = Math.max(...postBars.map(b=>b.high));
+  const waveLow  = Math.min(...postBars.map(b=>b.low));
+  const fib50 = isBull ? waveHigh - (waveHigh-waveLow)*0.5 : waveLow + (waveHigh-waveLow)*0.5;
+  const fib886 = isBull ? waveHigh - (waveHigh-waveLow)*0.886 : waveLow + (waveHigh-waveLow)*0.886;
+
+  const lastClose = bars[n-1].close;
+
+  // Fiyat high-value area'da mı? (Fib50-100)
+  const inDiscountZone = isBull
+    ? (lastClose >= fib50 && lastClose <= waveHigh)
+    : (lastClose >= waveLow && lastClose <= fib50);
+
+  if(inDiscountZone){
+    const sl = isBull ? fib886 : waveHigh + (waveHigh-waveLow)*0.886;
+    const tp = isBull
+      ? Math.max(...bars.slice(-15).map(b=>b.high)) * 1.005
+      : Math.min(...bars.slice(-15).map(b=>b.low)) * 0.995;
+    const rr = Math.abs((tp-lastClose)/(lastClose-sl)).toFixed(1);
+
+    return {
+      name:'S5', phase:'ready',
+      detail:`Likidite grab + Fib %50 bölgesinde! ${isBull?'Long':'Short'} setup.`,
+      dir:isBull?'bull':'bear', sl, tp, rr
+    };
+  }
+
+  return {
+    name:'S5', phase:'alert',
+    detail:`Likidite grab tamamlandı. Fib %50 bekleniyor: ${fp(fib50)}`,
+    dir:isBull?'bull':'bear'
+  };
+}
+
+// S6: Range Deviation (Equal High/Low + İki Sapma)
+function checkS6(bars, swings){
+  const n = bars.length;
+  if(n < 15) return null;
+
+  const recentHighs = swings.filter(s=>s.type==='high').slice(-6);
+  const recentLows  = swings.filter(s=>s.type==='low').slice(-6);
+
+  if(recentHighs.length < 2 || recentLows.length < 2)
+    return {name:'S6', phase:'watch', detail:'Range tespit için yeterli swing yok', dir:'neut'};
+
+  // Equal high/low bul (fark < %1)
+  let rangeTop = null, rangeBot = null;
+  for(let i=0; i<recentHighs.length-1; i++){
+    const diff = Math.abs(recentHighs[i].price - recentHighs[i+1].price) / recentHighs[i].price;
+    if(diff < 0.01){ rangeTop = (recentHighs[i].price + recentHighs[i+1].price)/2; break; }
+  }
+  for(let i=0; i<recentLows.length-1; i++){
+    const diff = Math.abs(recentLows[i].price - recentLows[i+1].price) / recentLows[i].price;
+    if(diff < 0.01){ rangeBot = (recentLows[i].price + recentLows[i+1].price)/2; break; }
+  }
+
+  if(!rangeTop || !rangeBot)
+    return {name:'S6', phase:'watch', detail:'Equal high/low henüz oluşmadı', dir:'neut'};
+
+  const rangeMid = (rangeTop + rangeBot) / 2;
+  const lastClose = bars[n-1].close;
+
+  // Sapma A ve B kontrolü
+  const devAbove = bars.slice(-20).some(b=>b.high > rangeTop * 1.003);
+  const devBelow = bars.slice(-20).some(b=>b.low  < rangeBot * 0.997);
+
+  if(!devAbove && !devBelow)
+    return {name:'S6', phase:'forming', detail:`Range tespit edildi: ${fp(rangeBot)}-${fp(rangeTop)}. Sapma bekleniyor.`, dir:'neut'};
+
+  if((devAbove && !devBelow) || (!devAbove && devBelow)){
+    const firstDev = devAbove ? 'üst' : 'alt';
+    return {name:'S6', phase:'forming', detail:`${firstDev} sapma oluştu. Karşı sapma bekleniyor.`, dir: devAbove?'bear':'bull'};
+  }
+
+  // Her iki sapma da var - kırılım bekleniyor
+  const broke = lastClose > rangeTop || lastClose < rangeBot;
+  if(!broke)
+    return {name:'S6', phase:'alert', detail:`İki sapma tamamlandı! Kırılım bekleniyor. Mid: ${fp(rangeMid)}`, dir:'neut'};
+
+  const isBull = lastClose > rangeTop;
+  const sl = isBull ? rangeBot * 0.997 : rangeTop * 1.003;
+  const tp = isBull ? rangeTop + (rangeTop-rangeBot) : rangeBot - (rangeTop-rangeBot);
+  const rr = Math.abs((tp-lastClose)/(lastClose-sl)).toFixed(1);
+
+  return {
+    name:'S6', phase:'ready',
+    detail:`Kırılım! ${isBull?'Bullish':'Bearish'} setup. Destek: ${fp(isBull?rangeMid:rangeMid)}`,
+    dir:isBull?'bull':'bear', sl, tp, rr
+  };
+}
+
+// S7: Trendline Liquidity Sweep (3+1 dokunuş)
+function checkS7(bars, swings){
+  const n = bars.length;
+  if(n < 20) return null;
+
+  // Son trendin yönünü belirle
+  const recentHighs = swings.filter(s=>s.type==='high').slice(-4);
+  const recentLows  = swings.filter(s=>s.type==='low').slice(-4);
+
+  if(recentLows.length < 3)
+    return {name:'S7', phase:'watch', detail:'Trendline için yeterli swing low yok', dir:'bull'};
+
+  // Uptrend trendline: son 3 low üzerinden
+  const l1 = recentLows[recentLows.length-3];
+  const l2 = recentLows[recentLows.length-2];
+  const l3 = recentLows[recentLows.length-1];
+
+  if(!l1||!l2||!l3) return null;
+
+  // Trendline yükselen mi?
+  const isRising = l2.price > l1.price && l3.price > l2.price;
+  if(!isRising)
+    return {name:'S7', phase:'watch', detail:'Yükselen trend trendline'ı oluşmadı', dir:'bull'};
+
+  // Trendline slope (l1 den l2 ye)
+  const slope = (l2.price - l1.price) / (l2.idx - l1.idx);
+
+  // 3. dokunuşta wick var mı? (l3 noktası)
+  const l3Bar = bars[l3.idx];
+  const wickSize = Math.abs(l3Bar.close - l3Bar.low) / (l3Bar.high - l3Bar.low);
+  const hasWick = l3Bar.close > l3Bar.low && wickSize < 0.4;
+
+  if(!hasWick)
+    return {name:'S7', phase:'forming', detail:`3 trendline dokunuşu var. 3. noktada wick bekleniyor.`, dir:'bull'};
+
+  // 4. dokunuş ve kırılım kontrolü
+  const lastClose = bars[n-1].close;
+  const trendlineAtLast = l3.price + slope * (n-1-l3.idx);
+
+  if(lastClose < trendlineAtLast * 0.998){
+    // Kırılım oldu
+    const sl = l3.price * 0.997;
+    const tp = Math.max(...recentHighs.map(h=>h.price));
+    const rr = Math.abs((tp-lastClose)/(lastClose-sl)).toFixed(1);
+    return {
+      name:'S7', phase:'ready',
+      detail:`Trendline kırıldı! Retest bekleniyor. SL: ${fp(sl)}`,
+      dir:'bear', sl, tp, rr
+    };
+  }
+
+  return {
+    name:'S7', phase:'alert',
+    detail:`Trendline intakt. 4. dokunuş ve kırılım bekleniyor. Seviye: ~${fp(trendlineAtLast)}`,
+    dir:'bull'
+  };
+}
+
+// S9: Swing Failure Pattern
+function checkS9(bars, swings){
+  const n = bars.length;
+  if(n < 10) return null;
+
+  const recentHighs = swings.filter(s=>s.type==='high').slice(-4);
+  const recentLows  = swings.filter(s=>s.type==='low').slice(-4);
+
+  // Bearish SFP: yeni high yapıp geri döndü
+  if(recentHighs.length >= 2){
+    const prevH = recentHighs[recentHighs.length-2];
+    const lastH = recentHighs[recentHighs.length-1];
+    const lastClose = bars[n-1].close;
+
+    if(lastH.price > prevH.price){
+      // Son high önceki high'ı geçti ama kapanış altında mı?
+      const lastBar = bars[n-1];
+      if(lastClose < prevH.price){
+        // SFP oluştu
+        const sl = lastH.price * 1.002;
+        const tp = Math.min(...recentLows.map(l=>l.price));
+        const rr = Math.abs((tp-lastClose)/(lastClose-sl)).toFixed(1);
+        return {
+          name:'S9', phase:'ready',
+          detail:`Bearish SFP! Likidite süpürüldü. ${fp(prevH.price)} altına kapandı.`,
+          dir:'bear', sl, tp, rr
+        };
+      }
+      // Yeni high sonrası birikme bekleniyor
+      return {
+        name:'S9', phase:'forming',
+        detail:`SFP adayı: Yeni high ${fp(lastH.price)}. Hızlı geri dönüş bekleniyor.`,
+        dir:'bear'
+      };
+    }
+  }
+
+  // Bullish SFP: yeni low yapıp geri döndü
+  if(recentLows.length >= 2){
+    const prevL = recentLows[recentLows.length-2];
+    const lastL = recentLows[recentLows.length-1];
+    const lastClose = bars[n-1].close;
+
+    if(lastL.price < prevL.price && lastClose > prevL.price){
+      const sl = lastL.price * 0.998;
+      const tp = Math.max(...recentHighs.map(h=>h.price));
+      const rr = Math.abs((tp-lastClose)/(lastClose-sl)).toFixed(1);
+      return {
+        name:'S9', phase:'ready',
+        detail:`Bullish SFP! Likidite süpürüldü. ${fp(prevL.price)} üstüne kapandı.`,
+        dir:'bull', sl, tp, rr
+      };
+    }
+
+    if(lastL.price < prevL.price){
+      return {
+        name:'S9', phase:'forming',
+        detail:`SFP adayı: Yeni low ${fp(lastL.price)}. Hızlı toparlanma bekleniyor.`,
+        dir:'bull'
+      };
+    }
+  }
+
+  return {name:'S9', phase:'watch', detail:'SFP koşulları henüz oluşmadı', dir:'neut'};
+}
+
+// S2: Base Deviation (Uptrend'de Base + Deviation)
+function checkS2(bars, swings){
+  const n = bars.length;
+  if(n < 15) return null;
+
+  // Son downtrend'den sonra yükselen trend var mı?
+  const sma200arr = sma(bars.map(b=>b.close), 200);
+  const s200 = sma200arr[n-1];
+  const lastClose = bars[n-1].close;
+  const isUptrend = lastClose > (s200||0);
+
+  if(!isUptrend) return {name:'S2', phase:'watch', detail:'Uptrend koşulu yok (fiyat SMA200 altında)', dir:'bull'};
+
+  // Base bul: birden fazla bounce olan konsolidasyon
+  const recentLows = swings.filter(s=>s.type==='low').slice(-5);
+  if(recentLows.length < 2) return {name:'S2', phase:'watch', detail:'Base oluşumu bekleniyor', dir:'bull'};
+
+  const l1 = recentLows[recentLows.length-2];
+  const l2 = recentLows[recentLows.length-1];
+  const baseDiff = Math.abs(l1.price-l2.price)/l1.price;
+
+  if(baseDiff > 0.03) return {name:'S2', phase:'watch', detail:'Equal low arıyor — base henüz oluşmadı', dir:'bull'};
+
+  const baseLevel = Math.min(l1.price, l2.price);
+  const baseTop   = Math.max(...bars.slice(l1.idx, l2.idx+1).map(b=>b.high));
+
+  // Deviation: base altına kısa süreli geçiş
+  const hasDeviation = bars.slice(l2.idx).some(b=>b.low < baseLevel * 0.997);
+
+  if(!hasDeviation)
+    return {name:'S2', phase:'forming', detail:`Base bulundu: ${fp(baseLevel)}. Deviation (sahte kırılım) bekleniyor.`, dir:'bull'};
+
+  // Fiyat base'e geri döndü mü?
+  if(lastClose > baseLevel && lastClose < baseTop){
+    const sl = baseLevel * 0.995;
+    const tp = baseTop * 1.01;
+    const rr = Math.abs((tp-lastClose)/(lastClose-sl)).toFixed(1);
+    return {
+      name:'S2', phase:'ready',
+      detail:`Base + Deviation tamamlandı. Base: ${fp(baseLevel)}-${fp(baseTop)}`,
+      dir:'bull', sl, tp, rr
+    };
+  }
+
+  return {
+    name:'S2', phase:'alert',
+    detail:`Deviation oluştu. Base bölgesine dönüş bekleniyor: ${fp(baseLevel)}`,
+    dir:'bull'
+  };
+}
+
+// Tüm stratejileri çalıştır ve güncelle
+function runStrategies(bars){
+  const swings = calcSwings(bars, 5);
+  const bosEvents = calcBOSCHoCH(bars, swings);
+
+  const results = [
+    checkS2(bars, swings),
+    checkS3(bars, swings),
+    checkS5(bars, swings, bosEvents),
+    checkS6(bars, swings),
+    checkS7(bars, swings),
+    checkS9(bars, swings),
+  ].filter(Boolean);
+
+  // Önce ready/alert olanları sırala
+  const order = {ready:0, alert:1, forming:2, watch:3, invalid:4};
+  results.sort((a,b)=>(order[a.phase]||3)-(order[b.phase]||3));
+
+  const container = g('strategyCards');
+  if(!container) return;
+
+  if(results.length === 0){
+    container.innerHTML = '<div style="font-family:var(--mono);font-size:10px;color:var(--txt2);text-align:center;padding:10px">Sinyal yok</div>';
+    return;
+  }
+
+  container.innerHTML = results.map(r=>{
+    const phaseClass = {ready:'phase-ready',alert:'phase-alert',forming:'phase-forming',watch:'phase-watch',invalid:'phase-invalid'}[r.phase]||'phase-watch';
+    const cardClass = {ready:'ready',alert:'alert',forming:'forming',watch:'',invalid:'invalid'}[r.phase]||'';
+    const phaseLabel = {ready:'HAZIR',alert:'UYARI',forming:'OLUŞUYOR',watch:'İZLE',invalid:'GEÇERSİZ'}[r.phase]||r.phase;
+
+    const dirColor = r.dir==='bull'?'var(--green)':r.dir==='bear'?'var(--red)':'var(--txt2)';
+    const dirArrow = r.dir==='bull'?'▲':r.dir==='bear'?'▼':'◆';
+
+    const levels = (r.sl && r.tp) ? `
+      <div class="strat-levels">
+        <span class="sl-lbl">SL: ${fp(r.sl)}</span>
+        <span class="tp-lbl">TP: ${fp(r.tp)}</span>
+        <span class="rr-lbl">RR: ${r.rr}:1</span>
+      </div>` : '';
+
+    return `
+      <div class="strat-card ${cardClass}">
+        <div class="strat-top">
+          <span class="strat-name" style="color:${dirColor}">${dirArrow} ${r.name}</span>
+          <span class="strat-phase ${phaseClass}">${phaseLabel}</span>
+        </div>
+        <div class="strat-detail">${r.detail}</div>
+        ${levels}
+      </div>`;
+  }).join('');
+}
+
 // Order Block hesapla
 function calcOrderBlocks(bars, swings){
   const obs = [];
@@ -1354,6 +1815,9 @@ function render(bars, sym){
 
   // SMC overlay çiz
   const smcData = drawSMC(bars);
+
+  // Strateji sinyalleri
+  runStrategies(bars);
 
   loading(false);
 }
