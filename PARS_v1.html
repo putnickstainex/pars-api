@@ -192,13 +192,13 @@ header {
   border-right: 1px solid var(--line);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 #watchlistItems {
   flex: 1;
   overflow-y: auto;
-  max-height: 280px;
 }
 
 .panel-title {
@@ -865,7 +865,7 @@ header {
     </div>
   </div>
   <!-- Watchlist Items -->
-  <div id="watchlistItems" style="overflow-y:auto;flex:1"></div>
+  <div id="watchlistItems"></div>
 
     <div class="sep"></div>
 
