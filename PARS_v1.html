@@ -2831,7 +2831,7 @@ function runAnalyst(bars, sym, stratResults, htfBias, confluencePct){
     steps = [
       {n:'1', txt:`${bestSignal.name} sinyali tespit edildi ancak yeterli teyit yok.`},
       {n:'2', txt:`Beklenen giris: ${fp(lastClose)}, SL: ${fp(sl)}.`},
-      {n:'3', txt:'Diger TF'lerde teyit bekle, acele etme.'},
+      {n:'3', txt:'Diger TF uzerinde teyit bekle, acele etme.'},
     ];
 
   // SENARYO 3: Alert sinyali - pozisyon hazirligi
@@ -2856,7 +2856,7 @@ function runAnalyst(bars, sym, stratResults, htfBias, confluencePct){
     steps = [
       {n:'1', txt:'RSI asiri satimda - bu genellikle geri sekme firsatidir.'},
       {n:'2', txt:'HTF bias yukari yonde - long tarafta kal.'},
-      {n:'3', txt:'LTF'de (daha kisa TF) MSB veya CHoCH bekle, oradan giris yap.'},
+      {n:'3', txt:'LTF uzerinde MSB veya CHoCH bekle, oradan giris yap.'},
       {n:'4', txt:'Pozisyon acmadan once mumun kapanisini bekle.'},
     ];
   } else if(rsiOB && htfBias?.bias==='bear'){
@@ -2876,7 +2876,7 @@ function runAnalyst(bars, sym, stratResults, htfBias, confluencePct){
     mainComment = `Confluence skoru cok dusuk (%${confluencePct}). Net sinyal yok. Risk almak icin dogru zaman degil.`;
     steps = [
       {n:'1', txt:'Hicbir pozisyon acma, bekle.'},
-      {n:'2', txt:'Daha kisa veya uzun TF'ye gec, net trend ara.'},
+      {n:'2', txt:'Daha kisa veya uzun TF sec, net trend ara.'},
       {n:'3', txt:`${formingSignals.length>0?formingSignals.length+' strateji olusuyor - takip et.':'Aktif setup yok.'}`},
     ];
 
@@ -2901,7 +2901,7 @@ function runAnalyst(bars, sym, stratResults, htfBias, confluencePct){
     mainComment = `${htfBias?'HTF bias: '+(htfBias.label||'Notr')+'. ':''} Net giris sinyali bekleniyor.`;
     steps = [
       {n:'1', txt:'Suanki durumda net islem sinyali yok.'},
-      {n:'2', txt:'HTF'de net trend ve LTF'de teyit olusmadan giris yapma.'},
+      {n:'2', txt:'HTF net trend ve LTF teyit olmadan giris yapma.'},
     ];
   }
 
