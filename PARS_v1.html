@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>PARS · Trading Intelligence</title>
 <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 <style>
@@ -548,6 +548,131 @@ header {
 }
 .smc-toggle-row:hover { background: var(--bg3); }
 
+/* Watchlist dropdown */
+.wl-drop-item:hover { background: var(--acc-glow) !important; }
+.wl-drop-item:last-child { border-bottom: none !important; }
+
+/* ── MOBİL RESPONSIVE ─────────────────────────────────────── */
+@media (max-width: 768px) {
+  body { overflow: auto; }
+
+  /* Header mobil */
+  header {
+    height: auto;
+    flex-wrap: wrap;
+    padding: 8px 10px;
+    gap: 8px;
+  }
+  .brand-sub { display: none; }
+  .brand-name { font-size: 14px; letter-spacing: 2px; }
+  .brand-icon { width: 28px; height: 25px; }
+  .divider { display: none; }
+
+  /* TF butonlari kucuk */
+  .tf { padding: 0 7px; font-size: 9px; }
+  .btn { height: 30px; padding: 0 10px; font-size: 10px; }
+
+  /* Ticker header'da gizle */
+  #ticker { display: none !important; }
+
+  /* Layout - dikey istif */
+  .layout {
+    flex-direction: column;
+    overflow-y: auto;
+    height: calc(100vh - 100px);
+  }
+
+  /* Sol panel - yatay scrollbar */
+  .left {
+    width: 100%;
+    height: auto;
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+    flex-shrink: 0;
+  }
+
+  #watchlistItems {
+    display: flex;
+    flex-direction: row;
+    max-height: none;
+    overflow-x: auto;
+    overflow-y: hidden;
+    flex: 1;
+  }
+
+  .wl-item {
+    flex-shrink: 0;
+    width: 90px;
+    border-left: none;
+    border-bottom: 2px solid transparent;
+    padding: 6px 8px;
+  }
+  .wl-item.active { border-bottom-color: var(--acc); background: var(--acc-glow); }
+
+  /* Indikatör ve ATR panellerini mobilde gizle */
+  .left .sep:first-of-type ~ * { display: none; }
+  .left > div:last-child { display: none; }
+
+  /* Grafik full width */
+  .center {
+    width: 100%;
+    flex: none;
+    height: 60vh;
+    min-height: 300px;
+  }
+
+  /* Sub charts mobilde kucuk */
+  #rsiChart { height: 60px !important; }
+  #volChart { height: 50px !important; }
+  #macdChart { height: 60px !important; }
+
+  /* Sag panel - tam genislik */
+  .right {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid var(--line);
+    flex-direction: row;
+    flex-wrap: wrap;
+    overflow-y: auto;
+    max-height: 40vh;
+  }
+
+  .right > div {
+    flex: 1;
+    min-width: 150px;
+    border-bottom: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+  }
+
+  /* Score box kucult */
+  .score-num { font-size: 18px !important; }
+
+  /* Strateji kartlari mobil */
+  .strat-card { padding: 7px 8px; }
+  .strat-detail { font-size: 9px; }
+
+  /* Stats grid 3 kolona */
+  .stats-grid { grid-template-columns: repeat(3,1fr); }
+
+  /* Modal fullscreen */
+  #btModal > div,
+  #scannerModal > div {
+    margin: 0;
+    border-radius: 0;
+    min-height: 100vh;
+  }
+}
+
+@media (max-width: 480px) {
+  .layout { height: calc(100vh - 90px); }
+  .center { height: 55vh; }
+  .right { max-height: 45vh; }
+  .tf-row { overflow-x: auto; }
+}
+
 /* scrollbar */
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -660,16 +785,21 @@ header {
       <span style="font-family:var(--mono);font-size:9px;color:var(--txt2);cursor:pointer" onclick="refreshWatchlist()" title="Yenile">⟳</span>
     </div>
     <!-- Arama kutusu -->
-    <div style="display:flex;gap:4px">
-      <div style="flex:1;display:flex;align-items:center;background:var(--bg3);border:1px solid var(--line2);border-radius:5px;padding:0 8px;gap:4px;transition:border-color .2s" id="wlSearchWrap">
-        <span style="font-family:var(--mono);font-size:10px;color:var(--txt2)">$</span>
-        <input id="wlSearch" type="text" placeholder="AAPL, GC=F, BTC..." 
-          style="background:none;border:none;outline:none;font-family:var(--mono);font-size:11px;color:var(--txt0);width:100%;padding:5px 0"
-          oninput="filterWatchlist(this.value)"
-          onkeydown="if(event.key==='Enter')addToWatchlist(this.value)">
+    <div style="position:relative">
+      <div style="display:flex;gap:4px">
+        <div style="flex:1;display:flex;align-items:center;background:var(--bg3);border:1px solid var(--line2);border-radius:5px;padding:0 8px;gap:4px;transition:border-color .2s" id="wlSearchWrap">
+          <span style="font-family:var(--mono);font-size:10px;color:var(--txt2)">🔍</span>
+          <input id="wlSearch" type="text" placeholder="altin, fener, btc, xau..." 
+            style="background:none;border:none;outline:none;font-family:var(--mono);font-size:11px;color:var(--txt0);width:100%;padding:5px 0"
+            oninput="onWLSearch(this.value)"
+            onkeydown="onWLKey(event)"
+            autocomplete="off">
+        </div>
+        <button onclick="addToWatchlist(g('wlSearch').value)"
+          style="background:var(--acc);color:var(--bg0);border:none;border-radius:5px;padding:0 8px;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer">+</button>
       </div>
-      <button onclick="addToWatchlist(g('wlSearch').value)" 
-        style="background:var(--acc);color:var(--bg0);border:none;border-radius:5px;padding:0 8px;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer">+</button>
+      <!-- Arama sonuclari dropdown -->
+      <div id="wlDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--line2);border-radius:5px;z-index:100;margin-top:3px;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,.5)"></div>
     </div>
   </div>
   <!-- Watchlist Items -->
@@ -1029,6 +1159,17 @@ header {
 let MC, CS, S20, S50, S200, RC, RSIL, RSOb, RSOsell, VC, VS;
 let MACDC, MACDL, MACDS, MACDH; // MACD chart
 let BBU, BBM, BBL; // Bollinger Bands (main chart)
+
+// Hesaplama cache - ayni veri icin tekrar hesaplama yapma
+const calcCache = new Map();
+function cachedCalc(key, fn){
+  if(calcCache.has(key)) return calcCache.get(key);
+  const result = fn();
+  calcCache.set(key, result);
+  // Cache 100 giristen buyukse temizle
+  if(calcCache.size > 100) calcCache.clear();
+  return result;
+}
 // SMC Series
 let swingMarkers = [], fvgSeries = [], bosSeries = [], liqSeries = [];
 let smcVisible = {swings:true, fvg:true, bos:true, liq:true, bb:true, macd:true, td9:true, ew:true};
@@ -1133,7 +1274,7 @@ async function fetchData(){
   const sym = document.getElementById('symbolInput').value.trim().toUpperCase();
   if(!sym){ toast('Sembol girin','err'); return; }
 
-  loading(true, `${sym} yukleniyor...`);
+  loading(true, `${getSymShort(sym)||sym} yukleniyor...`);
   document.getElementById('emptyOverlay').style.display='none';
 
   try{
@@ -1511,8 +1652,55 @@ function calcHTFBias(bars, swings, bosEvents){
 // { name, phase, detail, sl, tp, rr, dir }
 // phase: watch | forming | ready | alert | invalid
 
+// ── KALITE FILTRELERI ────────────────────────────────────────────────────────
+
+// Minimum RR kontrolu
+function validRR(entry, sl, tp, minRR=1.5){
+  if(!sl||!tp||sl<=0||tp<=0) return false;
+  const risk = Math.abs(entry-sl);
+  const reward = Math.abs(tp-entry);
+  if(risk===0) return false;
+  return reward/risk >= minRR;
+}
+
+// ATR bazli SL kalitesi - SL cok dar mi genis mi?
+function validSL(entry, sl, atrVal){
+  if(!atrVal||atrVal===0) return true;
+  const slDist = Math.abs(entry-sl);
+  // SL ATR'nin 0.3x ile 3x arasinda olmali
+  return slDist >= atrVal*0.3 && slDist <= atrVal*3;
+}
+
+// HTF bias ile uyum kontrolu
+function biasAligned(dir, htfBias){
+  if(!htfBias) return true; // bias yoksa filtre uygulama
+  if(htfBias.bias==='neut') return true; // notrde her iki yon de gecerli
+  if(dir==='bull' && htfBias.bias==='bull') return true;
+  if(dir==='bear' && htfBias.bias==='bear') return true;
+  return false; // Bias ile celisiyor
+}
+
+// Hacim onayi - son barda ortalamadan fazla hacim var mi?
+function volumeConfirm(bars){
+  const n = bars.length;
+  if(n < 20) return true; // yeterli veri yoksa gec
+  const avg = bars.slice(-20).reduce((a,b)=>a+b.volume,0)/20;
+  return bars[n-1].volume >= avg*0.8; // en az ortalamanin %80'i
+}
+
+// Momentum kontrolu - fiyat dogru yonde mi ilerliyor?
+function momentumOK(bars, dir, lookback=3){
+  const n = bars.length;
+  if(n < lookback+1) return true;
+  const recent = bars.slice(-lookback);
+  const trend = recent[recent.length-1].close - recent[0].close;
+  if(dir==='bull') return trend >= 0;
+  if(dir==='bear') return trend <= 0;
+  return true;
+}
+
 // S3: Cift Engulfing Support Zone
-function checkS3(bars, swings){
+function checkS3(bars, swings, htfBias=null){
   const n = bars.length;
   if(n < 10) return null;
 
@@ -1549,14 +1737,18 @@ function checkS3(bars, swings){
   const boxBot = Math.min(e1.low, e2.low);
   const lastClose = bars[n-1].close;
 
+  // HTF bias uyum kontrolu
+  if(htfBias && htfBias.bias==='bear') return {name:'Cift Yutma', phase:'watch', detail:'HTF bias asagi - long sinyal gec', dir:'bull'};
+
   // Fiyat blue box'a geldi mi?
   if(lastClose >= boxBot && lastClose <= boxTop){
-    const sl = boxBot * 0.999;
-    const tp = Math.max(...bars.slice(-10).map(b=>b.high));
-    const rr = tp && sl ? ((tp-lastClose)/(lastClose-sl)).toFixed(1) : '?';
+    const sl = boxBot * 0.997;
+    const tp = Math.max(...bars.slice(-15).map(b=>b.high)) * 1.002;
+    const rr = validRR(lastClose,sl,tp) ? ((tp-lastClose)/(lastClose-sl)).toFixed(1) : null;
+    if(!rr) return {name:'Cift Yutma', phase:'alert', detail:`Blue box icinde ama RR yetersiz. Box: ${fp(boxBot)}-${fp(boxTop)}`, dir:'bull'};
     return {
       name:'Cift Yutma', phase:'ready',
-      detail:`Blue box icinde! Giris bolgesi: ${fp(boxBot)}-${fp(boxTop)}`,
+      detail:`Blue box icinde! Hacim: ${volumeConfirm(bars)?'OK':'Zayif'}. Box: ${fp(boxBot)}-${fp(boxTop)}`,
       dir:'bull', sl, tp, rr
     };
   }
@@ -1569,7 +1761,7 @@ function checkS3(bars, swings){
 }
 
 // S5: CHoCH + Likidite Grab + Fibonacci
-function checkS5(bars, swings, bosEvents){
+function checkS5(bars, swings, bosEvents, htfBias=null){
   const n = bars.length;
   if(n < 20) return null;
 
@@ -1577,6 +1769,8 @@ function checkS5(bars, swings, bosEvents){
   const lastCHoCH = recentBOS.filter(e=>e.type==='CHoCH').slice(-1)[0];
 
   if(!lastCHoCH) return {name:'CHoCH Donus', phase:'watch', detail:'CHoCH bekleniyor - trend kirilimi yok', dir:'neut'};
+
+  // HTF uyum - CHoCH yonunun bias ile uyumlu olmasi gerekmiyor (zaten trend donusu)
 
   // CHoCH sonrasi likidite grab var mi?
   const chochIdx = bars.findIndex(b=>b.time===lastCHoCH.time);
@@ -1629,7 +1823,7 @@ function checkS5(bars, swings, bosEvents){
 }
 
 // S6: Range Deviation (Equal High/Low + Iki Sapma)
-function checkS6(bars, swings){
+function checkS6(bars, swings, htfBias=null){
   const n = bars.length;
   if(n < 15) return null;
 
@@ -1686,7 +1880,7 @@ function checkS6(bars, swings){
 }
 
 // S7: Trendline Liquidity Sweep (3+1 dokunus)
-function checkS7(bars, swings){
+function checkS7(bars, swings, htfBias=null){
   const n = bars.length;
   if(n < 20) return null;
 
@@ -1744,7 +1938,7 @@ function checkS7(bars, swings){
 }
 
 // S9: Swing Failure Pattern
-function checkS9(bars, swings){
+function checkS9(bars, swings, htfBias=null){
   const n = bars.length;
   if(n < 10) return null;
 
@@ -1787,12 +1981,14 @@ function checkS9(bars, swings){
     const lastClose = bars[n-1].close;
 
     if(lastL.price < prevL.price && lastClose > prevL.price){
-      const sl = lastL.price * 0.998;
-      const tp = Math.max(...recentHighs.map(h=>h.price));
+      const sl = lastL.price * 0.997;
+      const tp = Math.max(...recentHighs.map(h=>h.price)) * 1.002;
+      if(!validRR(lastClose,sl,tp,1.5)) return {name:'Swing Basarisiz', phase:'alert', detail:`Bullish SFP olustu ama RR yetersiz. Low: ${fp(lastL.price)}`, dir:'bull'};
+      if(htfBias?.bias==='bear') return {name:'Swing Basarisiz', phase:'alert', detail:`SFP var ama HTF bias asagi. Dikkatli ol.`, dir:'bull'};
       const rr = Math.abs((tp-lastClose)/(lastClose-sl)).toFixed(1);
       return {
         name:'Swing Basarisiz', phase:'ready',
-        detail:`Bullish SFP! Likidite supuruldu. ${fp(prevL.price)} ustune kapandi.`,
+        detail:`Bullish SFP! Low: ${fp(lastL.price)}, Hacim: ${volumeConfirm(bars)?'Guclu':'Zayif'}`,
         dir:'bull', sl, tp, rr
       };
     }
@@ -1810,7 +2006,7 @@ function checkS9(bars, swings){
 }
 
 // S2: Base Deviation (Uptrend'de Base + Deviation)
-function checkS2(bars, swings){
+function checkS2(bars, swings, htfBias=null){
   const n = bars.length;
   if(n < 15) return null;
 
@@ -1848,8 +2044,8 @@ function checkS2(bars, swings){
     const rr = Math.abs((tp-lastClose)/(lastClose-sl)).toFixed(1);
     return {
       name:'Base Kaymasi', phase:'ready',
-      detail:`Base + Deviation tamamlandi. Base: ${fp(baseLevel)}-${fp(baseTop)}`,
-      dir:'bull', sl, tp, rr
+      detail:`Base + Deviation! Hacim: ${volumeConfirm(bars)?'OK':'Zayif'}. Base: ${fp(baseLevel)}-${fp(baseTop)}`,
+      dir:'bull', sl: validSL(lastClose,sl,calcATR(bars.map(b=>b.high),bars.map(b=>b.low),bars.map(b=>b.close),14)[bars.length-1])?sl:sl, tp, rr
     };
   }
 
@@ -1862,7 +2058,7 @@ function checkS2(bars, swings){
 
 // Tum stratejileri calistir ve guncelle
 // S4: HTF Engulfing + Order Block Short Setup
-function checkS4(bars, swings){
+function checkS4(bars, swings, htfBias=null){
   const n = bars.length;
   if(n < 10) return null;
 
@@ -1935,7 +2131,7 @@ function checkS4(bars, swings){
 }
 
 // S8: Sharp Trend + FVG + Breaker Block
-function checkS8(bars, swings){
+function checkS8(bars, swings, htfBias=null){
   const n = bars.length;
   if(n < 20) return null;
 
@@ -2010,7 +2206,7 @@ function checkS8(bars, swings){
 }
 
 // S10: Trend Ici 4H Wick Mumu + FVG
-function checkS10(bars, swings){
+function checkS10(bars, swings, htfBias=null){
   const n = bars.length;
   if(n < 10) return null;
 
@@ -2086,7 +2282,7 @@ function checkS10(bars, swings){
 }
 
 // S11: Elliott Wave Giris (Wave 2 sonrasi C ve Wave 4 sonrasi)
-function checkS11(bars, swings){
+function checkS11(bars, swings, htfBias=null){
   const n = bars.length;
   if(n < 20) return null;
 
@@ -2155,7 +2351,7 @@ function checkS11(bars, swings){
 }
 
 // S1: 15m FVG + 1m Accumulation (Higher TF simulation)
-function checkS1(bars, swings){
+function checkS1(bars, swings, htfBias=null){
   const n = bars.length;
   if(n < 15) return null;
 
@@ -2231,19 +2427,20 @@ function checkS1(bars, swings){
 function runStrategies(bars){
   const swings = calcSwings(bars, 5);
   const bosEvents = calcBOSCHoCH(bars, swings);
+  const htfBias = calcHTFBias(bars, swings, bosEvents);
 
   const results = [
-    checkS1(bars, swings),
-    checkS2(bars, swings),
-    checkS3(bars, swings),
-    checkS4(bars, swings),
-    checkS5(bars, swings, bosEvents),
-    checkS6(bars, swings),
-    checkS7(bars, swings),
-    checkS8(bars, swings),
-    checkS9(bars, swings),
-    checkS10(bars, swings),
-    checkS11(bars, swings),
+    checkS1(bars, swings, htfBias),
+    checkS2(bars, swings, htfBias),
+    checkS3(bars, swings, htfBias),
+    checkS4(bars, swings, htfBias),
+    checkS5(bars, swings, bosEvents, htfBias),
+    checkS6(bars, swings, htfBias),
+    checkS7(bars, swings, htfBias),
+    checkS8(bars, swings, htfBias),
+    checkS9(bars, swings, htfBias),
+    checkS10(bars, swings, htfBias),
+    checkS11(bars, swings, htfBias),
   ].filter(Boolean);
 
   // Watch fazindaki kartlari gizle - sadece forming ve uzeri goster
@@ -3040,7 +3237,18 @@ function analyze(bars, sym){
 }
 
 // ── HELPERS ───────────────────────────────────────────────────
-function sma(data,p){return data.map((_,i)=>{if(i<p-1)return null;return data.slice(i-p+1,i+1).reduce((a,b)=>a+b,0)/p;});}
+function sma(data,p){
+  const out=new Array(data.length).fill(null);
+  if(p>data.length) return out;
+  let sum=0;
+  for(let i=0;i<p;i++) sum+=data[i];
+  out[p-1]=sum/p;
+  for(let i=p;i<data.length;i++){
+    sum+=data[i]-data[i-p];
+    out[i]=sum/p;
+  }
+  return out;
+}
 
 function rsi(c,p=14){
   const out=new Array(c.length).fill(null);
@@ -3675,25 +3883,128 @@ function drawEquityCurve(trades){
 
 // ── WATCHLIST MOTORU ─────────────────────────────────────────────────────────
 
-// Sembol isim haritasi
-const SYMBOL_NAMES = {
-  'AAPL':'Apple','MSFT':'Microsoft','NVDA':'NVIDIA','GOOGL':'Alphabet',
-  'AMZN':'Amazon','TSLA':'Tesla','META':'Meta','NFLX':'Netflix',
-  'GC=F':'Gold Futures','SI=F':'Silver','CL=F':'Crude Oil','NG=F':'Nat.Gas',
-  'BTC-USD':'Bitcoin','ETH-USD':'Ethereum','BNB-USD':'BNB','XRP-USD':'XRP',
-  'SOL-USD':'Solana','ADA-USD':'Cardano','DOGE-USD':'Dogecoin',
-  'EURUSD=X':'EUR/USD','GBPUSD=X':'GBP/USD','USDJPY=X':'USD/JPY',
-  'USDTRY=X':'USD/TRY','EURTRY=X':'EUR/TRY',
-  'THYAO.IS':'Turk Hava','GARAN.IS':'Garanti','AKBNK.IS':'Akbank',
-  'EREGL.IS':'Eregil','BIMAS.IS':'BIM','KCHOL.IS':'Koc Holding',
-  'XAU=F':'Altin Spot','XAUUSD=X':'XAU/USD',
-  '^GSPC':'S&P 500','^NDX':'Nasdaq','^DJI':'Dow Jones','^BIST100':'BIST 100',
-  '^FTSE':'FTSE 100','^DAX':'DAX','^N225':'Nikkei',
-  'SPY':'S&P 500 ETF','QQQ':'Nasdaq ETF',
-};
+// Tam arama veritabani - {yahoo_sembol, kisaad, tam_isim, etiketler}
+const SYMBOL_DB = [
+  // METALLER
+  {sym:'GC=F',     short:'ALTIN',   name:'Altin (Gold)',        tags:['altin','gold','xau','xauusd','au','metal']},
+  {sym:'SI=F',     short:'GUMUS',   name:'Gumus (Silver)',      tags:['gumus','silver','xag','si','metal']},
+  {sym:'PL=F',     short:'PLATIN',  name:'Platin',              tags:['platin','platinum','pt','metal']},
+  {sym:'HG=F',     short:'BAKIR',   name:'Bakir (Copper)',      tags:['bakir','copper','cu','metal']},
+  // ENERJI
+  {sym:'CL=F',     short:'PETROL',  name:'Ham Petrol (WTI)',    tags:['petrol','oil','wti','cl','enerji','brent']},
+  {sym:'BZ=F',     short:'BRENT',   name:'Brent Petrol',        tags:['brent','petrol','oil','enerji']},
+  {sym:'NG=F',     short:'DOGALGAZ',name:'Dogal Gaz',           tags:['dogalgaz','natgas','ng','gaz','enerji']},
+  // KRIPTO
+  {sym:'BTC-USD',  short:'BTC',     name:'Bitcoin',             tags:['bitcoin','btc','kripto','crypto']},
+  {sym:'ETH-USD',  short:'ETH',     name:'Ethereum',            tags:['ethereum','eth','kripto','crypto']},
+  {sym:'BNB-USD',  short:'BNB',     name:'BNB',                 tags:['bnb','binance','kripto']},
+  {sym:'XRP-USD',  short:'XRP',     name:'Ripple XRP',          tags:['xrp','ripple','kripto']},
+  {sym:'SOL-USD',  short:'SOL',     name:'Solana',              tags:['solana','sol','kripto']},
+  {sym:'ADA-USD',  short:'ADA',     name:'Cardano',             tags:['cardano','ada','kripto']},
+  {sym:'DOGE-USD', short:'DOGE',    name:'Dogecoin',            tags:['dogecoin','doge','kripto']},
+  {sym:'AVAX-USD', short:'AVAX',    name:'Avalanche',           tags:['avalanche','avax','kripto']},
+  {sym:'DOT-USD',  short:'DOT',     name:'Polkadot',            tags:['polkadot','dot','kripto']},
+  {sym:'LINK-USD', short:'LINK',    name:'Chainlink',           tags:['chainlink','link','kripto']},
+  // FOREX
+  {sym:'EURUSD=X', short:'EURUSD',  name:'Euro / Dolar',        tags:['eurusd','eur','euro','dolar','usd','forex']},
+  {sym:'GBPUSD=X', short:'GBPUSD',  name:'Sterlin / Dolar',     tags:['gbpusd','gbp','sterlin','pound','forex']},
+  {sym:'USDJPY=X', short:'USDJPY',  name:'Dolar / Japon Yeni',  tags:['usdjpy','jpy','yen','japon','forex']},
+  {sym:'USDTRY=X', short:'USDTRY',  name:'Dolar / Turk Lirasi', tags:['usdtry','try','lira','turk','dolar','forex']},
+  {sym:'EURTRY=X', short:'EURTRY',  name:'Euro / Turk Lirasi',  tags:['eurtry','eur','euro','try','lira','forex']},
+  {sym:'GBPTRY=X', short:'GBPTRY',  name:'Sterlin / Lira',      tags:['gbptry','gbp','try','forex']},
+  {sym:'XAUUSD=X', short:'XAUUSD',  name:'Altin / Dolar',       tags:['xauusd','xau','altin','gold','forex','metal']},
+  {sym:'XAGUSD=X', short:'XAGUSD',  name:'Gumus / Dolar',       tags:['xagusd','xag','gumus','silver','forex']},
+  // ABD HISSE
+  {sym:'AAPL',     short:'AAPL',    name:'Apple',               tags:['apple','aapl','teknoloji','nasdaq']},
+  {sym:'MSFT',     short:'MSFT',    name:'Microsoft',           tags:['microsoft','msft','teknoloji','nasdaq']},
+  {sym:'NVDA',     short:'NVDA',    name:'NVIDIA',              tags:['nvidia','nvda','teknoloji','ai','nasdaq']},
+  {sym:'GOOGL',    short:'GOOGL',   name:'Alphabet (Google)',   tags:['google','alphabet','googl','nasdaq']},
+  {sym:'AMZN',     short:'AMZN',    name:'Amazon',              tags:['amazon','amzn','nasdaq']},
+  {sym:'TSLA',     short:'TSLA',    name:'Tesla',               tags:['tesla','tsla','elektrikli','nasdaq']},
+  {sym:'META',     short:'META',    name:'Meta (Facebook)',     tags:['meta','facebook','fb','nasdaq']},
+  {sym:'NFLX',     short:'NFLX',    name:'Netflix',             tags:['netflix','nflx','nasdaq']},
+  {sym:'AMD',      short:'AMD',     name:'AMD',                 tags:['amd','chip','teknoloji']},
+  {sym:'INTC',     short:'INTC',    name:'Intel',               tags:['intel','intc','chip']},
+  {sym:'JPM',      short:'JPM',     name:'JP Morgan',           tags:['jpmorgan','jp','banka','finans']},
+  {sym:'GS',       short:'GS',      name:'Goldman Sachs',       tags:['goldman','gs','banka','finans']},
+  {sym:'SPY',      short:'SPY',     name:'S&P 500 ETF',         tags:['spy','sp500','endeks','etf']},
+  {sym:'QQQ',      short:'QQQ',     name:'Nasdaq ETF',          tags:['qqq','nasdaq','endeks','etf']},
+  {sym:'GLD',      short:'GLD',     name:'Altin ETF',           tags:['gld','altin','gold','etf']},
+  // ENDEKSLer
+  {sym:'^GSPC',    short:'SP500',   name:'S&P 500',             tags:['sp500','spx','sandp','endeks','abd']},
+  {sym:'^NDX',     short:'NASDAQ',  name:'Nasdaq 100',          tags:['nasdaq','ndx','endeks','abd']},
+  {sym:'^DJI',     short:'DOW',     name:'Dow Jones',           tags:['dow','dji','jones','endeks','abd']},
+  {sym:'^IXIC',    short:'COMP',    name:'Nasdaq Composite',    tags:['nasdaq','ixic','endeks']},
+  {sym:'^FTSE',    short:'FTSE',    name:'FTSE 100 (Londra)',   tags:['ftse','londra','uk','ingiltere','endeks']},
+  {sym:'^DAX',     short:'DAX',     name:'DAX (Almanya)',       tags:['dax','almanya','frankfurt','endeks']},
+  {sym:'^N225',    short:'NIKKEI',  name:'Nikkei 225 (Japonya)',tags:['nikkei','n225','japonya','tokyo','endeks']},
+  {sym:'^HSI',     short:'HANGSENG',name:'Hang Seng (HK)',      tags:['hangseng','hsi','hongkong','endeks']},
+  // BIST
+  {sym:'THYAO.IS', short:'THYAO',   name:'Turk Hava Yollari',  tags:['thyao','thy','turk','hava','bist']},
+  {sym:'GARAN.IS', short:'GARAN',   name:'Garanti BBVA',       tags:['garan','garanti','bbva','banka','bist']},
+  {sym:'AKBNK.IS', short:'AKBNK',   name:'Akbank',             tags:['akbnk','akbank','banka','bist']},
+  {sym:'EREGL.IS', short:'EREGL',   name:'Eregil Demir Celik', tags:['eregl','eregil','demir','celik','bist']},
+  {sym:'BIMAS.IS', short:'BIMAS',   name:'BIM Magazalar',      tags:['bimas','bim','market','perakende','bist']},
+  {sym:'KCHOL.IS', short:'KCHOL',   name:'Koc Holding',        tags:['kchol','koc','holding','bist']},
+  {sym:'SAHOL.IS', short:'SAHOL',   name:'Sabanci Holding',    tags:['sahol','sabanci','holding','bist']},
+  {sym:'ASELS.IS', short:'ASELS',   name:'Aselsan',            tags:['asels','aselsan','savunma','bist']},
+  {sym:'TCELL.IS', short:'TCELL',   name:'Turkcell',           tags:['tcell','turkcell','telekom','bist']},
+  {sym:'FROTO.IS', short:'FROTO',   name:'Ford Otosan',        tags:['froto','ford','otomobil','bist']},
+  {sym:'TOASO.IS', short:'TOASO',   name:'Tofas',              tags:['toaso','tofas','otomobil','bist']},
+  {sym:'PGSUS.IS', short:'PGSUS',   name:'Pegasus Hava',       tags:['pgsus','pegasus','hava','bist']},
+  {sym:'FENER.IS', short:'FENER',   name:'Fenerbahce',         tags:['fener','fenerbahce','spor','bist']},
+  {sym:'GSRAY.IS', short:'GSRAY',   name:'Galatasaray',        tags:['gsray','galatasaray','spor','bist']},
+  {sym:'BJKAS.IS', short:'BJKAS',   name:'Besiktas',           tags:['bjkas','besiktas','spor','bist']},
+  {sym:'SISE.IS',  short:'SISE',    name:'Sise ve Cam',        tags:['sise','sise cam','cam','bist']},
+  {sym:'KOZAL.IS', short:'KOZAL',   name:'Koza Altin',         tags:['kozal','koza','altin','maden','bist']},
+  {sym:'ISCTR.IS', short:'ISCTR',   name:'Is Bankasi',         tags:['isctr','is bankasi','banka','bist']},
+  {sym:'HALKB.IS', short:'HALKB',   name:'Halk Bankasi',       tags:['halkb','halk','banka','bist']},
+  {sym:'VAKBN.IS', short:'VAKBN',   name:'Vakifbank',          tags:['vakbn','vakif','banka','bist']},
+  {sym:'TUPRS.IS', short:'TUPRS',   name:'Tupras',             tags:['tuprs','tupras','enerji','rafineri','bist']},
+  {sym:'ENKAI.IS', short:'ENKAI',   name:'Enka Insaat',        tags:['enkai','enka','insaat','bist']},
+  {sym:'ARCLK.IS', short:'ARCLK',   name:'Arcelik',            tags:['arclk','arcelik','beyaz esya','bist']},
+];
+
+// Sembol -> isim haritasi (geriye uyumluluk)
+const SYMBOL_NAMES = {};
+SYMBOL_DB.forEach(s=>{ SYMBOL_NAMES[s.sym]=s.name; });
 
 function getSymName(sym){
-  return SYMBOL_NAMES[sym] || sym;
+  const entry = SYMBOL_DB.find(s=>s.sym===sym);
+  return entry ? entry.name : SYMBOL_NAMES[sym] || sym;
+}
+
+function getSymShort(sym){
+  const entry = SYMBOL_DB.find(s=>s.sym===sym);
+  return entry ? entry.short : sym;
+}
+
+// Arama fonksiyonu - yazilan metni tag, short, name, sym ile eslestirir
+function searchSymbols(query){
+  if(!query || query.length < 1) return [];
+  const q = query.toLowerCase().trim();
+  const results = [];
+  const seen = new Set();
+
+  for(const entry of SYMBOL_DB){
+    if(seen.has(entry.sym)) continue;
+    const score =
+      (entry.sym.toLowerCase() === q ? 100 : 0) +
+      (entry.short.toLowerCase() === q ? 90 : 0) +
+      (entry.sym.toLowerCase().startsWith(q) ? 70 : 0) +
+      (entry.short.toLowerCase().startsWith(q) ? 65 : 0) +
+      (entry.name.toLowerCase().includes(q) ? 50 : 0) +
+      (entry.tags.some(t=>t===q) ? 80 : 0) +
+      (entry.tags.some(t=>t.startsWith(q)) ? 40 : 0) +
+      (entry.tags.some(t=>t.includes(q)) ? 20 : 0);
+
+    if(score > 0){
+      results.push({...entry, score});
+      seen.add(entry.sym);
+    }
+  }
+
+  return results.sort((a,b)=>b.score-a.score).slice(0,8);
 }
 
 // Default watchlist
@@ -3748,19 +4059,27 @@ function renderWatchlist(){
     const chgText = chg==null?'—':`${chg>=0?'+':''}${chg.toFixed(2)}%`;
     const priceText = price!=null?fp(price):'';
 
+    const entry = SYMBOL_DB.find(s=>s.sym===sym);
+    const displayName = entry ? entry.short : sym;
+    const fullName = entry ? entry.name : name;
+
     return `<div class="wl-item${isActive?' active':''}"
       onclick="loadSymFromWL('${sym}')"
-      style="position:relative;padding-right:28px">
-      <div style="min-width:0;flex:1">
-        <div class="wl-sym">${sym}</div>
-        <div style="font-family:var(--sans);font-size:9px;color:var(--txt2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>
-        ${priceText?`<div style="font-family:var(--mono);font-size:10px;color:var(--txt0);margin-top:1px">${priceText}</div>`:''}
+      style="position:relative">
+      <div style="min-width:0;flex:1;overflow:hidden">
+        <div style="display:flex;align-items:baseline;gap:5px">
+          <span class="wl-sym">${displayName}</span>
+          ${displayName!==sym?`<span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">${sym}</span>`:''}
+        </div>
+        <div style="font-family:var(--sans);font-size:9px;color:var(--txt2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px">${fullName}</div>
+        ${priceText?`<div style="font-family:var(--mono);font-size:10px;color:var(--txt0);margin-top:2px">${priceText}</div>`:''}
       </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px">
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0">
         <span class="wl-chg ${chgClass}">${chgText}</span>
         <span onclick="event.stopPropagation();removeFromWatchlist('${sym}')"
-          style="font-size:10px;color:var(--txt2);cursor:pointer;line-height:1;padding:1px 3px;border-radius:2px"
-          title="Cikar">×</span>
+          style="font-size:11px;color:var(--txt2);cursor:pointer;line-height:1;padding:1px 4px;border-radius:2px;transition:color .1s"
+          onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--txt2)'"
+          title="Listeden cikar">×</span>
       </div>
     </div>`;
   }).join('');
@@ -3770,6 +4089,106 @@ function filterWatchlist(val){
   wlFilter = val;
   renderWatchlist();
 }
+
+let wlDropIdx = -1; // klavye navigasyon
+
+function onWLSearch(val){
+  wlFilter = val;
+  renderWatchlist();
+
+  const dropdown = g('wlDropdown');
+  if(!dropdown) return;
+
+  if(!val || val.length < 1){
+    dropdown.style.display='none';
+    return;
+  }
+
+  const results = searchSymbols(val);
+  if(results.length===0){
+    dropdown.innerHTML = `<div style="font-family:var(--mono);font-size:10px;color:var(--txt2);padding:10px 12px">Sonuc bulunamadi - Enter ile ekle</div>`;
+    dropdown.style.display='block';
+    return;
+  }
+
+  wlDropIdx = -1;
+  dropdown.innerHTML = results.map((r,i)=>`
+    <div class="wl-drop-item" data-sym="${r.sym}" data-idx="${i}"
+      onclick="selectDropItem('${r.sym}')"
+      onmouseover="wlDropIdx=${i};highlightDrop()"
+      style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--line);transition:background .1s">
+      <div>
+        <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:var(--acc)">${r.short}</span>
+        <span style="font-family:var(--sans);font-size:10px;color:var(--txt1);margin-left:6px">${r.name}</span>
+      </div>
+      <span style="font-family:var(--mono);font-size:9px;color:var(--txt2)">${r.sym}</span>
+    </div>`).join('');
+  dropdown.style.display='block';
+}
+
+function highlightDrop(){
+  const items = document.querySelectorAll('.wl-drop-item');
+  items.forEach((el,i)=>{
+    el.style.background = i===wlDropIdx ? 'var(--acc-glow)' : '';
+  });
+}
+
+function onWLKey(e){
+  const dropdown = g('wlDropdown');
+  const items = document.querySelectorAll('.wl-drop-item');
+  if(e.key==='ArrowDown'){
+    e.preventDefault();
+    wlDropIdx = Math.min(wlDropIdx+1, items.length-1);
+    highlightDrop();
+  } else if(e.key==='ArrowUp'){
+    e.preventDefault();
+    wlDropIdx = Math.max(wlDropIdx-1, 0);
+    highlightDrop();
+  } else if(e.key==='Enter'){
+    e.preventDefault();
+    if(wlDropIdx>=0 && items[wlDropIdx]){
+      const sym = items[wlDropIdx].dataset.sym;
+      selectDropItem(sym);
+    } else {
+      // Direkt sembol ekle
+      const val = g('wlSearch').value.trim().toUpperCase();
+      if(val) addDirectSymbol(val);
+    }
+  } else if(e.key==='Escape'){
+    if(dropdown) dropdown.style.display='none';
+  }
+}
+
+function selectDropItem(sym){
+  const dropdown = g('wlDropdown');
+  if(dropdown) dropdown.style.display='none';
+  const inp = g('wlSearch');
+  if(inp){ inp.value=''; wlFilter=''; }
+  addToWatchlist(sym);
+}
+
+function addDirectSymbol(sym){
+  // Kullanici tam sembol yazdiysa direkt ekle
+  if(!sym) return;
+  // DB'de var mi kontrol et
+  const found = SYMBOL_DB.find(s=>
+    s.sym.toUpperCase()===sym ||
+    s.short.toUpperCase()===sym
+  );
+  const finalSym = found ? found.sym : sym;
+  addToWatchlist(finalSym);
+  const inp = g('wlSearch');
+  if(inp){ inp.value=''; wlFilter=''; }
+}
+
+// Dropdown disina tiklayinca kapat
+document.addEventListener('click', e=>{
+  const dd = g('wlDropdown');
+  const wrap = g('wlSearchWrap');
+  if(dd && wrap && !wrap.contains(e.target) && !dd.contains(e.target)){
+    dd.style.display='none';
+  }
+});
 
 function addToWatchlist(sym){
   if(!sym) return;
