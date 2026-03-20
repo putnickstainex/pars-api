@@ -355,13 +355,75 @@ header {
 
 /* ── RIGHT PANEL ─────────────────────────────────── */
 .right {
-  width: 210px;
+  width: 240px;
   flex-shrink: 0;
   background: var(--bg1);
   border-left: 1px solid var(--line);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+}
+
+/* Analist Yorumu */
+.analyst-box {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(135deg, rgba(0,212,255,0.04) 0%, transparent 100%);
+}
+.analyst-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px;
+}
+.analyst-title {
+  font-family: var(--mono); font-size: 9px; font-weight: 700;
+  letter-spacing: 1.5px; color: var(--acc); display: flex; align-items: center; gap: 5px;
+}
+.analyst-dot {
+  width: 5px; height: 5px; border-radius: 50%; background: var(--acc);
+  animation: blink 2s infinite;
+}
+.analyst-action {
+  font-family: var(--mono); font-size: 13px; font-weight: 700;
+  padding: 6px 10px; border-radius: 6px; text-align: center;
+  margin-bottom: 8px; letter-spacing: .5px;
+}
+.analyst-action.buy  { background: rgba(0,230,118,.12); color: var(--green); border: 1px solid rgba(0,230,118,.3); }
+.analyst-action.sell { background: rgba(255,61,87,.12);  color: var(--red);   border: 1px solid rgba(255,61,87,.3); }
+.analyst-action.wait { background: rgba(255,171,0,.10);  color: var(--amber); border: 1px solid rgba(255,171,0,.3); }
+.analyst-action.watch{ background: rgba(61,69,96,.3);    color: var(--txt1);  border: 1px solid var(--line2); }
+
+.analyst-levels {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 4px; margin-bottom: 8px;
+}
+.analyst-level {
+  background: var(--bg3); border-radius: 4px; padding: 5px 7px;
+}
+.analyst-level-k {
+  font-family: var(--mono); font-size: 8px; color: var(--txt2); margin-bottom: 2px;
+}
+.analyst-level-v {
+  font-family: var(--mono); font-size: 11px; font-weight: 700;
+}
+.analyst-comment {
+  font-family: var(--sans); font-size: 10px; color: var(--txt1);
+  line-height: 1.55; padding: 8px; background: var(--bg2);
+  border-radius: 5px; border-left: 2px solid var(--acc);
+}
+.analyst-steps {
+  margin-top: 6px; display: flex; flex-direction: column; gap: 3px;
+}
+.analyst-step {
+  font-family: var(--mono); font-size: 9px; color: var(--txt2);
+  display: flex; align-items: flex-start; gap: 5px; line-height: 1.4;
+}
+.analyst-step-num {
+  background: var(--bg3); color: var(--acc); border-radius: 3px;
+  padding: 0 4px; font-weight: 700; flex-shrink: 0;
+}
+.analyst-tf {
+  font-family: var(--mono); font-size: 8px; color: var(--txt2);
+  margin-top: 5px; text-align: right; opacity: .6;
 }
 
 /* confluence score */
@@ -930,6 +992,39 @@ header {
 
   <!-- RIGHT -->
   <div class="right">
+
+    <!-- ANALIST YORUMU -->
+    <div class="analyst-box" id="analystBox">
+      <div class="analyst-header">
+        <div class="analyst-title">
+          <div class="analyst-dot"></div>
+          PARS ANALİST
+        </div>
+        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)" id="analystTF">—</span>
+      </div>
+      <div class="analyst-action watch" id="analystAction">ANALİZ BEKLENİYOR</div>
+      <div class="analyst-levels" id="analystLevels" style="display:none">
+        <div class="analyst-level">
+          <div class="analyst-level-k">GİRİŞ</div>
+          <div class="analyst-level-v" id="aLvlEntry" style="color:var(--acc)">—</div>
+        </div>
+        <div class="analyst-level">
+          <div class="analyst-level-k">STOP LOSS</div>
+          <div class="analyst-level-v" id="aLvlSL" style="color:var(--red)">—</div>
+        </div>
+        <div class="analyst-level">
+          <div class="analyst-level-k">HEDEF 1</div>
+          <div class="analyst-level-v" id="aLvlTP1" style="color:var(--green)">—</div>
+        </div>
+        <div class="analyst-level">
+          <div class="analyst-level-k">RR ORANI</div>
+          <div class="analyst-level-v" id="aLvlRR" style="color:var(--amber)">—</div>
+        </div>
+      </div>
+      <div class="analyst-comment" id="analystComment">Sembol seçin ve analiz başlasın.</div>
+      <div class="analyst-steps" id="analystSteps"></div>
+      <div class="analyst-tf" id="analystTime"></div>
+    </div>
 
     <!-- HTF BIAS -->
     <div class="score-box" id="htfBiasBox">
@@ -2657,8 +2752,189 @@ async function runMTFConfluence(sym, currentBars){
 }
 
 function updateMTFScore(bias, quality){
-  // mtfBiasGlobal'i guncelle - confluence skorunda kullanilir
   window.mtfBiasGlobal = {bias, quality};
+}
+
+// ── ANALIST MOTORU ────────────────────────────────────────────────────────────
+function runAnalyst(bars, sym, stratResults, htfBias, confluencePct){
+  const n = bars.length;
+  if(n < 2) return;
+
+  const last = bars[n-1];
+  const prev = bars[n-2];
+  const lastClose = last.close;
+  const chg = (lastClose - prev.close) / prev.close * 100;
+
+  // TF etiketi
+  const tfLabel = currentTF==='1m'?'1 Dakika':currentTF==='5m'?'5 Dakika':
+    currentTF==='15m'?'15 Dakika':currentTF==='30m'?'30 Dakika':
+    currentTF==='1h'?'1 Saat':currentTF==='1d'?'Gunluk':
+    currentTF==='1wk'?'Haftalik':'Aylik';
+
+  if(g('analystTF')) g('analystTF').textContent = tfLabel;
+  if(g('analystTime')) g('analystTime').textContent = new Date().toLocaleTimeString('tr-TR');
+
+  // En iyi strateji sinyali bul
+  const readySignals  = stratResults.filter(r=>r.phase==='ready');
+  const alertSignals  = stratResults.filter(r=>r.phase==='alert');
+  const formingSignals= stratResults.filter(r=>r.phase==='forming');
+  const bestSignal    = readySignals[0] || alertSignals[0] || null;
+
+  // MTF durumu
+  const mtf = window.mtfBiasGlobal;
+  const mtfIdeal  = mtf?.quality?.includes('IDEAL');
+  const mtfPartial= mtf?.quality?.includes('HTF');
+  const mtfNoConf = !mtfIdeal && !mtfPartial;
+
+  // RSI
+  const rsiVals = rsi(bars.map(b=>b.close), 14);
+  const lastRSI = rsiVals[n-1];
+  const rsiOB   = lastRSI > 70;
+  const rsiOS   = lastRSI < 30;
+
+  // Karar matrisi
+  let action='watch', actionClass='watch', mainComment='', steps=[], sl=null, tp=null, entry=null, rr=null;
+
+  // SENARYO 1: Hazir sinyal + yeterli confluence + MTF uyumlu
+  if(bestSignal && bestSignal.phase==='ready' && confluencePct >= 55 && !mtfNoConf){
+    const isBuy = bestSignal.dir==='bull';
+    action    = isBuy ? 'LONG (AL)' : 'SHORT (SAT)';
+    actionClass = isBuy ? 'buy' : 'sell';
+    entry = lastClose;
+    sl    = bestSignal.sl;
+    tp    = bestSignal.tp;
+    rr    = bestSignal.rr;
+
+    const mtfComment = mtfIdeal ? 'Tum zaman dilimleri uyumlu.' : 'HTF yonu destekliyor.';
+    const rsiComment = rsiOB ? 'RSI asiri alimda, dikkatli ol.' : rsiOS ? 'RSI asiri satimda, dip olabilir.' : 'RSI normal bolgede.';
+    const stratComment = bestSignal.detail;
+
+    mainComment = `${bestSignal.name} stratejisi aktif. ${mtfComment} ${rsiComment}`;
+
+    steps = [
+      { n:'1', txt:`Giris: ${fp(entry)} seviyesinden ${isBuy?'long':'short'} poz ac.` },
+      { n:'2', txt:`Stop Loss: ${fp(sl)} — bu seviyeye kapanirsa pozisyonu kapat.` },
+      { n:'3', txt:`Hedef: ${fp(tp)} — burada karin en az %50sini realize et.` },
+      { n:'4', txt:`RR ${rr}:1 — her ${rr} birim kazanc icin 1 birim risk. ${parseFloat(rr)>=2?'Iyi RR.':'RR biraz dar, dikkat.'}` },
+    ];
+    if(mtfIdeal) steps.push({n:'✦', txt:'Tum TF uyumlu — yuksek olasilikli setup.'});
+    if(rsiOB && isBuy) steps.push({n:'!', txt:'RSI asiri alimda — giris miktarini azalt.'});
+    if(rsiOS && !isBuy) steps.push({n:'!', txt:'RSI asiri satimda — short risk artmis.'});
+
+  // SENARYO 2: Hazir sinyal var ama confluence dusuk
+  } else if(bestSignal && bestSignal.phase==='ready' && confluencePct < 55){
+    const isBuy = bestSignal.dir==='bull';
+    action = 'BEKLE - DUSUK SKOR';
+    actionClass = 'wait';
+    sl = bestSignal.sl; tp = bestSignal.tp;
+    mainComment = `${bestSignal.name} sinyali var ama confluence skoru dusuk (%${confluencePct}). Giris icin en az %55 gerekiyor.`;
+    steps = [
+      {n:'1', txt:`${bestSignal.name} sinyali tespit edildi ancak yeterli teyit yok.`},
+      {n:'2', txt:`Beklenen giris: ${fp(lastClose)}, SL: ${fp(sl)}.`},
+      {n:'3', txt:'Diger TF'lerde teyit bekle, acele etme.'},
+    ];
+
+  // SENARYO 3: Alert sinyali - pozisyon hazirligi
+  } else if(alertSignals.length > 0 && confluencePct >= 45){
+    const sig = alertSignals[0];
+    const isBuy = sig.dir==='bull';
+    action = isBuy ? 'LONG HAZIRLIK' : 'SHORT HAZIRLIK';
+    actionClass = 'wait';
+    mainComment = `${sig.name} sinyali yaklasiyor. Henuz giris yok ama pozisyon hazirla.`;
+    steps = [
+      {n:'1', txt:`${sig.detail}`},
+      {n:'2', txt:'Sinyal tamamlandiginda hizlica pozisyon ac.'},
+      {n:'3', txt:mtfIdeal?'MTF uyumlu — guvenilir setup.':mtfPartial?'HTF destekliyor, LTF teyit bekle.':'MTF karisik — kucuk pozisyonla baslayabilirsin.'},
+    ];
+    if(sig.sl) steps.push({n:'4', txt:`Planlanan SL: ${fp(sig.sl)}`});
+
+  // SENARYO 4: RSI asiri bolge + bias uyumu
+  } else if(rsiOS && htfBias?.bias==='bull'){
+    action = 'DIPTEN AL DUSUN';
+    actionClass = 'wait';
+    mainComment = `RSI ${lastRSI?.toFixed(1)} asiri satim bolgesinde ve HTF bias yukari. Dip olusumu izleniyor.`;
+    steps = [
+      {n:'1', txt:'RSI asiri satimda - bu genellikle geri sekme firsatidir.'},
+      {n:'2', txt:'HTF bias yukari yonde - long tarafta kal.'},
+      {n:'3', txt:'LTF'de (daha kisa TF) MSB veya CHoCH bekle, oradan giris yap.'},
+      {n:'4', txt:'Pozisyon acmadan once mumun kapanisini bekle.'},
+    ];
+  } else if(rsiOB && htfBias?.bias==='bear'){
+    action = 'ZIRVEYE SAT DUSUN';
+    actionClass = 'wait';
+    mainComment = `RSI ${lastRSI?.toFixed(1)} asiri alim bolgesinde ve HTF bias asagi. Short firsat izleniyor.`;
+    steps = [
+      {n:'1', txt:'RSI asiri alimda - geri cekilme olasiligi yukseliyor.'},
+      {n:'2', txt:'HTF bias asagi yonde - short tarafta ol.'},
+      {n:'3', txt:'Bearish engulfing veya BOS bekle, oradan short ac.'},
+    ];
+
+  // SENARYO 5: Karisik / Belirsiz
+  } else if(confluencePct < 35){
+    action = 'PIYASADA KAL';
+    actionClass = 'watch';
+    mainComment = `Confluence skoru cok dusuk (%${confluencePct}). Net sinyal yok. Risk almak icin dogru zaman degil.`;
+    steps = [
+      {n:'1', txt:'Hicbir pozisyon acma, bekle.'},
+      {n:'2', txt:'Daha kisa veya uzun TF'ye gec, net trend ara.'},
+      {n:'3', txt:`${formingSignals.length>0?formingSignals.length+' strateji olusuyor - takip et.':'Aktif setup yok.'}`},
+    ];
+
+  // SENARYO 6: Forming sinyaller var, sinyal olgunlasmayi bekle
+  } else if(formingSignals.length >= 2){
+    const topForming = formingSignals.slice(0,2).map(s=>s.name).join(' + ');
+    action = 'SINYAL BEKLE';
+    actionClass = 'watch';
+    mainComment = `${topForming} olusuyor. Sinyal tamamlandiginda hazir ol.`;
+    const dir = formingSignals[0].dir;
+    steps = [
+      {n:'1', txt:`${topForming} setup olusuyor.`},
+      {n:'2', txt:`Beklenen yon: ${dir==='bull'?'YUKARI (Long)':dir==='bear'?'ASAGI (Short)':'Belirsiz'}.`},
+      {n:'3', txt:'Sinyal "HAZIR" oldugunda giris yap.'},
+      {n:'4', txt:mtfIdeal?'MTF uyumlu — gelecek sinyal guvenilir olabilir.':'Sinyal oncesi MTF confluence kontrol et.'},
+    ];
+
+  // DEFAULT
+  } else {
+    action = 'PIYASA IZLE';
+    actionClass = 'watch';
+    mainComment = `${htfBias?'HTF bias: '+(htfBias.label||'Notr')+'. ':''} Net giris sinyali bekleniyor.`;
+    steps = [
+      {n:'1', txt:'Suanki durumda net islem sinyali yok.'},
+      {n:'2', txt:'HTF'de net trend ve LTF'de teyit olusmadan giris yapma.'},
+    ];
+  }
+
+  // UI guncelle
+  const actionEl = g('analystAction');
+  if(actionEl){ actionEl.textContent=action; actionEl.className=`analyst-action ${actionClass}`; }
+
+  const commentEl = g('analystComment');
+  if(commentEl) commentEl.textContent = mainComment;
+
+  // Seviyeleri goster/gizle
+  const levelsEl = g('analystLevels');
+  if(levelsEl){
+    if(sl && tp && entry){
+      levelsEl.style.display='grid';
+      if(g('aLvlEntry')) g('aLvlEntry').textContent = fp(entry);
+      if(g('aLvlSL'))    g('aLvlSL').textContent    = fp(sl);
+      if(g('aLvlTP1'))   g('aLvlTP1').textContent   = fp(tp);
+      if(g('aLvlRR'))    g('aLvlRR').textContent     = rr?`${rr}:1`:'—';
+    } else {
+      levelsEl.style.display='none';
+    }
+  }
+
+  // Adimlar
+  const stepsEl = g('analystSteps');
+  if(stepsEl){
+    stepsEl.innerHTML = steps.map(s=>`
+      <div class="analyst-step">
+        <span class="analyst-step-num">${s.n}</span>
+        <span>${s.txt}</span>
+      </div>`).join('');
+  }
 }
 
 function runStrategies(bars){
@@ -2721,6 +2997,9 @@ function runStrategies(bars){
         ${levels}
       </div>`;
   }).join('');
+
+  // Analist motorunu calistir
+  return results; // caller'a dondurelim
 }
 
 // ── ELLIOTT WAVE ENGINE ──────────────────────────────────────────────────────
@@ -3327,10 +3606,20 @@ function render(bars, sym){
   const smcData = drawSMC(bars);
 
   // Strateji sinyalleri
-  runStrategies(bars);
+  const stratResults = runStrategies(bars) || [];
 
   // MTF Confluence (async - arka planda)
   runMTFConfluence(sym, bars).catch(_=>{});
+
+  // Analist yorumu - confluence skoru hesaplandiktan sonra calistir
+  setTimeout(()=>{
+    const swA = calcSwings(bars,5);
+    const bosA = calcBOSCHoCH(bars,swA);
+    const htfBiasA = calcHTFBias(bars,swA,bosA);
+    const pctEl = g('scoreNum');
+    const pct = pctEl ? parseInt(pctEl.textContent)||0 : 0;
+    runAnalyst(bars, sym, stratResults, htfBiasA, pct);
+  }, 400);
 
   // Elliott Wave
   try{
