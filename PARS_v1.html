@@ -352,6 +352,72 @@ header {
 #rsiChart { width:100%; height:90px; }
 #volChart { width:100%; height:70px; }
 
+
+/* Pozisyon Hesaplayici */
+.pos-calc {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(135deg, rgba(255,171,0,0.03) 0%, transparent 100%);
+}
+.pos-input-row {
+  display: flex; gap: 5px; margin-bottom: 6px;
+}
+.pos-input {
+  flex: 1;
+  background: var(--bg3);
+  border: 1px solid var(--line2);
+  border-radius: 4px;
+  padding: 5px 7px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--txt0);
+  outline: none;
+  transition: border-color .2s;
+  min-width: 0;
+}
+.pos-input:focus { border-color: var(--acc); }
+.pos-input::placeholder { color: var(--txt2); }
+.pos-label {
+  font-family: var(--mono);
+  font-size: 8px;
+  color: var(--txt2);
+  letter-spacing: .5px;
+  margin-bottom: 2px;
+}
+.pos-result {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-top: 6px;
+}
+.pos-res-item {
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 5px 7px;
+}
+.pos-res-k { font-family: var(--mono); font-size: 8px; color: var(--txt2); margin-bottom: 2px; }
+.pos-res-v { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--txt0); }
+.pos-res-v.green { color: var(--green); }
+.pos-res-v.red { color: var(--red); }
+.pos-res-v.amber { color: var(--amber); }
+.pos-calc-btn {
+  width: 100%;
+  background: var(--amber);
+  color: var(--bg0);
+  border: none;
+  border-radius: 4px;
+  padding: 5px 0;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: .5px;
+  transition: opacity .2s;
+  margin-top: 4px;
+}
+.pos-calc-btn:hover { opacity: .85; }
+
 /* ── RIGHT PANEL ─────────────────────────────────── */
 .right {
   width: 240px;
@@ -577,6 +643,53 @@ header {
 .sl-lbl { color: var(--red); }
 .tp-lbl { color: var(--green); }
 .rr-lbl { color: var(--acc); }
+
+
+/* Cizim Araclari */
+.draw-toolbar {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  z-index: 50;
+}
+.draw-btn {
+  width: 28px;
+  height: 28px;
+  background: var(--bg2);
+  border: 1px solid var(--line2);
+  border-radius: 5px;
+  color: var(--txt1);
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .15s;
+  font-family: var(--mono);
+}
+.draw-btn:hover { background: var(--bg4); color: var(--txt0); border-color: var(--acc); }
+.draw-btn.active { background: var(--acc); color: var(--bg0); border-color: var(--acc); }
+.draw-btn.danger { color: var(--red); }
+.draw-btn.danger:hover { background: var(--red-dim); border-color: var(--red); }
+.draw-tooltip {
+  position: absolute;
+  right: 34px;
+  background: var(--bg3);
+  border: 1px solid var(--line2);
+  border-radius: 4px;
+  padding: 3px 7px;
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--txt0);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .15s;
+}
+.draw-btn:hover .draw-tooltip { opacity: 1; }
 
 /* Piyasa Yonu */
 .bias-arrow {
@@ -830,7 +943,8 @@ header {
 
   <div class="status" id="statusBar">
     <div class="status-dot" id="sDot"></div>
-    <span id="sTxt">hazır</span>
+    <span id="sTxt">hazir</span>
+    <span id="sCountdown" style="color:var(--txt2);font-size:9px;margin-left:2px"></span>
   </div>
 </header>
 
@@ -1010,6 +1124,27 @@ header {
     <div class="chart-wrap">
       <div id="mainChart"></div>
 
+
+      <!-- ÇİZİM ARAÇLARI TOOLBAR -->
+      <div class="draw-toolbar" id="drawToolbar">
+        <button class="draw-btn" id="btnDrawHLine" onclick="setDrawMode('hline')" title="Yatay Cizgi">
+          <span class="draw-tooltip">Yatay Cizgi</span>
+          —
+        </button>
+        <button class="draw-btn" id="btnDrawTLine" onclick="setDrawMode('tline')" title="Trend Cizgisi">
+          <span class="draw-tooltip">Trend Cizgisi</span>
+          ╱
+        </button>
+        <button class="draw-btn" id="btnDrawSelect" onclick="setDrawMode('select')" title="Sec / Tasi">
+          <span class="draw-tooltip">Sec / Sil</span>
+          ✥
+        </button>
+        <button class="draw-btn danger" onclick="clearAllDrawings()" title="Tum Cizgileri Sil">
+          <span class="draw-tooltip">Tum Cizgileri Sil</span>
+          ✕
+        </button>
+      </div>
+
       <div class="overlay" id="loadOverlay" style="display:none">
         <div class="spinner"></div>
         <div class="overlay-text" id="loadTxt">Veri çekiliyor...</div>
@@ -1053,6 +1188,65 @@ header {
 
   <!-- RIGHT -->
   <div class="right">
+
+
+    <!-- POZİSYON HESAPLAYICI -->
+    <div class="pos-calc">
+      <div class="panel-title" style="padding:0 0 8px 0">Pozisyon Hesaplayici</div>
+
+      <div class="pos-input-row">
+        <div style="flex:1">
+          <div class="pos-label">SERMAYE ($)</div>
+          <input class="pos-input" id="posCapital" type="number" placeholder="10000" value="10000" oninput="calcPosition()">
+        </div>
+        <div style="flex:1">
+          <div class="pos-label">RİSK (%)</div>
+          <input class="pos-input" id="posRisk" type="number" placeholder="1" value="1" step="0.1" min="0.1" max="10" oninput="calcPosition()">
+        </div>
+      </div>
+
+      <div class="pos-input-row">
+        <div style="flex:1">
+          <div class="pos-label">GİRİŞ</div>
+          <input class="pos-input" id="posEntry" type="number" placeholder="0.00" oninput="calcPosition()">
+        </div>
+        <div style="flex:1">
+          <div class="pos-label">STOP LOSS</div>
+          <input class="pos-input" id="posSL" type="number" placeholder="0.00" oninput="calcPosition()">
+        </div>
+        <div style="flex:1">
+          <div class="pos-label">HEDEF</div>
+          <input class="pos-input" id="posTP" type="number" placeholder="0.00" oninput="calcPosition()">
+        </div>
+      </div>
+
+      <div class="pos-result" id="posResult" style="display:none">
+        <div class="pos-res-item">
+          <div class="pos-res-k">RİSK TUTARI</div>
+          <div class="pos-res-v red" id="posRiskAmt">—</div>
+        </div>
+        <div class="pos-res-item">
+          <div class="pos-res-k">POZİSYON BÜYÜKLÜĞÜ</div>
+          <div class="pos-res-v amber" id="posSize">—</div>
+        </div>
+        <div class="pos-res-item">
+          <div class="pos-res-k">MAX KAYIP</div>
+          <div class="pos-res-v red" id="posMaxLoss">—</div>
+        </div>
+        <div class="pos-res-item">
+          <div class="pos-res-k">MAX KAZANÇ</div>
+          <div class="pos-res-v green" id="posMaxGain">—</div>
+        </div>
+        <div class="pos-res-item">
+          <div class="pos-res-k">RR ORANI</div>
+          <div class="pos-res-v amber" id="posRR">—</div>
+        </div>
+        <div class="pos-res-item">
+          <div class="pos-res-k">SL MESAFESİ</div>
+          <div class="pos-res-v" id="posSLPct">—</div>
+        </div>
+      </div>
+    </div>
 
     <!-- ANALIST YORUMU -->
     <div class="analyst-box" id="analystBox">
@@ -2966,6 +3160,9 @@ function runAnalyst(bars, sym, stratResults, htfBias, confluencePct){
     ];
   }
 
+  // Pozisyon hesaplayiciya otomatik doldur
+  if(entry && sl && tp) fillPositionCalc(entry, sl, tp);
+
   // UI guncelle
   const actionEl = g('analystAction');
   if(actionEl){ actionEl.textContent=action; actionEl.className=`analyst-action ${actionClass}`; }
@@ -3691,6 +3888,9 @@ function render(bars, sym){
   // Backtest icin cache
   btBars = bars;
 
+  // Cizgileri yukle
+  loadDrawings(sym);
+
   loading(false);
 }
 
@@ -3970,6 +4170,80 @@ function loadSym(sym, el){
   loadSymFromWL(sym);
 }
 
+
+// ── POZISYON HESAPLAYICI ─────────────────────────────────────────────────────
+function calcPosition(){
+  const capital = parseFloat(document.getElementById('posCapital')?.value) || 0;
+  const riskPct = parseFloat(document.getElementById('posRisk')?.value) || 1;
+  const entry   = parseFloat(document.getElementById('posEntry')?.value) || 0;
+  const sl      = parseFloat(document.getElementById('posSL')?.value) || 0;
+  const tp      = parseFloat(document.getElementById('posTP')?.value) || 0;
+
+  const resEl = document.getElementById('posResult');
+  if(!resEl) return;
+
+  if(!capital || !entry || !sl || entry === sl){
+    resEl.style.display = 'none';
+    return;
+  }
+
+  resEl.style.display = 'grid';
+
+  const riskAmt   = capital * riskPct / 100;
+  const slDist    = Math.abs(entry - sl);
+  const slPct     = slDist / entry * 100;
+  const posSize   = riskAmt / slDist; // adet/lot
+  const posTotalVal = posSize * entry; // toplam pozisyon degeri
+  const maxLoss   = riskAmt;
+  const maxGain   = tp ? posSize * Math.abs(tp - entry) : null;
+  const rr        = tp && slDist > 0 ? Math.abs(tp - entry) / slDist : null;
+
+  const sv = (id, val) => {
+    const el = document.getElementById(id);
+    if(el) el.textContent = val;
+  };
+
+  sv('posRiskAmt',  `$${riskAmt.toFixed(2)}`);
+  sv('posMaxLoss',  `-$${maxLoss.toFixed(2)}`);
+  sv('posSLPct',    `${slPct.toFixed(2)}%`);
+
+  // Pozisyon buyuklugu - akilli format
+  if(posSize >= 1000){
+    sv('posSize', `${(posSize/1000).toFixed(2)}K adet`);
+  } else if(posSize >= 1){
+    sv('posSize', `${posSize.toFixed(2)} adet`);
+  } else {
+    sv('posSize', `${posSize.toFixed(4)} lot`);
+  }
+
+  if(maxGain){
+    sv('posMaxGain', `+$${maxGain.toFixed(2)}`);
+  } else {
+    sv('posMaxGain', 'TP gir');
+  }
+
+  if(rr){
+    sv('posRR', `${rr.toFixed(2)}:1`);
+    const rrEl = document.getElementById('posRR');
+    if(rrEl){
+      rrEl.className = `pos-res-v ${rr >= 2 ? 'green' : rr >= 1.5 ? 'amber' : 'red'}`;
+    }
+  } else {
+    sv('posRR', 'TP gir');
+  }
+}
+
+// Analist sinyali geldiginde pozisyon hesaplayiciya otomatik doldur
+function fillPositionCalc(entry, sl, tp){
+  const eEl = document.getElementById('posEntry');
+  const sEl = document.getElementById('posSL');
+  const tEl = document.getElementById('posTP');
+  if(eEl && entry) eEl.value = entry.toFixed(5);
+  if(sEl && sl)    sEl.value = sl.toFixed(5);
+  if(tEl && tp)    tEl.value = tp.toFixed(5);
+  calcPosition();
+}
+
 // Tum indikatorleri ac/kapat
 let allIndsOn = true;
 const ALL_INDS = ['sma20','sma50','sma200','rsi','vol','swings','fvg','bos','liq','bb','macd','td9','ew'];
@@ -4061,6 +4335,203 @@ function togInd(key){
     }
   }
 }
+
+
+// ── CIZIM ARACLARI ───────────────────────────────────────────────────────────
+let drawMode = null; // null | 'hline' | 'tline' | 'select'
+let drawings = []; // {type, series, p1, p2, color}
+let tlinePoints = []; // trendline icin 2 nokta bekle
+let drawColors = ['#00d4ff','#ffab00','#ff3d57','#00e676','#c678dd','#fb923c','#facc15'];
+let drawColorIdx = 0;
+
+function setDrawMode(mode){
+  drawMode = drawMode === mode ? null : mode;
+  tlinePoints = [];
+
+  // Buton stilleri
+  ['btnDrawHLine','btnDrawTLine','btnDrawSelect'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.classList.remove('active');
+  });
+
+  if(drawMode === 'hline') document.getElementById('btnDrawHLine')?.classList.add('active');
+  if(drawMode === 'tline') document.getElementById('btnDrawTLine')?.classList.add('active');
+  if(drawMode === 'select') document.getElementById('btnDrawSelect')?.classList.add('active');
+
+  // Cursor
+  const cw = document.querySelector('.chart-wrap');
+  if(cw){
+    if(drawMode === 'hline') cw.style.cursor = 'crosshair';
+    else if(drawMode === 'tline') cw.style.cursor = 'crosshair';
+    else if(drawMode === 'select') cw.style.cursor = 'pointer';
+    else cw.style.cursor = '';
+  }
+}
+
+function getDrawColor(){
+  const c = drawColors[drawColorIdx % drawColors.length];
+  drawColorIdx++;
+  return c;
+}
+
+// Ana grafige click listener ekle
+function initDrawingTools(){
+  if(!MC) return;
+
+  MC.subscribeClick(param=>{
+    if(!drawMode || !param.point || !param.time) return;
+
+    const price = MC.priceScale('right').coordinateToPrice(param.point.y);
+    if(!price) return;
+    const time = param.time;
+
+    if(drawMode === 'hline'){
+      // Yatay cizgi - tek tiklama
+      addHorizontalLine(price);
+      // drawMode'u kapat (her tiklama bir cizgi)
+    }
+    else if(drawMode === 'tline'){
+      tlinePoints.push({time, price});
+      if(tlinePoints.length === 2){
+        addTrendLine(tlinePoints[0], tlinePoints[1]);
+        tlinePoints = [];
+      } else {
+        // Ilk nokta isaretlendi, ikinci bekleniyor
+        showToast('Ikinci noktayi tiklayin', '');
+      }
+    }
+    else if(drawMode === 'select'){
+      // En yakin cizgiyi bul ve sil
+      const closest = findClosestDrawing(price, time);
+      if(closest !== -1){
+        removeDrawing(closest);
+      }
+    }
+  });
+}
+
+function addHorizontalLine(price, color){
+  if(!MC || !btBars || btBars.length < 2) return;
+  const c = color || getDrawColor();
+  const startTime = btBars[0].time;
+  const endTime = btBars[btBars.length-1].time + 86400*30;
+
+  try{
+    const series = MC.addLineSeries({
+      color: c,
+      lineWidth: 1,
+      lineStyle: 1, // noktali
+      priceLineVisible: false,
+      lastValueVisible: true,
+      crosshairMarkerVisible: false,
+      title: fp(price),
+    });
+    series.setData([
+      {time: startTime, value: price},
+      {time: endTime,   value: price},
+    ]);
+    drawings.push({type:'hline', series, price, color:c});
+    saveDrawings();
+  }catch(e){ console.warn('hline error:', e); }
+}
+
+function addTrendLine(p1, p2, color){
+  if(!MC || !btBars || btBars.length < 2) return;
+  const c = color || getDrawColor();
+
+  try{
+    // p1 ve p2 arasinda ve devaminda cizgi
+    const endTime = btBars[btBars.length-1].time + 86400*30;
+
+    // Slope hesapla - sona uzat
+    const t1 = typeof p1.time === 'number' ? p1.time : 0;
+    const t2 = typeof p2.time === 'number' ? p2.time : 0;
+    const slope = t2 !== t1 ? (p2.price - p1.price) / (t2 - t1) : 0;
+    const extPrice = p2.price + slope * (endTime - t2);
+
+    const series = MC.addLineSeries({
+      color: c,
+      lineWidth: 1,
+      lineStyle: 0,
+      priceLineVisible: false,
+      lastValueVisible: false,
+      crosshairMarkerVisible: false,
+    });
+    series.setData([
+      {time: p1.time, value: p1.price},
+      {time: p2.time, value: p2.price},
+      {time: endTime, value: extPrice},
+    ]);
+    drawings.push({type:'tline', series, p1, p2, color:c});
+    saveDrawings();
+  }catch(e){ console.warn('tline error:', e); }
+}
+
+function findClosestDrawing(price, time){
+  if(drawings.length === 0) return -1;
+  let minDist = Infinity;
+  let minIdx = -1;
+  drawings.forEach((d, i)=>{
+    let dist;
+    if(d.type === 'hline'){
+      dist = Math.abs(d.price - price) / price;
+    } else {
+      // Trend line - point to line distance (simplified)
+      const t1 = d.p1.time, t2 = d.p2.time;
+      const p1v = d.p1.price, p2v = d.p2.price;
+      const slope = t2 !== t1 ? (p2v-p1v)/(t2-t1) : 0;
+      const lineVal = p1v + slope * (time - t1);
+      dist = Math.abs(price - lineVal) / price;
+    }
+    if(dist < minDist){ minDist = dist; minIdx = i; }
+  });
+  return minDist < 0.01 ? minIdx : -1;
+}
+
+function removeDrawing(idx){
+  if(idx < 0 || idx >= drawings.length) return;
+  try{ MC.removeSeries(drawings[idx].series); }catch(_){}
+  drawings.splice(idx, 1);
+  saveDrawings();
+}
+
+function clearAllDrawings(){
+  drawings.forEach(d=>{ try{ MC.removeSeries(d.series); }catch(_){} });
+  drawings = [];
+  saveDrawings();
+  setDrawMode(null);
+}
+
+// Cizgileri localStorage'a kaydet/yukle
+function saveDrawings(){
+  try{
+    const sym = document.getElementById('symbolInput')?.value.trim().toUpperCase();
+    if(!sym) return;
+    const data = drawings.map(d=>({
+      type: d.type,
+      price: d.price,
+      p1: d.p1,
+      p2: d.p2,
+      color: d.color,
+    }));
+    localStorage.setItem(`pars_drawings_${sym}`, JSON.stringify(data));
+  }catch(_){}
+}
+
+function loadDrawings(sym){
+  clearAllDrawings();
+  try{
+    const raw = localStorage.getItem(`pars_drawings_${sym}`);
+    if(!raw) return;
+    const data = JSON.parse(raw);
+    data.forEach(d=>{
+      if(d.type === 'hline') addHorizontalLine(d.price, d.color);
+      else if(d.type === 'tline') addTrendLine(d.p1, d.p2, d.color);
+    });
+  }catch(_){}
+}
+
+function showToast(msg, type){ toast(msg, type); }
 
 // TF buttons
 document.querySelectorAll('.tf').forEach(b=>{
@@ -4927,10 +5398,16 @@ async function refreshWatchlist(){
   }
 }
 
+// ── CANLI FIYAT SISTEMI ─────────────────────────────────────────────────────
+const LIVE_INTERVAL = 5000; // 5 saniye
+let countdownTimer = null;
+let countdownVal = 5;
+
 function startLiveTicker(){
   if(liveTimer) clearInterval(liveTimer);
-  // 30 saniyede bir aktif sembolun fiyatini guncelle
-  liveTimer = setInterval(async ()=>{
+  if(countdownTimer) clearInterval(countdownTimer);
+
+  async function doFetch(){
     const sym = document.getElementById('symbolInput').value.trim().toUpperCase();
     if(!sym) return;
     try{
@@ -4944,32 +5421,60 @@ function startLiveTicker(){
       const prev = q.close[n-2];
       if(!last) return;
       const chg = prev ? (last-prev)/prev*100 : 0;
-
-      // Ticker guncelle
-      document.getElementById('tkPrice').textContent = fp(last);
-      const el = document.getElementById('tkChg');
       const dayOpen = q.open[0];
       const dayChg = dayOpen ? (last-dayOpen)/dayOpen*100 : chg;
+
+      // Ticker guncelle
+      const tkPrice = document.getElementById('tkPrice');
+      const oldPrice = parseFloat(tkPrice.textContent.replace(/[^0-9.]/g,''));
+      tkPrice.textContent = fp(last);
+
+      // Fiyat degisti mi? Flash efekti
+      if(oldPrice && Math.abs(last - oldPrice) > 0.0001){
+        const flash = last > oldPrice ? '#00e676' : '#ff3d57';
+        tkPrice.style.color = flash;
+        setTimeout(()=>{ tkPrice.style.color = ''; }, 600);
+      }
+
+      const el = document.getElementById('tkChg');
       el.textContent = `${dayChg>=0?'+':''}${dayChg.toFixed(2)}%`;
       el.className = `tk-chg ${dayChg>=0?'up':'dn'}`;
 
-      // WL fiyatini da guncelle
+      // WL fiyatini guncelle
       if(watchlistSymbols.includes(sym)){
         watchlistPrices[sym] = {price:last, chg:dayChg};
         renderWatchlist();
       }
 
-      // Canli gosterge
+      // Canli dot
       const dot = document.getElementById('sDot');
       if(dot){ dot.style.background='var(--green)'; dot.style.animation='blink 2s infinite'; }
 
-    }catch(_){}
-  }, 30000);
+      countdownVal = Math.round(LIVE_INTERVAL/1000);
+    }catch(_){
+      countdownVal = Math.round(LIVE_INTERVAL/1000);
+    }
+  }
+
+  doFetch();
+  liveTimer = setInterval(doFetch, LIVE_INTERVAL);
+
+  // Geri sayim
+  countdownVal = Math.round(LIVE_INTERVAL/1000);
+  countdownTimer = setInterval(()=>{
+    countdownVal--;
+    if(countdownVal < 0) countdownVal = Math.round(LIVE_INTERVAL/1000);
+    const cd = document.getElementById('sCountdown');
+    if(cd && document.getElementById('sDot')?.style.background === 'var(--green)'){
+      cd.textContent = `·${countdownVal}s`;
+    }
+  }, 1000);
 }
 
 // ── BOOT ────────────────────────────────────────────────────────────────────
 window.addEventListener('load',()=>{
   initCharts();
+  setTimeout(initDrawingTools, 500); // Cizim araclari
   // Watchlist baslat
   renderWatchlist();
   setTimeout(()=>{
