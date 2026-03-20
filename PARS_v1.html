@@ -954,13 +954,14 @@ header {
       <div class="score-top">
         <div>
           <span class="score-num" id="scoreNum" style="color:var(--txt2)">—</span>
-          <span class="score-denom">/8</span>
+          <span class="score-denom">%</span>
         </div>
       </div>
       <div class="score-track">
         <div class="score-fill" id="scoreFill" style="width:0%;background:var(--txt2)"></div>
       </div>
-      <div class="score-msg" id="scoreMsg" style="color:var(--txt2)">Analiz için sembol yükleyin</div>
+      <div class="score-msg" id="scoreMsg" style="color:var(--txt2)">Analiz icin sembol yukleyin</div>
+      <div id="scoreDetail" style="font-family:var(--mono);font-size:8px;color:var(--txt2);margin-top:4px;text-align:center"></div>
     </div>
 
     <div class="signals">
@@ -996,6 +997,14 @@ header {
           <span class="badge b-na" id="b_vol">—</span>
         </div>
         <div class="sig-detail" id="d_vol">Bekleniyor</div>
+      </div>
+    </div>
+
+    <!-- MTF CONFLUENCE PANEL -->
+    <div class="signals" id="mtfPanel">
+      <div class="panel-title" style="padding:0 0 8px 0">MTF Confluence</div>
+      <div id="mtfContent">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--txt2);text-align:center;padding:8px">Analiz bekleniyor</div>
       </div>
     </div>
 
@@ -1268,6 +1277,33 @@ async function tryFetch(url){
   try{ data = await r.json(); }catch(e){ throw new Error('JSON parse hatasi'); }
   if(!data?.chart?.result?.[0]) throw new Error('Veri bulunamadi. Sembolu kontrol edin.');
   return data;
+}
+
+// MTF (Multi-TimeFrame) veri cache
+let mtfCache = {}; // {sym_tf: bars}
+
+async function fetchMTFBars(sym, tf){
+  const key = `${sym}_${tf}`;
+  if(mtfCache[key] && mtfCache[key].ts > Date.now()-300000){ // 5dk cache
+    return mtfCache[key].bars;
+  }
+  try{
+    const data = await tryFetch(apiURL(sym, tf));
+    const res = data.chart.result[0];
+    const ts = res.timestamp;
+    const q = res.indicators.quote[0];
+    const bars = [];
+    for(let i=0;i<ts.length;i++){
+      if(!q.open?.[i]||!q.close?.[i]) continue;
+      bars.push({
+        time:ts[i],open:+q.open[i].toFixed(5),high:+q.high[i].toFixed(5),
+        low:+q.low[i].toFixed(5),close:+q.close[i].toFixed(5),volume:q.volume?.[i]||0
+      });
+    }
+    bars.sort((a,b)=>a.time-b.time);
+    mtfCache[key] = {bars, ts:Date.now()};
+    return bars;
+  }catch(e){ return null; }
 }
 
 async function fetchData(){
@@ -2060,74 +2096,133 @@ function checkS2(bars, swings, htfBias=null){
 // S4: HTF Engulfing + Order Block Short Setup
 function checkS4(bars, swings, htfBias=null){
   const n = bars.length;
-  if(n < 10) return null;
+  if(n < 15) return null;
 
-  // HTF engulfing tespit - son 20 barda
-  const window = bars.slice(-20);
-  let engulfIdx = -1;
-  let isBullEngulf = false;
+  const closes = bars.map(b=>b.close);
+  const lastClose = bars[n-1].close;
+  const lastBar = bars[n-1];
 
-  for(let i=1; i<window.length; i++){
-    const prev = window[i-1];
-    const curr = window[i];
-    // Bullish engulfing
-    if(prev.close < prev.open && curr.close > curr.open &&
-       curr.close > prev.open && curr.open < prev.close){
-      engulfIdx = i; isBullEngulf = true;
-    }
+  // S4 MANTIGI: HTF Engulfing + 3. Mum Teyidi + Order Block
+  // 1. HTF'de engulfing bul (son 30 bar - daha genis pencere)
+  const searchWindow = bars.slice(-30);
+  let bestEngulf = null;
+
+  for(let i=2; i<searchWindow.length; i++){
+    const prev = searchWindow[i-1];
+    const curr = searchWindow[i];
+    const body1 = Math.abs(prev.close - prev.open);
+    const body2 = Math.abs(curr.close - curr.open);
+
+    // Bullish engulfing: onceki bearish, simdiki bullish, tam yutuyor
+    const isBullEng = prev.close < prev.open &&
+      curr.close > curr.open &&
+      curr.close > prev.open &&
+      curr.open <= prev.close &&
+      body2 >= body1 * 0.8; // en az %80 boyutunda
+
     // Bearish engulfing
-    if(prev.close > prev.open && curr.close < curr.open &&
-       curr.close < prev.open && curr.open > prev.close){
-      engulfIdx = i; isBullEngulf = false;
+    const isBearEng = prev.close > prev.open &&
+      curr.close < curr.open &&
+      curr.close < prev.open &&
+      curr.open >= prev.close &&
+      body2 >= body1 * 0.8;
+
+    if(isBullEng || isBearEng){
+      // En son ve en guclu engulfing'i sec
+      if(!bestEngulf || i > bestEngulf.idx){
+        bestEngulf = {
+          idx: i,
+          isBull: isBullEng,
+          engulfBar: curr,
+          prevBar: prev,
+          bodyRatio: body2/body1,
+          // ORDER BLOCK: engulfing oncesindeki son karsi renk mumun govdesi
+          obTop: isBullEng ? prev.open : prev.close,
+          obBottom: isBullEng ? prev.close : prev.open,
+        };
+      }
     }
   }
 
-  if(engulfIdx < 0) return {name:'Emir Bloku', phase:'watch', detail:'HTF engulfing bekleniyor', dir:'neut'};
+  if(!bestEngulf){
+    return {name:'Emir Bloku', phase:'watch', detail:'HTF engulfing bekleniyor (30 bar tarandii)', dir:'neut'};
+  }
 
-  const engulfBar = window[engulfIdx];
-  const prevBar   = window[engulfIdx-1];
+  const {isBull, obTop, obBottom, bodyRatio} = bestEngulf;
 
-  // Order block: engulfing oncesindeki kirmizi mumun govdesi
-  const obTop    = isBullEngulf ? prevBar.open : prevBar.close;
-  const obBottom = isBullEngulf ? prevBar.close : prevBar.open;
-  const importantLevel = isBullEngulf ? obBottom : obTop; // giris seviyesi
+  // HTF bias uyum kontrolu
+  if(htfBias){
+    if(isBull && htfBias.bias==='bear'){
+      return {name:'Emir Bloku', phase:'watch', detail:'Bullish OB var ama HTF bias asagi - gec', dir:'bull'};
+    }
+    if(!isBull && htfBias.bias==='bull'){
+      return {name:'Emir Bloku', phase:'watch', detail:'Bearish OB var ama HTF bias yukari - gec', dir:'bear'};
+    }
+  }
 
-  const lastClose = bars[n-1].close;
-  const lastBar   = bars[n-1];
+  // 2. OB kalite kontrolu
+  const obSize = obTop - obBottom;
+  const obSizePct = obSize / lastClose * 100;
+  const qualityLabel = bodyRatio >= 1.5 ? 'Guclu' : bodyRatio >= 1.0 ? 'Normal' : 'Zayif';
 
-  // Fiyat import area'ya girdi mi?
-  const inImportArea = isBullEngulf
+  // 3. FIYATIN OB'YE GERI DONUSU
+  const distAboveOB = (lastClose - obTop) / lastClose * 100;
+  const distBelowOB = (obBottom - lastClose) / lastClose * 100;
+  const inOB = isBull
     ? (lastClose >= obBottom && lastClose <= obTop)
     : (lastClose >= obBottom && lastClose <= obTop);
 
-  // Zayiflik kontrolu: ilk 2 mum import area altinda/ustunde mi kapandi?
-  const post = bars.slice(-(Math.min(3, n)));
-  const showsWeakness = isBullEngulf
-    ? post.some(b=>b.close < importantLevel)
-    : post.some(b=>b.close > importantLevel);
+  // 4. 3. MUM TEYIDI - OB'ye geri donusten sonra yon teyidi
+  // Son 3 barda yon teyidi var mi?
+  const last3 = bars.slice(-3);
+  const bullConfirm = last3.every((b,i)=>i===0||b.low>=last3[i-1].low); // yukseliyor
+  const bearConfirm = last3.every((b,i)=>i===0||b.high<=last3[i-1].high); // dusiyor
 
-  if(!inImportArea && !showsWeakness){
-    return {
-      name:'Emir Bloku', phase:'alert',
-      detail:`Engulfing tespit edildi. Order Block: ${fp(obBottom)}-${fp(obTop)}. Giris bekleniyor.`,
-      dir: isBullEngulf?'bull':'bear'
-    };
-  }
+  // 5. FVG UYUMU - OB bolgeside FVG var mi?
+  const fvgs = calcFVG(bars);
+  const obFVG = fvgs.find(f=>
+    !f.mitigated &&
+    f.type===(isBull?'bull':'bear') &&
+    f.top >= obBottom && f.bottom <= obTop
+  );
 
-  if(inImportArea || showsWeakness){
-    const sl = isBullEngulf ? obTop*1.002 : obBottom*0.998;
-    const tp = isBullEngulf
-      ? Math.max(...bars.slice(-15).map(b=>b.high))*1.005
-      : Math.min(...bars.slice(-15).map(b=>b.low))*0.995;
-    const rr = Math.abs((tp-lastClose)/(lastClose-sl)).toFixed(1);
+  // SENARYO A: Fiyat OB icinde, 3. mum teyidi var
+  if(inOB){
+    const confirm = isBull ? bullConfirm : bearConfirm;
+    const sl = isBull ? obBottom * 0.997 : obTop * 1.003;
+    const tp = isBull
+      ? Math.max(...swings.filter(s=>s.type==='high').slice(-3).map(h=>h.price)) * 1.003
+      : Math.min(...swings.filter(s=>s.type==='low').slice(-3).map(l=>l.price)) * 0.997;
+    if(!validRR(lastClose, sl, tp, 1.5)){
+      return {name:'Emir Bloku', phase:'alert',
+        detail:`OB icinde ama RR yetersiz. OB: ${fp(obBottom)}-${fp(obTop)} (${qualityLabel})`, dir:isBull?'bull':'bear'};
+    }
+    const rr = (Math.abs(tp-lastClose)/Math.abs(lastClose-sl)).toFixed(1);
     return {
       name:'Emir Bloku', phase:'ready',
-      detail:`Order Block bolgesi! ${isBullEngulf?'Long':'Short'} setup. OB: ${fp(obBottom)}-${fp(obTop)}`,
-      dir: isBullEngulf?'bull':'bear', sl, tp, rr
+      detail:`OB geri donus! ${qualityLabel} engulfing (${bodyRatio.toFixed(1)}x). Teyit: ${confirm?'VAR':'YOK'}. FVG: ${obFVG?'UYUMLU':'yok'}`,
+      dir:isBull?'bull':'bear', sl, tp, rr
     };
   }
 
-  return {name:'Emir Bloku', phase:'watch', detail:'S4 kosullari olusmaedi', dir:'neut'};
+  // SENARYO B: Fiyat OB'ye yaklasiyor (%2 mesafede)
+  const approachingOB = isBull
+    ? (distBelowOB > 0 && distBelowOB < 2)
+    : (distAboveOB > 0 && distAboveOB < 2);
+
+  if(approachingOB){
+    return {name:'Emir Bloku', phase:'alert',
+      detail:`OB'ye yaklasiliyor! ${isBull?'Yukari':'Asagi'} OB: ${fp(obBottom)}-${fp(obTop)} (${qualityLabel}, ${bodyRatio.toFixed(1)}x)`,
+      dir:isBull?'bull':'bear'};
+  }
+
+  // SENARYO C: OB tespit edildi, fiyat uzakta
+  const dist = isBull ? distBelowOB : distAboveOB;
+  return {
+    name:'Emir Bloku', phase:'forming',
+    detail:`${isBull?'Bullish':'Bearish'} OB: ${fp(obBottom)}-${fp(obTop)} (${qualityLabel}). Geri donus bekle. Mesafe: ${dist>0?dist.toFixed(1)+'%':'OB ustunde'}`,
+    dir:isBull?'bull':'bear'
+  };
 }
 
 // S8: Sharp Trend + FVG + Breaker Block
@@ -2353,75 +2448,217 @@ function checkS11(bars, swings, htfBias=null){
 // S1: 15m FVG + 1m Accumulation (Higher TF simulation)
 function checkS1(bars, swings, htfBias=null){
   const n = bars.length;
-  if(n < 15) return null;
+  if(n < 20) return null;
 
-  // Uptrend kontrolu
-  const sma50arr = sma(bars.map(b=>b.close), Math.min(50,n-1));
-  const s50 = sma50arr[n-1];
+  const closes = bars.map(b=>b.close);
   const lastClose = bars[n-1].close;
-  const isUp = s50 ? lastClose > s50 : false;
+  const lastBar = bars[n-1];
 
-  if(!isUp) return {name:'FVG Birikimi', phase:'watch', detail:'Uptrend yok - S1 sadece uptrend icin', dir:'bull'};
+  // 1. UPTREND DOGRULAMA: SMA20 > SMA50 > SMA200 ve fiyat SMA20 ustunde
+  const s20arr = sma(closes, Math.min(20,n-1));
+  const s50arr = sma(closes, Math.min(50,n-1));
+  const s200arr = sma(closes, Math.min(200,n-1));
+  const s20 = s20arr[n-1], s50 = s50arr[n-1], s200 = s200arr[n-1];
 
-  // FVG tespit
+  const strongUptrend = s20 && s50 && lastClose > s20 && s20 > s50;
+  const weakUptrend   = s50 && lastClose > s50;
+
+  if(!strongUptrend && !weakUptrend){
+    return {name:'FVG Birikimi', phase:'watch', detail:'Uptrend kosulu yok (fiyat SMA50 altinda)', dir:'bull'};
+  }
+
+  // HTF bias kontrolu
+  if(htfBias && htfBias.bias==='bear'){
+    return {name:'FVG Birikimi', phase:'watch', detail:'HTF yonu asagi - FVG long sinyal gec', dir:'bull'};
+  }
+
+  // 2. EN YAKIN AKTIF BULLISH FVG bul
   const fvgs = calcFVG(bars);
-  const bullFVGs = fvgs.filter(f=>f.type==='bull'&&!f.mitigated).slice(-3);
+  const bullFVGs = fvgs
+    .filter(f=>f.type==='bull' && !f.mitigated && f.idx > n-40)
+    .sort((a,b)=>b.idx-a.idx); // En son FVG oncelikli
 
   if(bullFVGs.length===0){
-    return {name:'FVG Birikimi', phase:'watch', detail:'Bullish FVG bekleniyor (uptrend icinde)', dir:'bull'};
+    return {name:'FVG Birikimi', phase:'watch', detail:`Uptrend var (${strongUptrend?'guclu':'zayif'}). Bullish FVG bekleniyor.`, dir:'bull'};
   }
 
-  const nearestFVG = bullFVGs[bullFVGs.length-1];
+  const bestFVG = bullFVGs[0];
+  const fvgMid = (bestFVG.top + bestFVG.bottom) / 2;
 
-  // Equal highs kontrol - son barlarda
-  const recentHighs = swings.filter(s=>s.type==='high').slice(-4);
-  let hasEqualHighs = false;
+  // 3. EQUAL HIGHS (Likidite) tespit
+  const recentHighs = swings.filter(s=>s.type==='high').slice(-5);
+  let equalHighLevel = null;
+  let equalHighCount = 0;
   for(let i=0; i<recentHighs.length-1; i++){
     const diff = Math.abs(recentHighs[i].price - recentHighs[i+1].price)/recentHighs[i].price;
-    if(diff < 0.005){ hasEqualHighs=true; break; }
+    if(diff < 0.008){
+      equalHighLevel = Math.max(recentHighs[i].price, recentHighs[i+1].price);
+      equalHighCount++;
+    }
   }
 
-  // Accumulation: son 5-10 barda dar range
-  const accBars = bars.slice(-8);
-  const accHigh = Math.max(...accBars.map(b=>b.high));
-  const accLow  = Math.min(...accBars.map(b=>b.low));
-  const accRange = (accHigh-accLow)/accLow;
-  const isAccumulating = accRange < 0.03; // %3'ten dar range
+  // 4. ACCUMULATION - son 5 barda dar konsolidasyon
+  const accWindow = bars.slice(-6);
+  const accHigh = Math.max(...accWindow.map(b=>b.high));
+  const accLow  = Math.min(...accWindow.map(b=>b.low));
+  const accRange = (accHigh - accLow) / accLow;
+  const isAccumulating = accRange < 0.025; // %2.5 den dar
 
-  // Fiyat FVG'de mi?
-  const inFVG = lastClose >= nearestFVG.bottom && lastClose <= nearestFVG.top;
-  const belowFVG = lastClose < nearestFVG.bottom;
+  // 5. MSB (Micro Structure Break) - son 3 barda yukselen dip
+  const last3 = bars.slice(-3);
+  const hasMSB = last3.length>=2 && last3[last3.length-1].low > last3[0].low;
 
+  // 6. GIRIS SENARYOLARI
+
+  // SENARYO A: Fiyat FVG icinde + accumulation + (MSB veya equal highs var)
+  const inFVG = lastClose >= bestFVG.bottom && lastClose <= bestFVG.top;
   if(inFVG && isAccumulating){
-    const sl = nearestFVG.bottom * 0.997;
-    const tp = hasEqualHighs
-      ? Math.max(...recentHighs.map(h=>h.price)) * 1.005
-      : nearestFVG.top + (nearestFVG.top - nearestFVG.bottom) * 2;
-    const rr = Math.abs((tp-lastClose)/(lastClose-sl)).toFixed(1);
+    const tp = equalHighLevel
+      ? equalHighLevel * 1.003
+      : bestFVG.top + (bestFVG.top - bestFVG.bottom) * 3;
+    const sl = bestFVG.bottom * 0.996;
+    if(!validRR(lastClose, sl, tp, 1.5)){
+      return {name:'FVG Birikimi', phase:'alert',
+        detail:`FVG icinde accumulation. RR yetersiz. FVG: ${fp(bestFVG.bottom)}-${fp(bestFVG.top)}`, dir:'bull'};
+    }
+    const rr = ((tp-lastClose)/(lastClose-sl)).toFixed(1);
+    const qual = (strongUptrend?1:0) + (equalHighLevel?1:0) + (hasMSB?1:0) + (volumeConfirm(bars)?1:0);
     return {
       name:'FVG Birikimi', phase:'ready',
-      detail:`FVG + Accumulation! Equal highs: ${hasEqualHighs?'VAR':'YOK'}. FVG: ${fp(nearestFVG.bottom)}-${fp(nearestFVG.top)}`,
+      detail:`FVG + Birikim! Kalite: ${qual}/4. EqH: ${equalHighLevel?fp(equalHighLevel):'yok'}. MSB: ${hasMSB?'var':'yok'}`,
       dir:'bull', sl, tp, rr
     };
   }
 
-  if(belowFVG && isAccumulating){
-    return {
-      name:'FVG Birikimi', phase:'alert',
-      detail:`Accumulation FVG altinda. Deviation bekleniyor. FVG: ${fp(nearestFVG.bottom)}-${fp(nearestFVG.top)}`,
-      dir:'bull'
-    };
+  // SENARYO B: Fiyat FVG'ye yaklasiyor (FVG'nin %20 altinda)
+  const distToFVG = (bestFVG.bottom - lastClose) / lastClose;
+  if(distToFVG > 0 && distToFVG < 0.02){
+    return {name:'FVG Birikimi', phase:'alert',
+      detail:`FVG'ye ${(distToFVG*100).toFixed(1)}% uzakta. Birikim: ${isAccumulating?'VAR':'YOK'}. FVG: ${fp(bestFVG.bottom)}-${fp(bestFVG.top)}`,
+      dir:'bull'};
   }
 
-  if(bullFVGs.length>0){
-    return {
-      name:'FVG Birikimi', phase:'forming',
-      detail:`Bullish FVG var: ${fp(nearestFVG.bottom)}-${fp(nearestFVG.top)}. Accumulation bekleniyor.`,
-      dir:'bull'
-    };
+  // SENARYO C: FVG var ama fiyat uzakta
+  const trendLabel = strongUptrend?'Guclu uptrend':'Uptrend';
+  return {name:'FVG Birikimi', phase:'forming',
+    detail:`${trendLabel} + FVG: ${fp(bestFVG.bottom)}-${fp(bestFVG.top)}. ${equalHighLevel?'EqH: '+fp(equalHighLevel)+'.':''} Giris bekleniyor.`,
+    dir:'bull'};
+}
+
+// ── MTF CONFLUENCE MOTORU ────────────────────────────────────────────────────
+
+async function runMTFConfluence(sym, currentBars){
+  const el = g('mtfContent');
+  if(!el) return;
+  el.innerHTML = '<div style="font-family:var(--mono);font-size:9px;color:var(--txt2);text-align:center;padding:8px">MTF analiz yapiliyor...</div>';
+
+  // TF hiyerarsi: Aylik > Haftalik > Gunluk > LTF
+  const tfOrder = ['1mo','1wk','1d'];
+  const tfLabels = {'1mo':'AYLIK','1wk':'HAFTALIK','1d':'GUNLUK'};
+  const tfResults = {};
+
+  for(const tf of tfOrder){
+    try{
+      const bars = await fetchMTFBars(sym, tf);
+      if(!bars || bars.length < 20) continue;
+      const swings = calcSwings(bars, 5);
+      const bosEvents = calcBOSCHoCH(bars, swings);
+      const bias = calcHTFBias(bars, swings, bosEvents);
+      const rsiVals = rsi(bars.map(b=>b.close), 14);
+      const lastRSI = rsiVals[rsiVals.length-1];
+      const n = bars.length;
+      const closes = bars.map(b=>b.close);
+      const s200arr = sma(closes, Math.min(200,n-1));
+      const s200 = s200arr[n-1];
+      const lastClose = bars[n-1].close;
+
+      tfResults[tf] = {
+        bias: bias.bias,
+        label: bias.label,
+        rsi: lastRSI,
+        aboveSMA200: s200 ? lastClose > s200 : null,
+        bos: bias.bullBOS + bias.bearBOS,
+        bullBOS: bias.bullBOS,
+        bearBOS: bias.bearBOS,
+        close: lastClose,
+        chg: bars.length>1?(bars[n-1].close-bars[n-2].close)/bars[n-2].close*100:0,
+      };
+    }catch(e){ console.warn('MTF error:', tf, e); }
   }
 
-  return {name:'FVG Birikimi', phase:'watch', detail:'S1 kosullari olusmaedi', dir:'bull'};
+  // CONFLUENCE SKORU HESAPLA
+  const tfArr = tfOrder.filter(tf=>tfResults[tf]);
+  if(tfArr.length === 0){
+    el.innerHTML = '<div style="font-family:var(--mono);font-size:9px;color:var(--txt2);text-align:center;padding:8px">MTF veri alinamadii</div>';
+    return;
+  }
+
+  // Yon teyitleri
+  const biases = tfArr.map(tf=>tfResults[tf].bias);
+  const bullCount = biases.filter(b=>b==='bull').length;
+  const bearCount = biases.filter(b=>b==='bear').length;
+  const allBull = bullCount === tfArr.length;
+  const allBear = bearCount === tfArr.length;
+  const majorityBull = bullCount > bearCount;
+  const majorityBear = bearCount > bullCount;
+
+  // Genel MTF bias
+  let overallBias = 'neut';
+  let overallColor = 'var(--txt1)';
+  let overallLabel = 'KARISIK';
+  if(allBull){ overallBias='bull'; overallColor='var(--green)'; overallLabel='TUM TF YUKARI ▲'; }
+  else if(allBear){ overallBias='bear'; overallColor='var(--red)'; overallLabel='TUM TF ASAGI ▼'; }
+  else if(majorityBull){ overallBias='bull'; overallColor='var(--green)'; overallLabel='COGUNLUK YUKARI ▲'; }
+  else if(majorityBear){ overallBias='bear'; overallColor='var(--red)'; overallLabel='COGUNLUK ASAGI ▼'; }
+
+  // SETUP KALITESI
+  // En iyi senaryo: HTF (aylik/haftalik) yukari, LTF (gunluk) giris veriyor
+  const htfBull = tfResults['1mo']?.bias==='bull' || tfResults['1wk']?.bias==='bull';
+  const htfBear = tfResults['1mo']?.bias==='bear' || tfResults['1wk']?.bias==='bear';
+  const ltfBull = tfResults['1d']?.bias==='bull';
+  const ltfBear = tfResults['1d']?.bias==='bear';
+
+  let setupQuality = '';
+  let setupColor = 'var(--txt2)';
+  if(htfBull && ltfBull){ setupQuality='✦ IDEAL LONG SETUP'; setupColor='var(--green)'; }
+  else if(htfBear && ltfBear){ setupQuality='✦ IDEAL SHORT SETUP'; setupColor='var(--red)'; }
+  else if(htfBull && !ltfBull){ setupQuality='◈ HTF YUKARI, LTF DUZELTME'; setupColor='var(--amber)'; }
+  else if(htfBear && !ltfBear){ setupQuality='◈ HTF ASAGI, LTF DIPSI'; setupColor='var(--amber)'; }
+  else{ setupQuality='✕ CONFLUENCE YOK'; setupColor='var(--txt2)'; }
+
+  // HTML
+  const tfHTML = tfArr.map(tf=>{
+    const r = tfResults[tf];
+    const color = r.bias==='bull'?'var(--green)':r.bias==='bear'?'var(--red)':'var(--txt2)';
+    const arrow = r.bias==='bull'?'▲':r.bias==='bear'?'▼':'◆';
+    const rsiColor = r.rsi>70?'var(--red)':r.rsi<30?'var(--green)':'var(--txt1)';
+    const chgColor = r.chg>=0?'var(--green)':'var(--red)';
+    return `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--line)">
+        <span style="font-family:var(--mono);font-size:9px;color:var(--txt2);width:55px">${tfLabels[tf]}</span>
+        <span style="font-family:var(--mono);font-size:10px;font-weight:700;color:${color}">${arrow}</span>
+        <span style="font-family:var(--mono);font-size:9px;color:${rsiColor}">RSI ${r.rsi?.toFixed(0)||'—'}</span>
+        <span style="font-family:var(--mono);font-size:9px;color:${chgColor}">${r.chg>=0?'+':''}${r.chg.toFixed(1)}%</span>
+        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">${r.aboveSMA200===true?'SMA+':r.aboveSMA200===false?'SMA-':''}</span>
+      </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div style="text-align:center;padding:6px 0;margin-bottom:4px;border-bottom:1px solid var(--line2)">
+      <div style="font-family:var(--mono);font-size:11px;font-weight:700;color:${overallColor}">${overallLabel}</div>
+      <div style="font-family:var(--mono);font-size:9px;color:${setupColor};margin-top:3px">${setupQuality}</div>
+    </div>
+    ${tfHTML}
+    <div style="font-family:var(--mono);font-size:8px;color:var(--txt2);text-align:right;margin-top:4px">${new Date().toLocaleTimeString('tr-TR')}</div>
+  `;
+
+  // MTF bias'i confluence skoruna yansit
+  updateMTFScore(overallBias, setupQuality);
+}
+
+function updateMTFScore(bias, quality){
+  // mtfBiasGlobal'i guncelle - confluence skorunda kullanilir
+  window.mtfBiasGlobal = {bias, quality};
 }
 
 function runStrategies(bars){
@@ -3092,6 +3329,9 @@ function render(bars, sym){
   // Strateji sinyalleri
   runStrategies(bars);
 
+  // MTF Confluence (async - arka planda)
+  runMTFConfluence(sym, bars).catch(_=>{});
+
   // Elliott Wave
   try{
     const swingsForEW = calcSwings(bars, 5);
@@ -3206,34 +3446,81 @@ function analyze(bars, sym){
   }
   score+=vscore; setSig('vol',vs,vd);
 
-  // SMC tabanli ek skor
+  // SMC tabanli ek puanlar
+  let smcScore = 0;
+  let smcMax = 0;
   try{
     const swingsA = calcSwings(bars, 5);
     const bosA = calcBOSCHoCH(bars, swingsA);
     const fvgsA = calcFVG(bars);
     const biasA = calcHTFBias(bars, swingsA, bosA);
+    const atrVals = calcATR(bars.map(b=>b.high),bars.map(b=>b.low),bars.map(b=>b.close),14);
+    const atrNow = atrVals[n-1];
 
-    // Bias uyumu
-    if(biasA.bias==='bull' && last>closes[n-5]) score=Math.min(8,score+1);
-    else if(biasA.bias==='bear' && last<closes[n-5]) score=Math.min(8,score+1);
+    // Bias uyumu (20 puan)
+    smcMax += 20;
+    if(biasA.bias==='bull' && last>closes[n-5]) smcScore+=20;
+    else if(biasA.bias==='bear' && last<closes[n-5]) smcScore+=20;
+    else if(biasA.bias!=='neut') smcScore+=10;
 
-    // Son FVG var mi ve fiyat icinde mi?
+    // FVG icinde mi? (15 puan)
+    smcMax += 15;
     const activeFVGs = fvgsA.filter(f=>!f.mitigated).slice(-3);
     const inFVG = activeFVGs.some(f=>last>=f.bottom && last<=f.top);
-    if(inFVG) score=Math.min(8,score+1);
+    if(inFVG) smcScore+=15;
+
+    // BOS sayisi (10 puan)
+    smcMax += 10;
+    const bullBOS = biasA.bullBOS||0;
+    const bearBOS = biasA.bearBOS||0;
+    if(bullBOS>=2||bearBOS>=2) smcScore+=10;
+    else if(bullBOS>=1||bearBOS>=1) smcScore+=5;
+
+    // MTF bias uyumu (15 puan)
+    smcMax += 15;
+    const mtf = window.mtfBiasGlobal;
+    if(mtf){
+      if(mtf.quality.includes('IDEAL')) smcScore+=15;
+      else if(mtf.quality.includes('HTF')) smcScore+=8;
+    }
+
+    // ATR momentum (10 puan)
+    smcMax += 10;
+    if(atrNow){
+      const priceMove = Math.abs(last - closes[n-5]);
+      if(priceMove > atrNow) smcScore+=10;
+      else if(priceMove > atrNow*0.5) smcScore+=5;
+    }
+
   }catch(_){}
 
-  // SCORE
-  const pct=score/8*100;
-  let color,msg;
-  if(pct>=75){color='var(--green)';msg='✦ Guclu setup — Islem degerlendirilebilir';}
-  else if(pct>=50){color='var(--amber)';msg='◈ Orta setup — Ek teyit bekleyin';}
-  else{color='var(--red)';msg='✕ Zayif setup — Islem acmayin';}
+  // TOPLAM SKOR: temel (max 8 -> 40 puan) + SMC (max 70 puan) = 110 normalizasyon
+  // Temel skoru 40 puana normalize et
+  const baseScore = Math.round(score/8*40);
+  const totalRaw = baseScore + smcScore;
+  const totalMax = 40 + (smcMax||70);
+  const pct = Math.min(100, Math.round(totalRaw / totalMax * 100));
+
+  let color, msg, grade;
+  if(pct>=80){ color='var(--green)'; msg='✦ Cok guclu — Giris icin hazir'; grade='A'; }
+  else if(pct>=65){ color='var(--green)'; msg='✦ Guclu setup — Islem degerlendirilebilir'; grade='B'; }
+  else if(pct>=50){ color='var(--amber)'; msg='◈ Orta setup — Ek teyit bekleyin'; grade='C'; }
+  else if(pct>=35){ color='var(--amber)'; msg='◈ Zayif — Dikkatli izle'; grade='D'; }
+  else{ color='var(--red)'; msg='✕ Cok zayif — Islem acmayin'; grade='F'; }
 
   const sn=g('scoreNum');
-  sn.textContent=score; sn.style.color=color;
-  g('scoreFill').style.width=pct+'%'; g('scoreFill').style.background=color;
+  sn.textContent=pct; sn.style.color=color;
+  // Animasyonlu progress bar
+  const fill = g('scoreFill');
+  fill.style.transition='width .6s ease';
+  fill.style.width=pct+'%'; fill.style.background=color;
   const sm=g('scoreMsg'); sm.textContent=msg; sm.style.color=color;
+
+  // Skor detayi goster
+  const scoreDetail = g('scoreDetail');
+  if(scoreDetail){
+    scoreDetail.textContent = `Temel: ${Math.round(score/8*100)}% · SMC: ${smcMax>0?Math.round(smcScore/smcMax*100):'—'}% · MTF: ${window.mtfBiasGlobal?.quality?.includes('IDEAL')?'IDEAL':window.mtfBiasGlobal?.quality?.includes('HTF')?'KISMI':'—'}`;
+  }
 }
 
 // ── HELPERS ───────────────────────────────────────────────────
