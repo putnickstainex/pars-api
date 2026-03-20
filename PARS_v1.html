@@ -342,13 +342,13 @@ header {
   border-top: 1px solid var(--line);
 }
 .sub-hdr {
-  height: 26px;
+  height: 30px;
   background: var(--bg1);
   border-bottom: 1px solid var(--line);
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 14px;
 }
-.sub-lbl { font-family: var(--mono); font-size: 9px; letter-spacing: 1.5px; color: var(--txt2); }
+.sub-lbl { font-family: var(--mono); font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--txt1); }
 .sub-val { font-family: var(--mono); font-size: 11px; font-weight: 600; }
 #rsiChart { width:100%; height:90px; }
 #volChart { width:100%; height:70px; }
@@ -579,7 +579,7 @@ header {
 .tp-lbl { color: var(--green); }
 .rr-lbl { color: var(--acc); }
 
-/* HTF Bias */
+/* Piyasa Yonu */
 .bias-arrow {
   font-size: 28px; font-weight: 700; line-height: 1;
   font-family: var(--mono);
@@ -843,7 +843,7 @@ header {
     <!-- Watchlist Header -->
   <div style="padding:10px 14px 6px;border-bottom:1px solid var(--line)">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-      <span class="panel-title" style="padding:0">IZLEME LISTESI</span>
+      <span class="panel-title" style="padding:0">İZLEME LİSTESİ</span>
       <span style="font-family:var(--mono);font-size:9px;color:var(--txt2);cursor:pointer" onclick="refreshWatchlist()" title="Yenile">⟳</span>
     </div>
     <!-- Arama kutusu -->
@@ -868,65 +868,127 @@ header {
   <div id="watchlistItems" style="overflow-y:auto;flex:1"></div>
 
     <div class="sep"></div>
-    <div class="panel-title">İndikatörler</div>
+
+    <!-- Tümünü Aç/Kapat + Başlık -->
+    <div class="ind-row" onclick="togAllInd()" style="background:var(--bg3);border-bottom:1px solid var(--line)">
+      <span class="panel-title" style="padding:0;color:var(--txt0)">GÖSTERGELER</span>
+      <div class="tog on" id="t_all" title="Tümünü Aç/Kapat"></div>
+    </div>
 
     <div class="ind-row" onclick="togInd('sma20')">
-      <span class="ind-lbl" style="color:#00d4ff">SMA 20</span>
+      <span class="ind-lbl" style="color:#00d4ff">SMA 20 — Kısa Vade</span>
       <div class="tog on" id="t_sma20"></div>
     </div>
     <div class="ind-row" onclick="togInd('sma50')">
-      <span class="ind-lbl" style="color:#ffab00">SMA 50</span>
+      <span class="ind-lbl" style="color:#ffab00">SMA 50 — Orta Vade</span>
       <div class="tog on" id="t_sma50"></div>
     </div>
     <div class="ind-row" onclick="togInd('sma200')">
-      <span class="ind-lbl" style="color:#c678dd">SMA 200</span>
+      <span class="ind-lbl" style="color:#c678dd">SMA 200 — Uzun Vade</span>
       <div class="tog on" id="t_sma200"></div>
     </div>
     <div class="ind-row" onclick="togInd('rsi')">
-      <span class="ind-lbl" style="color:var(--txt1)">RSI 14</span>
+      <span class="ind-lbl" style="color:var(--txt1)">RSI — Aşırı Al/Sat</span>
       <div class="tog on" id="t_rsi"></div>
     </div>
     <div class="ind-row" onclick="togInd('vol')">
-      <span class="ind-lbl" style="color:var(--txt1)">Hacim</span>
+      <span class="ind-lbl" style="color:var(--txt1)">İşlem Hacmi</span>
       <div class="tog on" id="t_vol"></div>
     </div>
     <div class="ind-row" onclick="togInd('swings')">
-      <span class="ind-lbl" style="color:#e879f9">Swing H/L</span>
+      <span class="ind-lbl" style="color:#e879f9">Tepe / Dip Noktaları</span>
       <div class="tog on" id="t_swings"></div>
     </div>
     <div class="ind-row" onclick="togInd('fvg')">
-      <span class="ind-lbl" style="color:#fb923c">Fair Value Gap</span>
+      <span class="ind-lbl" style="color:#fb923c">Fiyat Boşluğu</span>
       <div class="tog on" id="t_fvg"></div>
     </div>
     <div class="ind-row" onclick="togInd('bos')">
-      <span class="ind-lbl" style="color:#4ade80">BOS / CHoCH</span>
+      <span class="ind-lbl" style="color:#4ade80">Kırılım / Dönüş</span>
       <div class="tog on" id="t_bos"></div>
     </div>
     <div class="ind-row" onclick="togInd('liq')">
-      <span class="ind-lbl" style="color:#facc15">Likidite</span>
+      <span class="ind-lbl" style="color:#facc15">Likidite Bölgesi</span>
       <div class="tog on" id="t_liq"></div>
     </div>
     <div class="ind-row" onclick="togInd('bb')">
-      <span class="ind-lbl" style="color:#818cf8">Bollinger</span>
+      <span class="ind-lbl" style="color:#818cf8">Bollinger Bantları</span>
       <div class="tog on" id="t_bb"></div>
     </div>
     <div class="ind-row" onclick="togInd('macd')">
-      <span class="ind-lbl" style="color:#f472b6">MACD</span>
+      <span class="ind-lbl" style="color:#f472b6">MACD — Trend Gücü</span>
       <div class="tog on" id="t_macd"></div>
     </div>
     <div class="ind-row" onclick="togInd('td9')">
-      <span class="ind-lbl" style="color:#fb923c">TD9</span>
+      <span class="ind-lbl" style="color:#fb923c">TD9 — Dönüş Sayacı</span>
       <div class="tog on" id="t_td9"></div>
     </div>
     <div class="ind-row" onclick="togInd('ew')">
-      <span class="ind-lbl" style="color:#00e676">Elliott Wave</span>
+      <span class="ind-lbl" style="color:#00e676">Elliott Dalga Sayımı</span>
       <div class="tog on" id="t_ew"></div>
     </div>
 
     <div class="sep"></div>
 
+    <!-- STRATEJİLER -->
+    <div class="ind-row" style="background:var(--bg3);border-bottom:1px solid var(--line)">
+      <span class="panel-title" style="padding:0;color:var(--txt0)">STRATEJİLER</span>
+    </div>
+    <div style="font-family:var(--sans);font-size:9px;color:var(--txt2);padding:5px 14px;line-height:1.4">
+      Sistem bu stratejileri otomatik tarar ve sinyaller oluşturur:
+    </div>
+    <div style="padding:2px 8px;display:flex;flex-direction:column;gap:1px;margin-bottom:6px">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 6px;border-radius:3px;background:var(--bg2)">
+        <span style="font-family:var(--mono);font-size:9px;color:var(--green)">▲ FVG Birikimi</span>
+        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">Alış</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 6px;border-radius:3px;background:var(--bg2)">
+        <span style="font-family:var(--mono);font-size:9px;color:var(--green)">▲ Base Kayması</span>
+        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">Alış</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 6px;border-radius:3px;background:var(--bg2)">
+        <span style="font-family:var(--mono);font-size:9px;color:var(--acc)">◆ Çift Yutma</span>
+        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">Alış</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 6px;border-radius:3px;background:var(--bg2)">
+        <span style="font-family:var(--mono);font-size:9px;color:var(--acc)">◆ Emir Bloku</span>
+        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">Al/Sat</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 6px;border-radius:3px;background:var(--bg2)">
+        <span style="font-family:var(--mono);font-size:9px;color:var(--acc)">◆ CHoCH Dönüşü</span>
+        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">Al/Sat</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 6px;border-radius:3px;background:var(--bg2)">
+        <span style="font-family:var(--mono);font-size:9px;color:var(--amber)">◆ Range Sapma</span>
+        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">Al/Sat</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 6px;border-radius:3px;background:var(--bg2)">
+        <span style="font-family:var(--mono);font-size:9px;color:var(--red)">▼ Trend Kırılışı</span>
+        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">Satış</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 6px;border-radius:3px;background:var(--bg2)">
+        <span style="font-family:var(--mono);font-size:9px;color:var(--red)">▼ Güçlü Trend FVG</span>
+        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">Satış</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 6px;border-radius:3px;background:var(--bg2)">
+        <span style="font-family:var(--mono);font-size:9px;color:var(--acc)">◆ Swing Başarısız</span>
+        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">Al/Sat</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 6px;border-radius:3px;background:var(--bg2)">
+        <span style="font-family:var(--mono);font-size:9px;color:var(--green)">▲ Fitil Mumu</span>
+        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">Alış</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 6px;border-radius:3px;background:var(--bg2)">
+        <span style="font-family:var(--mono);font-size:9px;color:var(--green)">▲ Elliott Girişi</span>
+        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">Alış</span>
+      </div>
+    </div>
+
+
+    <div class="sep"></div>
+
     <div class="atr-block">
-      <div class="atr-label">ATR (14)</div>
+      <div class="atr-label">Ortalama Dalgalanma (ATR)</div>
       <div class="atr-val" id="atrVal">—</div>
       <div class="atr-adr" id="adrVal">ADR: —</div>
       <div class="atr-sl" id="slVal">SL 1.5×: —</div>
@@ -969,17 +1031,17 @@ header {
 
     <div class="sub-charts">
       <div class="sub-hdr">
-        <span class="sub-lbl">RSI · 14</span>
+        <span class="sub-lbl">RSI (Aşırı Alım/Satım Göstergesi)</span>
         <span class="sub-val" id="rsiVal" style="color:var(--acc)">—</span>
       </div>
       <div id="rsiChart"></div>
       <div class="sub-hdr" style="border-top:1px solid var(--line)">
-        <span class="sub-lbl">HACİM</span>
+        <span class="sub-lbl">İşlem Hacmi</span>
         <span class="sub-val" id="volVal" style="color:var(--txt1)">—</span>
       </div>
       <div id="volChart"></div>
       <div class="sub-hdr" style="border-top:1px solid var(--line)" id="macdHdr">
-        <span class="sub-lbl">MACD · 12,26,9</span>
+        <span class="sub-lbl">MACD (Trend Momentum)</span>
         <div style="display:flex;gap:10px">
           <span class="sub-val" id="macdVal" style="color:var(--txt1)">—</span>
           <span class="sub-val" id="macdSig" style="color:var(--txt2)">—</span>
@@ -998,11 +1060,11 @@ header {
       <div class="analyst-header">
         <div class="analyst-title">
           <div class="analyst-dot"></div>
-          PARS ANALİST
+          PARS ANALİST YORUMU
         </div>
         <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)" id="analystTF">—</span>
       </div>
-      <div class="analyst-action watch" id="analystAction">ANALİZ BEKLENİYOR</div>
+      <div class="analyst-action watch" id="analystAction">Sembol seçin...</div>
       <div class="analyst-levels" id="analystLevels" style="display:none">
         <div class="analyst-level">
           <div class="analyst-level-k">GİRİŞ</div>
@@ -1028,7 +1090,7 @@ header {
 
     <!-- HTF BIAS -->
     <div class="score-box" id="htfBiasBox">
-      <div class="panel-title" style="padding:0 0 8px 0">HTF Bias</div>
+      <div class="panel-title" style="padding:0 0 8px 0">Piyasanın Genel Yönü</div>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
         <div class="bias-arrow" id="biasArrow">—</div>
         <div>
@@ -1037,15 +1099,15 @@ header {
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">
-        <div class="bias-chip" id="bc_bos">BOS —</div>
-        <div class="bias-chip" id="bc_choch">CHoCH —</div>
-        <div class="bias-chip" id="bc_fvg">FVG —</div>
-        <div class="bias-chip" id="bc_liq">LIQ —</div>
+        <div class="bias-chip" id="bc_bos">Kırılım —</div>
+        <div class="bias-chip" id="bc_choch">Dönüş —</div>
+        <div class="bias-chip" id="bc_fvg">Boşluk —</div>
+        <div class="bias-chip" id="bc_liq">Likidite —</div>
       </div>
     </div>
 
     <div class="score-box">
-      <div class="panel-title" style="padding:0 0 10px 0">Confluence Skoru</div>
+      <div class="panel-title" style="padding:0 0 10px 0">Sinyal Gücü (%)</div>
       <div class="score-top">
         <div>
           <span class="score-num" id="scoreNum" style="color:var(--txt2)">—</span>
@@ -1055,16 +1117,16 @@ header {
       <div class="score-track">
         <div class="score-fill" id="scoreFill" style="width:0%;background:var(--txt2)"></div>
       </div>
-      <div class="score-msg" id="scoreMsg" style="color:var(--txt2)">Analiz icin sembol yukleyin</div>
+      <div class="score-msg" id="scoreMsg" style="color:var(--txt2)">Sembol seçin ve analiz başlasın</div>
       <div id="scoreDetail" style="font-family:var(--mono);font-size:8px;color:var(--txt2);margin-top:4px;text-align:center"></div>
     </div>
 
     <div class="signals">
-      <div class="panel-title" style="padding:0 0 10px 0">Sinyal Analizi</div>
+      <div class="panel-title" style="padding:0 0 10px 0">Teknik Göstergeler</div>
 
       <div class="sig-card">
         <div class="sig-top">
-          <span class="sig-name">TREND</span>
+          <span class="sig-name">TREND YÖNÜ</span>
           <span class="badge b-na" id="b_trend">—</span>
         </div>
         <div class="sig-detail" id="d_trend">Bekleniyor</div>
@@ -1088,7 +1150,7 @@ header {
 
       <div class="sig-card">
         <div class="sig-top">
-          <span class="sig-name">HACİM</span>
+          <span class="sig-name">İşlem Hacmi</span>
           <span class="badge b-na" id="b_vol">—</span>
         </div>
         <div class="sig-detail" id="d_vol">Bekleniyor</div>
@@ -1097,7 +1159,7 @@ header {
 
     <!-- MTF CONFLUENCE PANEL -->
     <div class="signals" id="mtfPanel">
-      <div class="panel-title" style="padding:0 0 8px 0">MTF Confluence</div>
+      <div class="panel-title" style="padding:0 0 8px 0">Çoklu Periyot Analizi</div>
       <div id="mtfContent">
         <div style="font-family:var(--mono);font-size:10px;color:var(--txt2);text-align:center;padding:8px">Analiz bekleniyor</div>
       </div>
@@ -1105,7 +1167,7 @@ header {
 
     <!-- ELLIOTT WAVE PANEL -->
     <div class="signals">
-      <div class="panel-title" style="padding:0 0 8px 0">Elliott Wave</div>
+      <div class="panel-title" style="padding:0 0 8px 0">Elliott Dalga Analizi</div>
       <div id="elliottPanel">
         <div style="font-family:var(--mono);font-size:10px;color:var(--txt2);text-align:center;padding:8px">Analiz bekleniyor</div>
       </div>
@@ -1113,25 +1175,25 @@ header {
 
     <!-- STRATEJİ SİNYALLERİ -->
     <div class="signals" id="strategyPanel">
-      <div class="panel-title" style="padding:0 0 10px 0">Strateji Sinyalleri</div>
+      <div class="panel-title" style="padding:0 0 10px 0">Aktif Strateji Sinyalleri</div>
       <div id="strategyCards">
         <div style="font-family:var(--mono);font-size:10px;color:var(--txt2);text-align:center;padding:10px 0">
-          Analiz bekleniyor...
+          Sembol seçin, analiz başlasın...
         </div>
       </div>
     </div>
 
     <div class="stats">
-      <div class="panel-title" style="padding:0 0 10px 0">İstatistikler</div>
+      <div class="panel-title" style="padding:0 0 10px 0">Temel İstatistikler</div>
       <div class="stats-grid">
-        <div class="stat"><div class="stat-k">52H HIGH</div><div class="stat-v" id="s_h52">—</div></div>
-        <div class="stat"><div class="stat-k">52H LOW</div><div class="stat-v" id="s_l52">—</div></div>
+        <div class="stat"><div class="stat-k">52 Hafta En Yüksek</div><div class="stat-v" id="s_h52">—</div></div>
+        <div class="stat"><div class="stat-k">52 Hafta En Düşük</div><div class="stat-v" id="s_l52">—</div></div>
         <div class="stat"><div class="stat-k">SMA 200</div><div class="stat-v" id="s_sma200">—</div></div>
-        <div class="stat"><div class="stat-k">F/SMA200</div><div class="stat-v" id="s_ratio">—</div></div>
+        <div class="stat"><div class="stat-k">SMA200 Farkı</div><div class="stat-v" id="s_ratio">—</div></div>
         <div class="stat"><div class="stat-k">ATR %</div><div class="stat-v" id="s_atrp">—</div></div>
         <div class="stat"><div class="stat-k">SL %</div><div class="stat-v dn" id="s_slp">—</div></div>
-        <div class="stat"><div class="stat-k">AKTİF FVG</div><div class="stat-v" id="s_fvg">—</div></div>
-        <div class="stat"><div class="stat-k">ORDER BLOCK</div><div class="stat-v" id="s_ob">—</div></div>
+        <div class="stat"><div class="stat-k">Açık Fiyat Boşluğu</div><div class="stat-v" id="s_fvg">—</div></div>
+        <div class="stat"><div class="stat-k">Emir Bölgesi</div><div class="stat-v" id="s_ob">—</div></div>
       </div>
     </div>
   </div>
@@ -1732,7 +1794,7 @@ function calcLiquidity(swings, threshold=0.003){
   return liqZones;
 }
 
-// HTF Bias hesapla
+// Piyasa Yonu hesapla
 function calcHTFBias(bars, swings, bosEvents){
   const n = bars.length;
   const last = bars[n-1].close;
@@ -1750,28 +1812,28 @@ function calcHTFBias(bars, swings, bosEvents){
   const s200 = sma200arr[n-1];
 
   let bias = 'neut';
-  let label = 'NOTR';
+  let label = 'YON YOK';
   let sub = '';
 
   if(bullBOS >= 2 || (bullBOS>=1 && last > (s200||0))){
     bias = 'bull';
-    label = '▲ YUKARI';
+    label = '▲ YUKARI TREND';
     sub = `${bullBOS} BOS ↑ · ${bullCHoCH} CHoCH ↑`;
   } else if(bearBOS >= 2 || (bearBOS>=1 && last < (s200||Infinity))){
     bias = 'bear';
-    label = '▼ ASAGI';
+    label = '▼ ASAGI TREND';
     sub = `${bearBOS} BOS ↓ · ${bearCHoCH} CHoCH ↓`;
   } else if(bullCHoCH > bearCHoCH){
     bias = 'bull';
-    label = '↗ POTANSIYEL YUKARI';
+    label = '↗ YUKARI POTANSIYEL';
     sub = `CHoCH donusu tespit edildi`;
   } else if(bearCHoCH > bullCHoCH){
     bias = 'bear';
-    label = '↘ POTANSIYEL ASAGI';
+    label = '↘ ASAGI POTANSIYEL';
     sub = `CHoCH donusu tespit edildi`;
   } else {
-    label = 'NOTR';
-    sub = 'Belirgin yon yok';
+    label = 'YON YOK';
+    sub = 'Net bir yon tespit edilemedi';
   }
 
   return {bias, label, sub, bullBOS, bearBOS, bullCHoCH, bearCHoCH};
@@ -2231,7 +2293,7 @@ function checkS4(bars, swings, htfBias=null){
           engulfBar: curr,
           prevBar: prev,
           bodyRatio: body2/body1,
-          // ORDER BLOCK: engulfing oncesindeki son karsi renk mumun govdesi
+          // Emir Bolgesi: engulfing oncesindeki son karsi renk mumun govdesi
           obTop: isBullEng ? prev.open : prev.close,
           obBottom: isBullEng ? prev.close : prev.open,
         };
@@ -2471,14 +2533,14 @@ function checkS10(bars, swings, htfBias=null){
   return {name:'Fitil Mumu', phase:'forming', detail:`Wick mumu + FVG hazir. Geri donus bekleniyor. FVG: ${fp(triggerFVG.bottom)}-${fp(triggerFVG.top)}`, dir:isUptrend?'bull':'bear'};
 }
 
-// S11: Elliott Wave Giris (Wave 2 sonrasi C ve Wave 4 sonrasi)
+// S11: Dalga Analizi Giris (Wave 2 sonrasi C ve Wave 4 sonrasi)
 function checkS11(bars, swings, htfBias=null){
   const n = bars.length;
   if(n < 20) return null;
 
   const ew = detectElliottWave(bars, swings);
   if(!ew || ew.waveType==='unknown'){
-    return {name:'Elliott Giris', phase:'watch', detail:'Elliott Wave sayimi yapilamiyor', dir:'neut'};
+    return {name:'Elliott Giris', phase:'watch', detail:'Dalga Analizi sayimi yapilamiyor', dir:'neut'};
   }
 
   const lastClose = bars[n-1].close;
@@ -2649,7 +2711,7 @@ async function runMTFConfluence(sym, currentBars){
 
   // TF hiyerarsi: Aylik > Haftalik > Gunluk > LTF
   const tfOrder = ['1mo','1wk','1d'];
-  const tfLabels = {'1mo':'AYLIK','1wk':'HAFTALIK','1d':'GUNLUK'};
+  const tfLabels = {'1mo':'Aylik Periyot','1wk':'Haftalik Periyot','1d':'Gunluk Periyot'};
   const tfResults = {};
 
   for(const tf of tfOrder){
@@ -2701,10 +2763,10 @@ async function runMTFConfluence(sym, currentBars){
   let overallBias = 'neut';
   let overallColor = 'var(--txt1)';
   let overallLabel = 'KARISIK';
-  if(allBull){ overallBias='bull'; overallColor='var(--green)'; overallLabel='TUM TF YUKARI ▲'; }
-  else if(allBear){ overallBias='bear'; overallColor='var(--red)'; overallLabel='TUM TF ASAGI ▼'; }
-  else if(majorityBull){ overallBias='bull'; overallColor='var(--green)'; overallLabel='COGUNLUK YUKARI ▲'; }
-  else if(majorityBear){ overallBias='bear'; overallColor='var(--red)'; overallLabel='COGUNLUK ASAGI ▼'; }
+  if(allBull){ overallBias='bull'; overallColor='var(--green)'; overallLabel='TUM PERIYOTLAR YUKARI ▲ ▲'; }
+  else if(allBear){ overallBias='bear'; overallColor='var(--red)'; overallLabel='TUM PERIYOTLAR ASAGI ▼ ▼'; }
+  else if(majorityBull){ overallBias='bull'; overallColor='var(--green)'; overallLabel='COGU PERIYOT YUKARI ▲'; }
+  else if(majorityBear){ overallBias='bear'; overallColor='var(--red)'; overallLabel='COGU PERIYOT ASAGI ▼'; }
 
   // SETUP KALITESI
   // En iyi senaryo: HTF (aylik/haftalik) yukari, LTF (gunluk) giris veriyor
@@ -2715,11 +2777,11 @@ async function runMTFConfluence(sym, currentBars){
 
   let setupQuality = '';
   let setupColor = 'var(--txt2)';
-  if(htfBull && ltfBull){ setupQuality='✦ IDEAL LONG SETUP'; setupColor='var(--green)'; }
-  else if(htfBear && ltfBear){ setupQuality='✦ IDEAL SHORT SETUP'; setupColor='var(--red)'; }
-  else if(htfBull && !ltfBull){ setupQuality='◈ HTF YUKARI, LTF DUZELTME'; setupColor='var(--amber)'; }
-  else if(htfBear && !ltfBear){ setupQuality='◈ HTF ASAGI, LTF DIPSI'; setupColor='var(--amber)'; }
-  else{ setupQuality='✕ CONFLUENCE YOK'; setupColor='var(--txt2)'; }
+  if(htfBull && ltfBull){ setupQuality='✦ MUKEMMEL ALIS FIRSATI'; setupColor='var(--green)'; }
+  else if(htfBear && ltfBear){ setupQuality='✦ MUKEMMEL SATIS FIRSATI'; setupColor='var(--red)'; }
+  else if(htfBull && !ltfBull){ setupQuality='◈ YUKARI TREND, DUZELTME BEKLENIYOR'; setupColor='var(--amber)'; }
+  else if(htfBear && !ltfBear){ setupQuality='◈ ASAGI TREND, DIP ARAYISI'; setupColor='var(--amber)'; }
+  else{ setupQuality='✕ UYUMLU SINYAL YOK'; setupColor='var(--txt2)'; }
 
   // HTML
   const tfHTML = tfArr.map(tf=>{
@@ -2798,7 +2860,7 @@ function runAnalyst(bars, sym, stratResults, htfBias, confluencePct){
   // SENARYO 1: Hazir sinyal + yeterli confluence + MTF uyumlu
   if(bestSignal && bestSignal.phase==='ready' && confluencePct >= 55 && !mtfNoConf){
     const isBuy = bestSignal.dir==='bull';
-    action    = isBuy ? 'LONG (AL)' : 'SHORT (SAT)';
+    action    = isBuy ? 'ALIS FIRSATI — LONG' : 'SATIS FIRSATI — SHORT';
     actionClass = isBuy ? 'buy' : 'sell';
     entry = lastClose;
     sl    = bestSignal.sl;
@@ -2824,7 +2886,7 @@ function runAnalyst(bars, sym, stratResults, htfBias, confluencePct){
   // SENARYO 2: Hazir sinyal var ama confluence dusuk
   } else if(bestSignal && bestSignal.phase==='ready' && confluencePct < 55){
     const isBuy = bestSignal.dir==='bull';
-    action = 'BEKLE - DUSUK SKOR';
+    action = 'BEKLE — SINYAL ZAYIF';
     actionClass = 'wait';
     sl = bestSignal.sl; tp = bestSignal.tp;
     mainComment = `${bestSignal.name} sinyali var ama confluence skoru dusuk (%${confluencePct}). Giris icin en az %55 gerekiyor.`;
@@ -2838,7 +2900,7 @@ function runAnalyst(bars, sym, stratResults, htfBias, confluencePct){
   } else if(alertSignals.length > 0 && confluencePct >= 45){
     const sig = alertSignals[0];
     const isBuy = sig.dir==='bull';
-    action = isBuy ? 'LONG HAZIRLIK' : 'SHORT HAZIRLIK';
+    action = isBuy ? 'ALIS HAZIRLIGI YAP' : 'SATIS HAZIRLIGI YAP';
     actionClass = 'wait';
     mainComment = `${sig.name} sinyali yaklasiyor. Henuz giris yok ama pozisyon hazirla.`;
     steps = [
@@ -2850,7 +2912,7 @@ function runAnalyst(bars, sym, stratResults, htfBias, confluencePct){
 
   // SENARYO 4: RSI asiri bolge + bias uyumu
   } else if(rsiOS && htfBias?.bias==='bull'){
-    action = 'DIPTEN AL DUSUN';
+    action = 'DIP FIRSATI YAKLASHIYOR';
     actionClass = 'wait';
     mainComment = `RSI ${lastRSI?.toFixed(1)} asiri satim bolgesinde ve HTF bias yukari. Dip olusumu izleniyor.`;
     steps = [
@@ -2860,7 +2922,7 @@ function runAnalyst(bars, sym, stratResults, htfBias, confluencePct){
       {n:'4', txt:'Pozisyon acmadan once mumun kapanisini bekle.'},
     ];
   } else if(rsiOB && htfBias?.bias==='bear'){
-    action = 'ZIRVEYE SAT DUSUN';
+    action = 'ZIRVE DONUSU IZLE';
     actionClass = 'wait';
     mainComment = `RSI ${lastRSI?.toFixed(1)} asiri alim bolgesinde ve HTF bias asagi. Short firsat izleniyor.`;
     steps = [
@@ -2871,7 +2933,7 @@ function runAnalyst(bars, sym, stratResults, htfBias, confluencePct){
 
   // SENARYO 5: Karisik / Belirsiz
   } else if(confluencePct < 35){
-    action = 'PIYASADA KAL';
+    action = 'ISLEM YAPMA — BEKLE';
     actionClass = 'watch';
     mainComment = `Confluence skoru cok dusuk (%${confluencePct}). Net sinyal yok. Risk almak icin dogru zaman degil.`;
     steps = [
@@ -2883,7 +2945,7 @@ function runAnalyst(bars, sym, stratResults, htfBias, confluencePct){
   // SENARYO 6: Forming sinyaller var, sinyal olgunlasmayi bekle
   } else if(formingSignals.length >= 2){
     const topForming = formingSignals.slice(0,2).map(s=>s.name).join(' + ');
-    action = 'SINYAL BEKLE';
+    action = 'SINYAL OLUSUYOR';
     actionClass = 'watch';
     mainComment = `${topForming} olusuyor. Sinyal tamamlandiginda hazir ol.`;
     const dir = formingSignals[0].dir;
@@ -2896,7 +2958,7 @@ function runAnalyst(bars, sym, stratResults, htfBias, confluencePct){
 
   // DEFAULT
   } else {
-    action = 'PIYASA IZLE';
+    action = 'PIYASAYI IZLE';
     actionClass = 'watch';
     mainComment = `${htfBias?'HTF bias: '+(htfBias.label||'Notr')+'. ':''} Net giris sinyali bekleniyor.`;
     steps = [
@@ -3140,7 +3202,7 @@ function buildWaveDescription(type, wave, bias){
   return 'Dalga sayimi belirsiz';
 }
 
-// Elliott Wave'i grafige ciz
+// Dalga Analizi'i grafige ciz
 let elliottSeries = [];
 
 function drawElliott(bars, swings){
@@ -3219,7 +3281,7 @@ function updateElliottPanel(ew){
   const arrow = ew.bias==='bull'?'▲':ew.bias==='bear'?'▼':'◆';
   el.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
-      <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:${color}">${arrow} ${ew.waveType==='impulse_up'?'IMPULSIVE UP':ew.waveType==='impulse_down'?'IMPULSIVE DOWN':'CORRECTIVE'}</span>
+      <span style="font-family:var(--mono);font-size:11px;font-weight:700;color:${color}">${arrow} ${ew.waveType==='impulse_up'?'Yukselis Dalgasi':ew.waveType==='impulse_down'?'Dusus Dalgasi':'Duzeltme Dalgasi'}</span>
       <span style="font-family:var(--mono);font-size:10px;background:var(--bg3);padding:2px 8px;border-radius:4px;color:${color}">Dalga (${ew.currentWave})</span>
     </div>
     <div style="font-family:var(--sans);font-size:10px;color:var(--txt1);margin-bottom:6px;line-height:1.4">${ew.description}</div>
@@ -3392,7 +3454,7 @@ function drawSMC(bars){
     });
   }
 
-  // ── ORDER BLOCKS
+  // ── Emir BolgesiS
   if(smcVisible.fvg){ // FVG toggle ile birlikte
     const obs = calcOrderBlocks(bars, swings);
     const activeOBs = obs.filter(o=>!o.mitigated).slice(-6);
@@ -3458,10 +3520,10 @@ function drawSMC(bars){
     if(el){ el.textContent=val; el.className=`bias-chip ${cls}`; }
   };
 
-  bc('bc_bos', `BOS ${bosCount}`, bosCount>0?(bias.bullBOS>bias.bearBOS?'bull':'bear'):'');
-  bc('bc_choch', `CHoCH ${chochCount}`, chochCount>0?'neut':'');
-  bc('bc_fvg', `FVG ${fvgCount} · OB ${obCount}`, fvgCount>0?'bull':'');
-  bc('bc_liq', `LIQ ${liqCount}`, liqCount>2?'neut':'');
+  bc('bc_bos', `Kirilim: ${bosCount}`, bosCount>0?(bias.bullBOS>bias.bearBOS?'bull':'bear'):'');
+  bc('bc_choch', `Donus: ${chochCount}`, chochCount>0?'neut':'');
+  bc('bc_fvg', `Bosluk: ${fvgCount} · OB: ${obCount}`, fvgCount>0?'bull':'');
+  bc('bc_liq', `Likidite: ${liqCount}`, liqCount>2?'neut':'');
 
   return {swings, bosEvents: bosEventsAll, bias};
 }
@@ -3608,7 +3670,7 @@ function render(bars, sym){
   // Strateji sinyalleri
   const stratResults = runStrategies(bars) || [];
 
-  // MTF Confluence (async - arka planda)
+  // Coklu Zaman Dilimi (async - arka planda)
   runMTFConfluence(sym, bars).catch(_=>{});
 
   // Analist yorumu - confluence skoru hesaplandiktan sonra calistir
@@ -3621,7 +3683,7 @@ function render(bars, sym){
     runAnalyst(bars, sym, stratResults, htfBiasA, pct);
   }, 400);
 
-  // Elliott Wave
+  // Dalga Analizi
   try{
     const swingsForEW = calcSwings(bars, 5);
     renderElliott(bars, swingsForEW);
@@ -3791,11 +3853,11 @@ function analyze(bars, sym){
   const pct = Math.min(100, Math.round(totalRaw / totalMax * 100));
 
   let color, msg, grade;
-  if(pct>=80){ color='var(--green)'; msg='✦ Cok guclu — Giris icin hazir'; grade='A'; }
-  else if(pct>=65){ color='var(--green)'; msg='✦ Guclu setup — Islem degerlendirilebilir'; grade='B'; }
-  else if(pct>=50){ color='var(--amber)'; msg='◈ Orta setup — Ek teyit bekleyin'; grade='C'; }
-  else if(pct>=35){ color='var(--amber)'; msg='◈ Zayif — Dikkatli izle'; grade='D'; }
-  else{ color='var(--red)'; msg='✕ Cok zayif — Islem acmayin'; grade='F'; }
+  if(pct>=80){ color='var(--green)'; msg='✦ Cok Guclu — Islem icin hazir!'; grade='A'; }
+  else if(pct>=65){ color='var(--green)'; msg='✦ Guclu Sinyal — Islem degerlendirin'; grade='B'; }
+  else if(pct>=50){ color='var(--amber)'; msg='◈ Orta Sinyal — Teyit bekleyin'; grade='C'; }
+  else if(pct>=35){ color='var(--amber)'; msg='◈ Zayif Sinyal — Dikkatli olun'; grade='D'; }
+  else{ color='var(--red)'; msg='✕ Sinyal Yok — Islem yapmayin'; grade='F'; }
 
   const sn=g('scoreNum');
   sn.textContent=pct; sn.style.color=color;
@@ -3808,7 +3870,7 @@ function analyze(bars, sym){
   // Skor detayi goster
   const scoreDetail = g('scoreDetail');
   if(scoreDetail){
-    scoreDetail.textContent = `Temel: ${Math.round(score/8*100)}% · SMC: ${smcMax>0?Math.round(smcScore/smcMax*100):'—'}% · MTF: ${window.mtfBiasGlobal?.quality?.includes('IDEAL')?'IDEAL':window.mtfBiasGlobal?.quality?.includes('HTF')?'KISMI':'—'}`;
+    scoreDetail.textContent = `Gostergeler: ${Math.round(score/8*100)}% · Yapi: ${smcMax>0?Math.round(smcScore/smcMax*100):'—'}% · MTF: ${window.mtfBiasGlobal?.quality?.includes('IDEAL')?'IDEAL':window.mtfBiasGlobal?.quality?.includes('HTF')?'KISMI':'—'}`;
   }
 }
 
@@ -3907,6 +3969,51 @@ function updateWL(sym,bars){
 
 function loadSym(sym, el){
   loadSymFromWL(sym);
+}
+
+// Tum indikatorleri ac/kapat
+let allIndsOn = true;
+const ALL_INDS = ['sma20','sma50','sma200','rsi','vol','swings','fvg','bos','liq','bb','macd','td9','ew'];
+
+function togAllInd(){
+  allIndsOn = !allIndsOn;
+  const t = g('t_all');
+  if(t){ allIndsOn ? t.classList.add('on') : t.classList.remove('on'); }
+  ALL_INDS.forEach(key=>{
+    inds[key] = allIndsOn;
+    smcVisible[key] = allIndsOn;
+    const tog = g(`t_${key}`);
+    if(tog){ allIndsOn ? tog.classList.add('on') : tog.classList.remove('on'); }
+  });
+  // Grafikleri guncelle
+  S20?.applyOptions({visible: allIndsOn});
+  S50?.applyOptions({visible: allIndsOn});
+  S200?.applyOptions({visible: allIndsOn});
+  const rsiParent = g('rsiChart')?.parentElement;
+  const volParent = g('volChart')?.parentElement;
+  if(rsiParent) rsiParent.style.display = allIndsOn?'':'none';
+  if(volParent) volParent.style.display = allIndsOn?'':'none';
+  const macdHdr = g('macdHdr');
+  const macdChart = g('macdChart');
+  if(macdHdr) macdHdr.style.display = allIndsOn?'':'none';
+  if(macdChart) macdChart.style.display = allIndsOn?'':'none';
+  if(BBU) BBU.applyOptions({visible: allIndsOn});
+  if(BBM) BBM.applyOptions({visible: allIndsOn});
+  if(BBL) BBL.applyOptions({visible: allIndsOn});
+  if(!allIndsOn){
+    elliottSeries.forEach(s=>{try{MC.removeSeries(s);}catch(_){}});
+    elliottSeries=[];
+    const ep=g('elliottPanel');
+    if(ep) ep.parentElement.style.display='none';
+    fvgSeries.forEach(s=>{try{MC.removeSeries(s);}catch(_){}});
+    bosSeries.forEach(s=>{try{MC.removeSeries(s);}catch(_){}});
+    liqSeries.forEach(s=>{try{MC.removeSeries(s);}catch(_){}});
+    fvgSeries=[]; bosSeries=[]; liqSeries=[];
+    CS.setMarkers([]);
+  } else if(btBars){
+    // Yeniden ciz
+    render(btBars, g('symbolInput').value.trim().toUpperCase());
+  }
 }
 
 function togInd(key){
