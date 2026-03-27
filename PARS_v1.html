@@ -3,32 +3,32 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>PARS · Trading Intelligence</title>
+<title>Pars Trading | Teknik Analiz - Apex Trading</title>
 <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
 
 :root {
-  --bg0: #080a0f;
-  --bg1: #0c0f16;
-  --bg2: #10141e;
-  --bg3: #141826;
-  --bg4: #1a1f2e;
-  --line: #1e2436;
-  --line2: #252c40;
-  --acc: #00d4ff;
-  --acc2: #0099cc;
-  --acc-glow: rgba(0,212,255,0.08);
-  --acc-dim: rgba(0,212,255,0.15);
+  --bg0: #0D0B08;
+  --bg1: #111009;
+  --bg2: #16140F;
+  --bg3: #1C1914;
+  --bg4: #221F18;
+  --line: #2A2620;
+  --line2: #332E26;
+  --acc: #C9973A;
+  --acc2: #8A6520;
+  --acc-glow: rgba(201,151,58,0.08);
+  --acc-dim: rgba(201,151,58,0.15);
   --green: #00e676;
   --green-dim: rgba(0,230,118,0.1);
   --red: #ff3d57;
   --red-dim: rgba(255,61,87,0.1);
   --amber: #ffab00;
   --amber-dim: rgba(255,171,0,0.1);
-  --txt0: #e8edf5;
-  --txt1: #8892aa;
-  --txt2: #3d4560;
+  --txt0: #FAF6EE;
+  --txt1: #9A8E7A;
+  --txt2: #4A4338;
   --mono: 'IBM Plex Mono', monospace;
   --sans: 'IBM Plex Sans', sans-serif;
   --r: 6px;
@@ -352,71 +352,6 @@ header {
 #rsiChart { width:100%; height:90px; }
 #volChart { width:100%; height:70px; }
 
-
-/* Pozisyon Hesaplayici */
-.pos-calc {
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--line);
-  background: linear-gradient(135deg, rgba(255,171,0,0.03) 0%, transparent 100%);
-}
-.pos-input-row {
-  display: flex; gap: 5px; margin-bottom: 6px;
-}
-.pos-input {
-  flex: 1;
-  background: var(--bg3);
-  border: 1px solid var(--line2);
-  border-radius: 4px;
-  padding: 5px 7px;
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--txt0);
-  outline: none;
-  transition: border-color .2s;
-  min-width: 0;
-}
-.pos-input:focus { border-color: var(--acc); }
-.pos-input::placeholder { color: var(--txt2); }
-.pos-label {
-  font-family: var(--mono);
-  font-size: 8px;
-  color: var(--txt2);
-  letter-spacing: .5px;
-  margin-bottom: 2px;
-}
-.pos-result {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px;
-  margin-top: 6px;
-}
-.pos-res-item {
-  background: var(--bg2);
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  padding: 5px 7px;
-}
-.pos-res-k { font-family: var(--mono); font-size: 8px; color: var(--txt2); margin-bottom: 2px; }
-.pos-res-v { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--txt0); }
-.pos-res-v.green { color: var(--green); }
-.pos-res-v.red { color: var(--red); }
-.pos-res-v.amber { color: var(--amber); }
-.pos-calc-btn {
-  width: 100%;
-  background: var(--amber);
-  color: var(--bg0);
-  border: none;
-  border-radius: 4px;
-  padding: 5px 0;
-  font-family: var(--mono);
-  font-size: 10px;
-  font-weight: 700;
-  cursor: pointer;
-  letter-spacing: .5px;
-  transition: opacity .2s;
-  margin-top: 4px;
-}
-.pos-calc-btn:hover { opacity: .85; }
 
 /* ── RIGHT PANEL ─────────────────────────────────── */
 .right {
@@ -851,57 +786,97 @@ header {
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--line2); border-radius: 2px; }
+
+@media(max-width:768px){
+  body{overflow:hidden auto!important}
+  .layout{flex-direction:column!important;overflow:visible!important;height:auto!important}
+  .left{width:100%!important;height:auto!important;position:relative!important;border-right:none!important;border-bottom:1px solid var(--line)!important;max-height:200px;overflow-y:auto}
+  .center,.chart-area{min-height:60vw!important}
+  .right,.side-panel{display:none!important}
+  header{padding:0 .75rem!important;flex-wrap:wrap;height:auto!important;min-height:48px}
+  .brand-icon{width:32px!important;height:28px!important}
+  .brand-name{font-size:13px!important}
+  .brand-sub{display:none}
+  .search-box{flex:1;min-width:0}
+  #symbolInput{width:60px!important}
+  header > div:last-child{display:none!important}
+  .tf-row{overflow-x:auto;flex-wrap:nowrap!important}
+}
+
 </style>
 </head>
 <body>
+
+<div id="legalPopup" style="position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(10,8,6,0.92)">
+  <div style="background:#1C1914;border:1px solid rgba(201,151,58,0.25);border-radius:12px;max-width:540px;width:90%;padding:2.5rem">
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:#C9973A;margin-bottom:1rem">&#9888; Yasal Uyarı</div>
+    <h2 style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:400;color:#FAF6EE;margin-bottom:1rem">Apex Trading</h2>
+    <div style="font-size:.82rem;color:rgba(250,246,238,.5);line-height:1.8;margin-bottom:1.5rem">
+      <p style="margin-bottom:.75rem">Bu platformdaki tüm içerikler <strong style="color:rgba(250,246,238,.75)">yalnızca bilgilendirme amaçlıdır</strong> ve yatırım tavsiyesi niteliği taşımaz.</p>
+      <p>Kaldıraçlı işlemler <strong style="color:#F87171">yüksek risk</strong> içerir. Sermayenizin tamamını kaybedebilirsiniz.</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1.5rem;padding:.75rem;background:rgba(201,151,58,.05);border:1px solid rgba(201,151,58,.15);border-radius:6px;cursor:pointer" onclick="toggleConsent()">
+      <div id="consentBox" style="width:18px;height:18px;border-radius:3px;border:1px solid rgba(201,151,58,.4);background:transparent;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s"></div>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(250,246,238,.55)">Yasal uyarıyı okudum, kabul ediyorum.</span>
+    </div>
+    <button id="enterBtn" onclick="enterSite()" disabled style="width:100%;padding:13px;font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.15em;text-transform:uppercase;background:rgba(201,151,58,.3);color:rgba(250,246,238,.3);border:1px solid rgba(201,151,58,.2);border-radius:4px;cursor:not-allowed;transition:all .3s">Siteye Gir</button>
+  </div>
+</div>
+<script>
+(function(){if(localStorage.getItem('apex_legal_ok')==='1'){var p=document.getElementById('legalPopup');if(p)p.style.display='none';return;}document.body.style.overflow='hidden';})();
+var _cv=false;
+function toggleConsent(){_cv=!_cv;var b=document.getElementById('consentBox'),btn=document.getElementById('enterBtn');if(_cv){b.style.background='#C9973A';b.style.borderColor='#C9973A';b.innerHTML='<svg width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4l3 3 6-6" stroke="#1A1612" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';btn.disabled=false;btn.style.background='#C9973A';btn.style.color='#1A1612';btn.style.cursor='pointer';}else{b.style.background='transparent';b.style.borderColor='rgba(201,151,58,.4)';b.innerHTML='';btn.disabled=true;btn.style.background='rgba(201,151,58,.3)';btn.style.color='rgba(250,246,238,.3)';btn.style.cursor='not-allowed';}}
+function enterSite(){if(!_cv)return;localStorage.setItem('apex_legal_ok','1');document.getElementById('legalPopup').style.display='none';document.body.style.overflow='';}
+</script>
+
 
 <!-- HEADER -->
 <header>
   <div class="brand">
     <!-- Pars (Leopard) SVG Icon -->
             <svg class="brand-icon" class="brand-icon" viewBox="0 0 100 88" xmlns="http://www.w3.org/2000/svg">
-  <path d="M 99.0 8.5 L 98.1 10.4 L 97.8 7.1 L 95.2 6.8 L 94.9 10.4 L 91.5 11.5 L 92.8 7.9 L 90.1 9.0 L 96.6 5.2 L 77.8 7.4 L 72.2 5.2 L 73.2 12.6 L 69.8 20.2 L 61.4 28.7 L 42.3 38.5 L 36.7 44.0 L 18.4 82.5 L 13.5 85.8 L 7.5 85.0 L 4.8 79.8 L 5.8 74.6 L 8.5 71.9 L 13.8 72.4 L 15.2 68.6 L 11.6 65.6 L 15.2 68.6 L 13.0 71.9 L 11.8 66.9 L 10.4 69.4 L 6.8 66.9 L 6.5 70.5 L 3.6 68.3 L 11.1 65.3 L 2.9 68.6 L 0.0 73.2 L 2.2 71.0 L 5.1 75.4 L 1.9 75.1 L 0.0 78.1 L 1.9 87.4 L 9.2 92.3 L 19.8 90.4 L 18.8 98.1 L 28.7 98.1 L 27.3 91.0 L 29.2 85.8 L 47.3 68.6 L 52.4 75.1 L 50.7 86.3 L 56.8 97.3 L 63.3 99.7 L 84.1 98.6 L 84.8 94.5 L 80.2 91.3 L 80.0 87.7 L 96.1 47.0 Z" fill="#00d4ff" opacity="0.95"/>
-  <path d="M 87.7 5.5 L 93.2 17.8 L 89.9 23.0 L 94.4 24.6 L 93.5 19.4 L 95.2 23.8 L 95.9 20.8 L 95.4 28.7 L 91.5 30.1 L 90.3 25.7 L 88.4 29.5 L 80.2 29.2 L 84.5 29.0 L 78.7 31.4 L 81.9 32.2 L 79.2 39.1 L 73.7 37.7 L 78.0 35.2 L 75.1 33.1 L 69.3 35.8 L 73.4 44.0 L 79.7 45.4 L 75.1 39.3 L 87.7 39.3 L 92.3 34.4 L 84.5 30.6 L 94.0 34.4 L 87.2 45.9 L 93.0 41.8 L 90.8 57.9 L 72.0 66.7 L 74.9 62.6 L 69.6 65.8 L 67.6 53.6 L 64.5 58.5 L 62.1 53.8 L 68.4 68.6 L 63.5 68.0 L 71.0 89.6 L 66.2 93.7 L 68.4 98.9 L 63.0 98.1 L 54.3 64.2 L 63.3 30.9 L 54.3 50.0 L 51.9 47.5 L 52.9 65.0 L 50.2 63.1 L 50.2 66.9 L 36.7 72.7 L 36.7 78.4 L 25.8 85.0 L 26.1 96.4 L 19.1 97.3 L 36.7 45.6 L 61.1 29.5 L 60.4 34.7 L 68.4 21.6 L 71.5 31.7 L 71.0 18.9 L 77.5 19.7 L 77.8 26.5 L 82.9 27.0 L 80.4 21.3 L 87.9 16.7 L 81.6 18.3 L 81.2 13.7 L 79.0 17.8 L 74.6 15.0 L 74.9 19.1 L 71.0 16.9 L 77.1 8.2 Z" fill="#080a0f" opacity="0.85"/>
-  <path d="M 42.8 41.3 L 40.8 43.2 L 40.8 44.5 L 41.8 45.1 L 41.1 49.5 L 40.1 49.7 L 39.9 46.7 L 39.1 46.7 L 38.6 45.9 L 37.7 47.0 L 37.2 51.1 L 37.9 51.6 L 38.9 50.3 L 39.6 50.3 L 39.6 51.6 L 39.1 53.6 L 38.4 53.8 L 37.7 55.7 L 36.0 57.1 L 35.7 58.5 L 36.0 59.0 L 37.0 59.3 L 37.2 58.7 L 38.4 59.3 L 37.2 61.2 L 36.0 61.2 L 35.3 62.0 L 35.0 65.6 L 35.5 66.1 L 37.0 66.1 L 36.2 68.6 L 34.3 68.3 L 33.3 69.4 L 32.9 70.8 L 33.1 71.9 L 33.6 72.1 L 35.3 71.6 L 36.0 69.7 L 37.2 68.9 L 38.6 69.9 L 39.4 69.1 L 40.3 66.4 L 42.5 63.7 L 44.7 62.3 L 46.1 62.0 L 44.0 57.7 L 42.8 52.2 L 42.8 47.8 L 43.2 45.4 Z" fill="#00d4ff" opacity="0.95"/>
-  <path d="M 73.4 68.6 L 73.9 69.1 L 73.4 80.1 L 72.7 83.9 L 71.7 86.3 L 71.0 86.1 L 71.0 85.5 L 70.5 84.7 L 70.3 83.9 L 70.3 83.1 L 69.8 82.2 L 68.6 77.0 L 68.6 69.9 L 69.1 69.4 L 70.3 68.9 L 71.7 68.6 Z" fill="#080a0f" opacity="0.85"/>
-  <path d="M 82.4 68.0 L 81.9 68.9 L 81.6 69.7 L 81.4 69.7 L 80.2 70.5 L 80.4 71.9 L 79.7 72.7 L 78.0 73.5 L 76.1 73.5 L 75.1 74.3 L 74.4 73.8 L 74.6 72.7 L 74.9 72.1 L 75.6 71.3 L 76.6 70.5 L 79.0 68.9 L 80.0 68.6 L 80.4 68.0 L 81.6 67.5 Z" fill="#080a0f" opacity="0.85"/>
-  <path d="M 68.8 93.4 L 69.3 93.2 L 71.0 93.2 L 72.0 93.7 L 72.7 94.5 L 73.2 95.6 L 73.4 96.4 L 73.4 97.8 L 73.2 98.4 L 72.7 98.9 L 72.0 98.9 L 72.0 97.5 L 71.3 98.6 L 70.0 98.6 L 69.6 98.1 L 69.3 97.3 L 69.3 96.4 L 68.8 95.6 L 68.8 94.8 L 68.1 94.3 Z" fill="#080a0f" opacity="0.85"/>
-  <path d="M 4.3 89.1 L 5.1 88.0 L 6.0 87.7 L 6.8 88.5 L 7.7 87.4 L 7.7 86.9 L 8.5 86.1 L 9.4 86.1 L 10.1 86.9 L 10.1 87.7 L 10.6 88.3 L 11.4 88.3 L 11.6 88.0 L 12.1 88.0 L 12.6 88.3 L 12.8 88.5 L 13.3 90.2 L 12.8 90.2 L 11.8 89.6 L 11.4 90.2 L 10.9 90.2 L 9.9 89.3 L 9.2 89.6 L 8.5 89.1 L 8.0 89.1 L 7.5 89.6 L 7.5 89.9 L 7.0 90.4 L 5.6 90.4 L 4.8 89.9 Z" fill="#080a0f" opacity="0.85"/>
-  <path d="M 2.4 79.8 L 3.1 80.1 L 2.9 80.9 L 1.9 82.2 L 1.7 83.1 L 2.2 83.6 L 3.1 82.5 L 4.1 82.0 L 4.8 82.0 L 5.3 82.5 L 5.3 83.6 L 4.8 83.9 L 4.3 83.9 L 3.6 84.7 L 3.4 85.2 L 3.1 87.7 L 2.7 87.7 L 2.2 87.2 L 1.2 85.5 L 0.2 83.1 L 0.2 82.5 L 0.5 82.0 L 1.2 80.9 L 1.9 80.1 Z" fill="#080a0f" opacity="0.85"/>
-  <path d="M 78.3 76.2 L 78.0 77.9 L 77.8 78.7 L 77.3 79.2 L 76.3 79.2 L 75.4 80.1 L 74.9 81.4 L 74.9 83.1 L 73.7 83.3 L 73.7 82.2 L 73.9 82.0 L 73.9 80.6 L 74.2 79.0 L 74.4 78.1 L 75.1 77.3 L 75.6 77.0 L 76.1 77.0 L 77.1 76.2 L 77.3 75.7 Z" fill="#080a0f" opacity="0.85"/>
-  <path d="M 32.4 74.6 L 31.9 74.9 L 31.4 75.4 L 30.9 76.5 L 30.9 77.6 L 31.2 78.1 L 31.9 79.0 L 33.1 79.0 L 33.6 78.7 L 34.3 77.9 L 34.3 75.7 L 33.6 74.9 L 33.1 74.6 Z" fill="#00d4ff" opacity="0.95"/>
-  <path d="M 70.8 56.6 L 70.3 57.1 L 70.3 57.9 L 71.5 59.3 L 71.5 60.1 L 72.0 61.2 L 73.2 61.2 L 73.9 60.9 L 74.2 60.4 L 74.2 59.8 L 72.9 57.4 L 72.7 57.1 L 71.7 56.6 Z" fill="#00d4ff" opacity="0.95"/>
-  <path d="M 91.1 11.2 L 92.8 12.0 L 93.7 12.8 L 94.7 13.1 L 94.4 16.1 L 94.0 16.1 L 92.8 15.6 L 92.0 14.8 L 92.0 14.5 L 91.1 13.4 L 90.6 12.3 Z" fill="#080a0f" opacity="0.85"/>
-  <path d="M 72.7 93.2 L 73.7 93.2 L 74.4 93.4 L 75.1 94.3 L 75.4 95.6 L 75.4 98.4 L 74.9 98.9 L 74.4 98.6 L 73.7 98.9 L 73.7 96.7 L 73.4 95.6 L 72.5 94.0 Z" fill="#080a0f" opacity="0.85"/>
-  <path d="M 59.7 49.5 L 59.2 49.5 L 58.7 49.7 L 58.2 50.8 L 58.0 52.2 L 58.2 53.6 L 58.7 54.6 L 59.4 55.5 L 60.1 55.2 L 60.1 54.1 L 59.7 53.3 L 60.4 52.2 L 60.4 50.8 L 60.1 50.0 Z" fill="#00d4ff" opacity="0.95"/>
-  <path d="M 78.3 27.6 L 77.5 28.4 L 76.3 28.1 L 75.8 28.1 L 74.6 28.7 L 72.5 29.2 L 72.0 28.4 L 72.0 29.0 L 74.9 32.2 L 74.9 31.7 L 75.1 31.1 L 76.6 29.5 L 77.3 29.0 L 77.5 29.0 L 77.8 28.7 L 77.8 28.4 Z" fill="#00d4ff" opacity="0.95"/>
-  <path d="M 49.5 49.5 L 48.8 50.0 L 48.6 50.5 L 48.6 51.6 L 48.3 53.0 L 48.3 53.6 L 48.6 54.1 L 49.3 55.2 L 50.0 55.2 L 50.5 54.1 L 50.5 51.9 L 50.2 50.5 L 50.0 50.0 Z" fill="#00d4ff" opacity="0.95"/>
-  <path d="M 84.3 30.1 L 84.5 29.5 L 85.7 29.5 L 89.6 30.1 L 91.1 30.6 L 91.5 30.9 L 91.5 31.7 L 90.6 31.7 L 88.2 30.9 L 86.0 30.9 L 84.8 30.6 Z" fill="#080a0f" opacity="0.85"/>
-  <path d="M 45.2 52.7 L 44.9 53.3 L 44.9 56.0 L 45.4 57.7 L 45.7 58.2 L 46.1 59.0 L 47.1 59.8 L 46.9 59.3 L 46.6 58.2 L 46.6 54.9 L 45.7 52.7 Z" fill="#00d4ff" opacity="0.95"/>
-  <path d="M 62.8 40.2 L 62.3 40.7 L 62.1 40.7 L 61.6 41.3 L 61.4 42.1 L 61.4 42.6 L 61.8 43.7 L 61.8 45.4 L 62.3 45.9 L 62.8 45.9 L 63.3 45.4 L 63.5 44.8 L 63.5 42.3 L 63.3 41.8 L 62.3 41.0 Z" fill="#00d4ff" opacity="0.95"/>
-  <path d="M 34.1 57.1 L 33.3 57.1 L 32.9 57.4 L 32.6 57.9 L 31.9 58.2 L 31.6 59.0 L 31.6 60.1 L 32.1 60.4 L 32.1 60.9 L 32.4 61.5 L 33.3 61.7 L 33.8 61.2 L 34.1 60.4 L 33.6 59.6 L 33.6 59.0 L 34.1 58.5 L 34.3 57.7 Z" fill="#00d4ff" opacity="0.95"/>
-  <path d="M 86.0 45.4 L 86.0 44.0 L 85.5 43.7 L 83.6 44.0 L 82.9 44.8 L 82.4 44.8 L 81.4 44.0 L 80.7 44.0 L 80.7 44.5 L 81.6 45.9 L 83.1 46.2 L 84.1 45.4 L 84.8 45.4 L 85.0 45.6 L 85.5 45.6 Z" fill="#00d4ff" opacity="0.95"/>
-  <path d="M 58.0 69.1 L 57.5 69.4 L 57.5 71.6 L 58.0 73.5 L 58.9 73.5 L 59.4 73.0 L 59.7 71.9 L 59.7 71.0 L 59.4 69.9 L 58.9 69.4 L 58.5 69.1 Z" fill="#00d4ff" opacity="0.95"/>
-  <path d="M 27.3 76.5 L 26.6 77.3 L 26.6 79.2 L 26.8 79.8 L 27.3 80.1 L 28.0 80.3 L 28.7 80.1 L 29.2 79.0 L 29.2 78.4 L 28.7 77.3 L 28.5 77.0 L 28.3 77.0 L 27.8 76.5 Z" fill="#00d4ff" opacity="0.95"/>
-  <path d="M 60.9 79.2 L 60.4 79.8 L 60.4 80.9 L 60.9 82.8 L 61.1 83.3 L 62.1 83.6 L 62.6 83.1 L 62.6 80.6 L 62.3 80.1 L 61.6 79.2 Z" fill="#00d4ff" opacity="0.95"/>
-  <path d="M 83.6 32.0 L 84.1 31.4 L 85.7 32.0 L 89.9 34.7 L 89.9 35.5 L 89.1 35.5 L 87.7 34.4 L 84.1 32.5 Z" fill="#080a0f" opacity="0.85"/>
-  <path d="M 58.9 63.9 L 58.9 65.8 L 59.2 66.4 L 59.7 66.9 L 60.1 67.2 L 61.1 67.2 L 61.6 66.9 L 61.8 66.4 L 61.8 65.8 L 61.4 64.8 L 60.9 64.5 L 60.4 64.5 L 59.7 63.7 Z" fill="#00d4ff" opacity="0.95"/>
-  <path d="M 48.6 56.8 L 48.6 59.0 L 49.0 60.1 L 50.0 61.2 L 51.4 60.9 L 51.4 59.8 L 49.8 57.9 L 49.5 57.1 Z" fill="#00d4ff" opacity="0.95"/>
-  <path d="M 82.9 32.2 L 83.3 32.2 L 84.1 32.5 L 84.5 33.1 L 85.0 33.1 L 85.3 33.6 L 86.0 33.9 L 86.7 34.4 L 88.6 36.3 L 88.4 37.2 L 87.9 36.9 L 85.5 34.7 L 83.6 33.6 L 83.1 33.1 L 82.9 33.1 Z" fill="#080a0f" opacity="0.85"/>
-  <path d="M 30.4 71.3 L 29.5 71.3 L 28.5 72.4 L 28.3 73.8 L 28.5 74.3 L 29.0 74.9 L 29.5 74.9 L 30.0 74.6 L 30.2 74.3 L 30.9 72.7 L 30.9 71.9 Z" fill="#00d4ff" opacity="0.95"/>
-  <path d="M 47.8 44.8 L 47.1 45.4 L 46.9 45.4 L 46.6 45.6 L 46.4 46.2 L 46.1 47.0 L 45.9 48.1 L 45.9 50.3 L 46.1 50.8 L 46.9 50.8 L 46.9 50.0 L 47.1 49.7 L 47.1 47.5 L 47.6 47.3 L 47.6 46.4 L 47.8 46.2 Z" fill="#00d4ff" opacity="0.95"/>
-  <path d="M 15.0 85.8 L 15.5 85.8 L 16.2 86.6 L 17.6 86.6 L 17.6 87.2 L 17.4 87.7 L 16.9 88.3 L 16.9 88.5 L 16.7 88.8 L 16.4 88.8 L 15.9 89.3 L 14.7 89.1 Z" fill="#080a0f" opacity="0.85"/>
-  <path d="M 32.6 64.8 L 32.1 64.8 L 31.2 65.8 L 30.9 66.7 L 31.2 68.9 L 32.1 68.9 L 32.9 67.8 L 32.9 66.9 L 33.1 66.7 L 33.1 66.1 L 32.9 65.3 Z" fill="#00d4ff" opacity="0.95"/>
-  <path d="M 64.5 79.0 L 64.3 79.5 L 64.3 81.4 L 64.7 82.0 L 65.2 82.2 L 65.9 82.2 L 66.4 81.7 L 66.4 80.6 L 66.2 79.8 L 65.9 79.2 L 65.5 78.7 Z" fill="#00d4ff" opacity="0.95"/>
-  <path d="M 35.7 50.0 L 34.8 50.8 L 34.3 51.6 L 33.6 53.3 L 33.6 54.4 L 34.3 54.4 L 34.8 53.6 L 35.3 53.6 L 35.7 53.3 L 36.0 52.7 Z" fill="#00d4ff" opacity="0.95"/>
-  <path d="M 60.6 74.3 L 60.4 74.9 L 60.4 75.4 L 60.9 76.5 L 61.6 77.0 L 63.3 76.8 L 63.3 76.5 L 63.5 76.0 L 62.8 75.1 L 62.3 75.1 L 62.1 74.6 L 61.8 74.3 Z" fill="#00d4ff" opacity="0.95"/>
-  <path d="M 49.8 38.0 L 49.0 38.3 L 48.6 38.5 L 48.3 38.8 L 47.6 39.9 L 47.6 40.7 L 46.9 41.5 L 46.6 42.1 L 46.9 42.9 L 47.3 42.6 L 48.6 41.3 L 49.0 40.4 L 49.5 39.3 L 49.5 38.5 Z" fill="#00d4ff" opacity="0.95"/>
-  <path d="M 72.7 6.8 L 72.7 7.4 L 73.2 8.5 L 74.6 10.1 L 74.6 10.7 L 73.4 11.7 L 72.9 11.2 L 72.2 9.6 L 72.0 8.7 Z" fill="#080a0f" opacity="0.85"/>
-  <path d="M 87.4 56.0 L 87.0 56.0 L 86.0 57.1 L 85.5 57.4 L 84.1 57.4 L 83.1 58.5 L 83.3 59.0 L 84.5 59.0 L 86.2 58.2 L 87.4 56.8 Z" fill="#00d4ff" opacity="0.95"/>
-  <path d="M 75.4 53.3 L 75.4 54.1 L 75.6 54.9 L 76.3 55.7 L 77.3 56.3 L 77.8 56.0 L 78.0 55.5 L 78.0 54.6 L 77.5 54.1 L 76.8 53.8 L 76.8 53.6 L 76.3 53.0 Z" fill="#00d4ff" opacity="0.95"/>
-  <path d="M 67.9 83.6 L 67.1 83.9 L 67.1 86.1 L 66.4 87.2 L 66.7 88.0 L 67.1 88.0 L 67.6 87.7 L 67.9 86.6 L 68.4 86.6 L 68.6 86.1 L 68.6 85.0 L 68.4 84.2 Z" fill="#00d4ff" opacity="0.95"/>
-  <path d="M 55.3 39.1 L 54.8 39.1 L 54.1 39.9 L 53.4 41.0 L 52.9 42.1 L 52.9 43.4 L 53.4 43.4 L 54.3 42.3 L 55.3 40.2 Z" fill="#00d4ff" opacity="0.95"/>
-  <path d="M 73.4 48.1 L 72.9 48.4 L 72.7 48.9 L 72.7 49.7 L 72.9 50.8 L 73.2 51.4 L 73.4 51.6 L 73.9 51.9 L 74.6 51.9 L 74.9 51.4 L 74.9 50.3 L 73.7 48.9 Z" fill="#00d4ff" opacity="0.95"/>
+  <path d="M 99.0 8.5 L 98.1 10.4 L 97.8 7.1 L 95.2 6.8 L 94.9 10.4 L 91.5 11.5 L 92.8 7.9 L 90.1 9.0 L 96.6 5.2 L 77.8 7.4 L 72.2 5.2 L 73.2 12.6 L 69.8 20.2 L 61.4 28.7 L 42.3 38.5 L 36.7 44.0 L 18.4 82.5 L 13.5 85.8 L 7.5 85.0 L 4.8 79.8 L 5.8 74.6 L 8.5 71.9 L 13.8 72.4 L 15.2 68.6 L 11.6 65.6 L 15.2 68.6 L 13.0 71.9 L 11.8 66.9 L 10.4 69.4 L 6.8 66.9 L 6.5 70.5 L 3.6 68.3 L 11.1 65.3 L 2.9 68.6 L 0.0 73.2 L 2.2 71.0 L 5.1 75.4 L 1.9 75.1 L 0.0 78.1 L 1.9 87.4 L 9.2 92.3 L 19.8 90.4 L 18.8 98.1 L 28.7 98.1 L 27.3 91.0 L 29.2 85.8 L 47.3 68.6 L 52.4 75.1 L 50.7 86.3 L 56.8 97.3 L 63.3 99.7 L 84.1 98.6 L 84.8 94.5 L 80.2 91.3 L 80.0 87.7 L 96.1 47.0 Z" fill="#C9973A" opacity="0.95"/>
+  <path d="M 87.7 5.5 L 93.2 17.8 L 89.9 23.0 L 94.4 24.6 L 93.5 19.4 L 95.2 23.8 L 95.9 20.8 L 95.4 28.7 L 91.5 30.1 L 90.3 25.7 L 88.4 29.5 L 80.2 29.2 L 84.5 29.0 L 78.7 31.4 L 81.9 32.2 L 79.2 39.1 L 73.7 37.7 L 78.0 35.2 L 75.1 33.1 L 69.3 35.8 L 73.4 44.0 L 79.7 45.4 L 75.1 39.3 L 87.7 39.3 L 92.3 34.4 L 84.5 30.6 L 94.0 34.4 L 87.2 45.9 L 93.0 41.8 L 90.8 57.9 L 72.0 66.7 L 74.9 62.6 L 69.6 65.8 L 67.6 53.6 L 64.5 58.5 L 62.1 53.8 L 68.4 68.6 L 63.5 68.0 L 71.0 89.6 L 66.2 93.7 L 68.4 98.9 L 63.0 98.1 L 54.3 64.2 L 63.3 30.9 L 54.3 50.0 L 51.9 47.5 L 52.9 65.0 L 50.2 63.1 L 50.2 66.9 L 36.7 72.7 L 36.7 78.4 L 25.8 85.0 L 26.1 96.4 L 19.1 97.3 L 36.7 45.6 L 61.1 29.5 L 60.4 34.7 L 68.4 21.6 L 71.5 31.7 L 71.0 18.9 L 77.5 19.7 L 77.8 26.5 L 82.9 27.0 L 80.4 21.3 L 87.9 16.7 L 81.6 18.3 L 81.2 13.7 L 79.0 17.8 L 74.6 15.0 L 74.9 19.1 L 71.0 16.9 L 77.1 8.2 Z" fill="#0D0B08" opacity="0.85"/>
+  <path d="M 42.8 41.3 L 40.8 43.2 L 40.8 44.5 L 41.8 45.1 L 41.1 49.5 L 40.1 49.7 L 39.9 46.7 L 39.1 46.7 L 38.6 45.9 L 37.7 47.0 L 37.2 51.1 L 37.9 51.6 L 38.9 50.3 L 39.6 50.3 L 39.6 51.6 L 39.1 53.6 L 38.4 53.8 L 37.7 55.7 L 36.0 57.1 L 35.7 58.5 L 36.0 59.0 L 37.0 59.3 L 37.2 58.7 L 38.4 59.3 L 37.2 61.2 L 36.0 61.2 L 35.3 62.0 L 35.0 65.6 L 35.5 66.1 L 37.0 66.1 L 36.2 68.6 L 34.3 68.3 L 33.3 69.4 L 32.9 70.8 L 33.1 71.9 L 33.6 72.1 L 35.3 71.6 L 36.0 69.7 L 37.2 68.9 L 38.6 69.9 L 39.4 69.1 L 40.3 66.4 L 42.5 63.7 L 44.7 62.3 L 46.1 62.0 L 44.0 57.7 L 42.8 52.2 L 42.8 47.8 L 43.2 45.4 Z" fill="#C9973A" opacity="0.95"/>
+  <path d="M 73.4 68.6 L 73.9 69.1 L 73.4 80.1 L 72.7 83.9 L 71.7 86.3 L 71.0 86.1 L 71.0 85.5 L 70.5 84.7 L 70.3 83.9 L 70.3 83.1 L 69.8 82.2 L 68.6 77.0 L 68.6 69.9 L 69.1 69.4 L 70.3 68.9 L 71.7 68.6 Z" fill="#0D0B08" opacity="0.85"/>
+  <path d="M 82.4 68.0 L 81.9 68.9 L 81.6 69.7 L 81.4 69.7 L 80.2 70.5 L 80.4 71.9 L 79.7 72.7 L 78.0 73.5 L 76.1 73.5 L 75.1 74.3 L 74.4 73.8 L 74.6 72.7 L 74.9 72.1 L 75.6 71.3 L 76.6 70.5 L 79.0 68.9 L 80.0 68.6 L 80.4 68.0 L 81.6 67.5 Z" fill="#0D0B08" opacity="0.85"/>
+  <path d="M 68.8 93.4 L 69.3 93.2 L 71.0 93.2 L 72.0 93.7 L 72.7 94.5 L 73.2 95.6 L 73.4 96.4 L 73.4 97.8 L 73.2 98.4 L 72.7 98.9 L 72.0 98.9 L 72.0 97.5 L 71.3 98.6 L 70.0 98.6 L 69.6 98.1 L 69.3 97.3 L 69.3 96.4 L 68.8 95.6 L 68.8 94.8 L 68.1 94.3 Z" fill="#0D0B08" opacity="0.85"/>
+  <path d="M 4.3 89.1 L 5.1 88.0 L 6.0 87.7 L 6.8 88.5 L 7.7 87.4 L 7.7 86.9 L 8.5 86.1 L 9.4 86.1 L 10.1 86.9 L 10.1 87.7 L 10.6 88.3 L 11.4 88.3 L 11.6 88.0 L 12.1 88.0 L 12.6 88.3 L 12.8 88.5 L 13.3 90.2 L 12.8 90.2 L 11.8 89.6 L 11.4 90.2 L 10.9 90.2 L 9.9 89.3 L 9.2 89.6 L 8.5 89.1 L 8.0 89.1 L 7.5 89.6 L 7.5 89.9 L 7.0 90.4 L 5.6 90.4 L 4.8 89.9 Z" fill="#0D0B08" opacity="0.85"/>
+  <path d="M 2.4 79.8 L 3.1 80.1 L 2.9 80.9 L 1.9 82.2 L 1.7 83.1 L 2.2 83.6 L 3.1 82.5 L 4.1 82.0 L 4.8 82.0 L 5.3 82.5 L 5.3 83.6 L 4.8 83.9 L 4.3 83.9 L 3.6 84.7 L 3.4 85.2 L 3.1 87.7 L 2.7 87.7 L 2.2 87.2 L 1.2 85.5 L 0.2 83.1 L 0.2 82.5 L 0.5 82.0 L 1.2 80.9 L 1.9 80.1 Z" fill="#0D0B08" opacity="0.85"/>
+  <path d="M 78.3 76.2 L 78.0 77.9 L 77.8 78.7 L 77.3 79.2 L 76.3 79.2 L 75.4 80.1 L 74.9 81.4 L 74.9 83.1 L 73.7 83.3 L 73.7 82.2 L 73.9 82.0 L 73.9 80.6 L 74.2 79.0 L 74.4 78.1 L 75.1 77.3 L 75.6 77.0 L 76.1 77.0 L 77.1 76.2 L 77.3 75.7 Z" fill="#0D0B08" opacity="0.85"/>
+  <path d="M 32.4 74.6 L 31.9 74.9 L 31.4 75.4 L 30.9 76.5 L 30.9 77.6 L 31.2 78.1 L 31.9 79.0 L 33.1 79.0 L 33.6 78.7 L 34.3 77.9 L 34.3 75.7 L 33.6 74.9 L 33.1 74.6 Z" fill="#C9973A" opacity="0.95"/>
+  <path d="M 70.8 56.6 L 70.3 57.1 L 70.3 57.9 L 71.5 59.3 L 71.5 60.1 L 72.0 61.2 L 73.2 61.2 L 73.9 60.9 L 74.2 60.4 L 74.2 59.8 L 72.9 57.4 L 72.7 57.1 L 71.7 56.6 Z" fill="#C9973A" opacity="0.95"/>
+  <path d="M 91.1 11.2 L 92.8 12.0 L 93.7 12.8 L 94.7 13.1 L 94.4 16.1 L 94.0 16.1 L 92.8 15.6 L 92.0 14.8 L 92.0 14.5 L 91.1 13.4 L 90.6 12.3 Z" fill="#0D0B08" opacity="0.85"/>
+  <path d="M 72.7 93.2 L 73.7 93.2 L 74.4 93.4 L 75.1 94.3 L 75.4 95.6 L 75.4 98.4 L 74.9 98.9 L 74.4 98.6 L 73.7 98.9 L 73.7 96.7 L 73.4 95.6 L 72.5 94.0 Z" fill="#0D0B08" opacity="0.85"/>
+  <path d="M 59.7 49.5 L 59.2 49.5 L 58.7 49.7 L 58.2 50.8 L 58.0 52.2 L 58.2 53.6 L 58.7 54.6 L 59.4 55.5 L 60.1 55.2 L 60.1 54.1 L 59.7 53.3 L 60.4 52.2 L 60.4 50.8 L 60.1 50.0 Z" fill="#C9973A" opacity="0.95"/>
+  <path d="M 78.3 27.6 L 77.5 28.4 L 76.3 28.1 L 75.8 28.1 L 74.6 28.7 L 72.5 29.2 L 72.0 28.4 L 72.0 29.0 L 74.9 32.2 L 74.9 31.7 L 75.1 31.1 L 76.6 29.5 L 77.3 29.0 L 77.5 29.0 L 77.8 28.7 L 77.8 28.4 Z" fill="#C9973A" opacity="0.95"/>
+  <path d="M 49.5 49.5 L 48.8 50.0 L 48.6 50.5 L 48.6 51.6 L 48.3 53.0 L 48.3 53.6 L 48.6 54.1 L 49.3 55.2 L 50.0 55.2 L 50.5 54.1 L 50.5 51.9 L 50.2 50.5 L 50.0 50.0 Z" fill="#C9973A" opacity="0.95"/>
+  <path d="M 84.3 30.1 L 84.5 29.5 L 85.7 29.5 L 89.6 30.1 L 91.1 30.6 L 91.5 30.9 L 91.5 31.7 L 90.6 31.7 L 88.2 30.9 L 86.0 30.9 L 84.8 30.6 Z" fill="#0D0B08" opacity="0.85"/>
+  <path d="M 45.2 52.7 L 44.9 53.3 L 44.9 56.0 L 45.4 57.7 L 45.7 58.2 L 46.1 59.0 L 47.1 59.8 L 46.9 59.3 L 46.6 58.2 L 46.6 54.9 L 45.7 52.7 Z" fill="#C9973A" opacity="0.95"/>
+  <path d="M 62.8 40.2 L 62.3 40.7 L 62.1 40.7 L 61.6 41.3 L 61.4 42.1 L 61.4 42.6 L 61.8 43.7 L 61.8 45.4 L 62.3 45.9 L 62.8 45.9 L 63.3 45.4 L 63.5 44.8 L 63.5 42.3 L 63.3 41.8 L 62.3 41.0 Z" fill="#C9973A" opacity="0.95"/>
+  <path d="M 34.1 57.1 L 33.3 57.1 L 32.9 57.4 L 32.6 57.9 L 31.9 58.2 L 31.6 59.0 L 31.6 60.1 L 32.1 60.4 L 32.1 60.9 L 32.4 61.5 L 33.3 61.7 L 33.8 61.2 L 34.1 60.4 L 33.6 59.6 L 33.6 59.0 L 34.1 58.5 L 34.3 57.7 Z" fill="#C9973A" opacity="0.95"/>
+  <path d="M 86.0 45.4 L 86.0 44.0 L 85.5 43.7 L 83.6 44.0 L 82.9 44.8 L 82.4 44.8 L 81.4 44.0 L 80.7 44.0 L 80.7 44.5 L 81.6 45.9 L 83.1 46.2 L 84.1 45.4 L 84.8 45.4 L 85.0 45.6 L 85.5 45.6 Z" fill="#C9973A" opacity="0.95"/>
+  <path d="M 58.0 69.1 L 57.5 69.4 L 57.5 71.6 L 58.0 73.5 L 58.9 73.5 L 59.4 73.0 L 59.7 71.9 L 59.7 71.0 L 59.4 69.9 L 58.9 69.4 L 58.5 69.1 Z" fill="#C9973A" opacity="0.95"/>
+  <path d="M 27.3 76.5 L 26.6 77.3 L 26.6 79.2 L 26.8 79.8 L 27.3 80.1 L 28.0 80.3 L 28.7 80.1 L 29.2 79.0 L 29.2 78.4 L 28.7 77.3 L 28.5 77.0 L 28.3 77.0 L 27.8 76.5 Z" fill="#C9973A" opacity="0.95"/>
+  <path d="M 60.9 79.2 L 60.4 79.8 L 60.4 80.9 L 60.9 82.8 L 61.1 83.3 L 62.1 83.6 L 62.6 83.1 L 62.6 80.6 L 62.3 80.1 L 61.6 79.2 Z" fill="#C9973A" opacity="0.95"/>
+  <path d="M 83.6 32.0 L 84.1 31.4 L 85.7 32.0 L 89.9 34.7 L 89.9 35.5 L 89.1 35.5 L 87.7 34.4 L 84.1 32.5 Z" fill="#0D0B08" opacity="0.85"/>
+  <path d="M 58.9 63.9 L 58.9 65.8 L 59.2 66.4 L 59.7 66.9 L 60.1 67.2 L 61.1 67.2 L 61.6 66.9 L 61.8 66.4 L 61.8 65.8 L 61.4 64.8 L 60.9 64.5 L 60.4 64.5 L 59.7 63.7 Z" fill="#C9973A" opacity="0.95"/>
+  <path d="M 48.6 56.8 L 48.6 59.0 L 49.0 60.1 L 50.0 61.2 L 51.4 60.9 L 51.4 59.8 L 49.8 57.9 L 49.5 57.1 Z" fill="#C9973A" opacity="0.95"/>
+  <path d="M 82.9 32.2 L 83.3 32.2 L 84.1 32.5 L 84.5 33.1 L 85.0 33.1 L 85.3 33.6 L 86.0 33.9 L 86.7 34.4 L 88.6 36.3 L 88.4 37.2 L 87.9 36.9 L 85.5 34.7 L 83.6 33.6 L 83.1 33.1 L 82.9 33.1 Z" fill="#0D0B08" opacity="0.85"/>
+  <path d="M 30.4 71.3 L 29.5 71.3 L 28.5 72.4 L 28.3 73.8 L 28.5 74.3 L 29.0 74.9 L 29.5 74.9 L 30.0 74.6 L 30.2 74.3 L 30.9 72.7 L 30.9 71.9 Z" fill="#C9973A" opacity="0.95"/>
+  <path d="M 47.8 44.8 L 47.1 45.4 L 46.9 45.4 L 46.6 45.6 L 46.4 46.2 L 46.1 47.0 L 45.9 48.1 L 45.9 50.3 L 46.1 50.8 L 46.9 50.8 L 46.9 50.0 L 47.1 49.7 L 47.1 47.5 L 47.6 47.3 L 47.6 46.4 L 47.8 46.2 Z" fill="#C9973A" opacity="0.95"/>
+  <path d="M 15.0 85.8 L 15.5 85.8 L 16.2 86.6 L 17.6 86.6 L 17.6 87.2 L 17.4 87.7 L 16.9 88.3 L 16.9 88.5 L 16.7 88.8 L 16.4 88.8 L 15.9 89.3 L 14.7 89.1 Z" fill="#0D0B08" opacity="0.85"/>
+  <path d="M 32.6 64.8 L 32.1 64.8 L 31.2 65.8 L 30.9 66.7 L 31.2 68.9 L 32.1 68.9 L 32.9 67.8 L 32.9 66.9 L 33.1 66.7 L 33.1 66.1 L 32.9 65.3 Z" fill="#C9973A" opacity="0.95"/>
+  <path d="M 64.5 79.0 L 64.3 79.5 L 64.3 81.4 L 64.7 82.0 L 65.2 82.2 L 65.9 82.2 L 66.4 81.7 L 66.4 80.6 L 66.2 79.8 L 65.9 79.2 L 65.5 78.7 Z" fill="#C9973A" opacity="0.95"/>
+  <path d="M 35.7 50.0 L 34.8 50.8 L 34.3 51.6 L 33.6 53.3 L 33.6 54.4 L 34.3 54.4 L 34.8 53.6 L 35.3 53.6 L 35.7 53.3 L 36.0 52.7 Z" fill="#C9973A" opacity="0.95"/>
+  <path d="M 60.6 74.3 L 60.4 74.9 L 60.4 75.4 L 60.9 76.5 L 61.6 77.0 L 63.3 76.8 L 63.3 76.5 L 63.5 76.0 L 62.8 75.1 L 62.3 75.1 L 62.1 74.6 L 61.8 74.3 Z" fill="#C9973A" opacity="0.95"/>
+  <path d="M 49.8 38.0 L 49.0 38.3 L 48.6 38.5 L 48.3 38.8 L 47.6 39.9 L 47.6 40.7 L 46.9 41.5 L 46.6 42.1 L 46.9 42.9 L 47.3 42.6 L 48.6 41.3 L 49.0 40.4 L 49.5 39.3 L 49.5 38.5 Z" fill="#C9973A" opacity="0.95"/>
+  <path d="M 72.7 6.8 L 72.7 7.4 L 73.2 8.5 L 74.6 10.1 L 74.6 10.7 L 73.4 11.7 L 72.9 11.2 L 72.2 9.6 L 72.0 8.7 Z" fill="#0D0B08" opacity="0.85"/>
+  <path d="M 87.4 56.0 L 87.0 56.0 L 86.0 57.1 L 85.5 57.4 L 84.1 57.4 L 83.1 58.5 L 83.3 59.0 L 84.5 59.0 L 86.2 58.2 L 87.4 56.8 Z" fill="#C9973A" opacity="0.95"/>
+  <path d="M 75.4 53.3 L 75.4 54.1 L 75.6 54.9 L 76.3 55.7 L 77.3 56.3 L 77.8 56.0 L 78.0 55.5 L 78.0 54.6 L 77.5 54.1 L 76.8 53.8 L 76.8 53.6 L 76.3 53.0 Z" fill="#C9973A" opacity="0.95"/>
+  <path d="M 67.9 83.6 L 67.1 83.9 L 67.1 86.1 L 66.4 87.2 L 66.7 88.0 L 67.1 88.0 L 67.6 87.7 L 67.9 86.6 L 68.4 86.6 L 68.6 86.1 L 68.6 85.0 L 68.4 84.2 Z" fill="#C9973A" opacity="0.95"/>
+  <path d="M 55.3 39.1 L 54.8 39.1 L 54.1 39.9 L 53.4 41.0 L 52.9 42.1 L 52.9 43.4 L 53.4 43.4 L 54.3 42.3 L 55.3 40.2 Z" fill="#C9973A" opacity="0.95"/>
+  <path d="M 73.4 48.1 L 72.9 48.4 L 72.7 48.9 L 72.7 49.7 L 72.9 50.8 L 73.2 51.4 L 73.4 51.6 L 73.9 51.9 L 74.6 51.9 L 74.9 51.4 L 74.9 50.3 L 73.7 48.9 Z" fill="#C9973A" opacity="0.95"/>
 </svg>
     
     <div>
@@ -946,7 +921,16 @@ header {
     <span id="sTxt">hazir</span>
     <span id="sCountdown" style="color:var(--txt2);font-size:9px;margin-left:2px"></span>
   </div>
+  <div style="display:flex;align-items:center;gap:.75rem;margin-left:auto">
+    <a href="index.html" style="font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:rgba(201,151,58,.45);text-decoration:none;padding:5px 12px;border:1px solid rgba(201,151,58,.2);border-radius:3px;transition:all .2s" onmouseover="this.style.color='#E8C36A'" onmouseout="this.style.color='rgba(201,151,58,.45)'">&#8592; Ana Sayfa</a>
+    <a href="piyasa-akademi.html" style="font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:rgba(201,151,58,.45);text-decoration:none;padding:5px 12px;border:1px solid rgba(201,151,58,.2);border-radius:3px;transition:all .2s" onmouseover="this.style.color='#E8C36A'" onmouseout="this.style.color='rgba(201,151,58,.45)'">Akademi</a>
+    <a href="haberler.html" style="font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:rgba(201,151,58,.45);text-decoration:none;padding:5px 12px;border:1px solid rgba(201,151,58,.2);border-radius:3px;transition:all .2s" onmouseover="this.style.color='#E8C36A'" onmouseout="this.style.color='rgba(201,151,58,.45)'">Haberler</a>
+  </div>
 </header>
+
+<div style="background:rgba(248,113,113,.05);border-bottom:1px solid rgba(248,113,113,.12);padding:.5rem 1rem;text-align:center;flex-shrink:0">
+  <span style="font-family:var(--mono);font-size:10px;color:rgba(248,113,113,.45);letter-spacing:.06em">&#9888; Kaldıraçlı işlemler yüksek risk içerir. Bu platform yatırım tavsiyesi vermez. Tüm kayıplar yatırımcıya aittir.</span>
+</div>
 
 <!-- LAYOUT -->
 <div class="layout">
@@ -1053,15 +1037,15 @@ header {
     <div style="padding:2px 8px;display:flex;flex-direction:column;gap:1px;margin-bottom:6px">
       <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 6px;border-radius:3px;background:var(--bg2)">
         <span style="font-family:var(--mono);font-size:9px;color:var(--green)">▲ FVG Birikimi</span>
-        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">Alış</span>
+        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">▲</span>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 6px;border-radius:3px;background:var(--bg2)">
         <span style="font-family:var(--mono);font-size:9px;color:var(--green)">▲ Base Kayması</span>
-        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">Alış</span>
+        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">▲</span>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 6px;border-radius:3px;background:var(--bg2)">
         <span style="font-family:var(--mono);font-size:9px;color:var(--acc)">◆ Çift Yutma</span>
-        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">Alış</span>
+        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">▲</span>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 6px;border-radius:3px;background:var(--bg2)">
         <span style="font-family:var(--mono);font-size:9px;color:var(--acc)">◆ Emir Bloku</span>
@@ -1077,11 +1061,11 @@ header {
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 6px;border-radius:3px;background:var(--bg2)">
         <span style="font-family:var(--mono);font-size:9px;color:var(--red)">▼ Trend Kırılışı</span>
-        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">Satış</span>
+        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">▼</span>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 6px;border-radius:3px;background:var(--bg2)">
         <span style="font-family:var(--mono);font-size:9px;color:var(--red)">▼ Güçlü Trend FVG</span>
-        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">Satış</span>
+        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">▼</span>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 6px;border-radius:3px;background:var(--bg2)">
         <span style="font-family:var(--mono);font-size:9px;color:var(--acc)">◆ Swing Başarısız</span>
@@ -1089,23 +1073,18 @@ header {
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 6px;border-radius:3px;background:var(--bg2)">
         <span style="font-family:var(--mono);font-size:9px;color:var(--green)">▲ Fitil Mumu</span>
-        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">Alış</span>
+        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">▲</span>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 6px;border-radius:3px;background:var(--bg2)">
         <span style="font-family:var(--mono);font-size:9px;color:var(--green)">▲ Elliott Girişi</span>
-        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">Alış</span>
+        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">▲</span>
       </div>
     </div>
 
 
     <div class="sep"></div>
 
-    <div class="atr-block">
-      <div class="atr-label">Ortalama Dalgalanma (ATR)</div>
-      <div class="atr-val" id="atrVal">—</div>
-      <div class="atr-adr" id="adrVal">ADR: —</div>
-      <div class="atr-sl" id="slVal">SL 1.5×: —</div>
-    </div>
+    
   </div>
 
   <!-- CENTER -->
@@ -1189,64 +1168,6 @@ header {
   <!-- RIGHT -->
   <div class="right">
 
-
-    <!-- POZİSYON HESAPLAYICI -->
-    <div class="pos-calc">
-      <div class="panel-title" style="padding:0 0 8px 0">Pozisyon Hesaplayici</div>
-
-      <div class="pos-input-row">
-        <div style="flex:1">
-          <div class="pos-label">SERMAYE ($)</div>
-          <input class="pos-input" id="posCapital" type="number" placeholder="10000" value="10000" oninput="calcPosition()">
-        </div>
-        <div style="flex:1">
-          <div class="pos-label">RİSK (%)</div>
-          <input class="pos-input" id="posRisk" type="number" placeholder="1" value="1" step="0.1" min="0.1" max="10" oninput="calcPosition()">
-        </div>
-      </div>
-
-      <div class="pos-input-row">
-        <div style="flex:1">
-          <div class="pos-label">GİRİŞ</div>
-          <input class="pos-input" id="posEntry" type="number" placeholder="0.00" oninput="calcPosition()">
-        </div>
-        <div style="flex:1">
-          <div class="pos-label">STOP LOSS</div>
-          <input class="pos-input" id="posSL" type="number" placeholder="0.00" oninput="calcPosition()">
-        </div>
-        <div style="flex:1">
-          <div class="pos-label">HEDEF</div>
-          <input class="pos-input" id="posTP" type="number" placeholder="0.00" oninput="calcPosition()">
-        </div>
-      </div>
-
-      <div class="pos-result" id="posResult" style="display:none">
-        <div class="pos-res-item">
-          <div class="pos-res-k">RİSK TUTARI</div>
-          <div class="pos-res-v red" id="posRiskAmt">—</div>
-        </div>
-        <div class="pos-res-item">
-          <div class="pos-res-k">POZİSYON BÜYÜKLÜĞÜ</div>
-          <div class="pos-res-v amber" id="posSize">—</div>
-        </div>
-        <div class="pos-res-item">
-          <div class="pos-res-k">MAX KAYIP</div>
-          <div class="pos-res-v red" id="posMaxLoss">—</div>
-        </div>
-        <div class="pos-res-item">
-          <div class="pos-res-k">MAX KAZANÇ</div>
-          <div class="pos-res-v green" id="posMaxGain">—</div>
-        </div>
-        <div class="pos-res-item">
-          <div class="pos-res-k">RR ORANI</div>
-          <div class="pos-res-v amber" id="posRR">—</div>
-        </div>
-        <div class="pos-res-item">
-          <div class="pos-res-k">SL MESAFESİ</div>
-          <div class="pos-res-v" id="posSLPct">—</div>
-        </div>
-      </div>
-    </div>
 
     <!-- ANALIST YORUMU -->
     <div class="analyst-box" id="analystBox">
@@ -1454,6 +1375,15 @@ header {
       <span style="font-family:var(--mono);font-size:9px;color:var(--txt2);margin-left:auto">TF: <span id="scanTFLabel">1H</span></span>
     </div>
   </div>
+</div>
+
+<!-- CANLI HABERLER -->
+<div style="border-top:1px solid var(--line);flex-shrink:0">
+  <div style="padding:8px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)">
+    <span style="font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:var(--acc);text-transform:uppercase">Canlı Haberler</span>
+    <a href="haberler.html" target="_blank" style="font-family:var(--mono);font-size:9px;color:var(--txt2);text-decoration:none">Tümü →</a>
+  </div>
+  <div id="tradingHaberler" style="overflow-y:auto;max-height:300px"></div>
 </div>
 
 <!-- BACKTEST MODAL -->
@@ -2782,7 +2712,7 @@ function checkS11(bars, swings, htfBias=null){
     return {name:'Elliott Giris', phase:'alert', detail:`Wave 4 duzeltmesi. ${fp(parseFloat(wave4Low))}-${fp(fib382)} bolgesi bekleniyor.`, dir:'bull'};
   }
 
-  // Downtrend icin
+  // Düşüş trendi icin
   if(ew.waveType==='impulse_down'){
     return {name:'Elliott Giris', phase:'forming', detail:`Impulsive dusus - Dalga ${ew.currentWave}. Short firsatlari izleniyor.`, dir:'bear'};
   }
@@ -2889,7 +2819,7 @@ function checkS1(bars, swings, htfBias=null){
   }
 
   // SENARYO C: FVG var ama fiyat uzakta
-  const trendLabel = strongUptrend?'Guclu uptrend':'Uptrend';
+  const trendLabel = strongUptrend?'Güçlü yükseliş trendi':'Uptrend';
   return {name:'FVG Birikimi', phase:'forming',
     detail:`${trendLabel} + FVG: ${fp(bestFVG.bottom)}-${fp(bestFVG.top)}. ${equalHighLevel?'EqH: '+fp(equalHighLevel)+'.':''} Giris bekleniyor.`,
     dir:'bull'};
@@ -2956,10 +2886,10 @@ async function runMTFConfluence(sym, currentBars){
   let overallBias = 'neut';
   let overallColor = 'var(--txt1)';
   let overallLabel = 'KARISIK';
-  if(allBull){ overallBias='bull'; overallColor='var(--green)'; overallLabel='TUM PERIYOTLAR YUKARI ▲ ▲'; }
-  else if(allBear){ overallBias='bear'; overallColor='var(--red)'; overallLabel='TUM PERIYOTLAR ASAGI ▼ ▼'; }
-  else if(majorityBull){ overallBias='bull'; overallColor='var(--green)'; overallLabel='COGU PERIYOT YUKARI ▲'; }
-  else if(majorityBear){ overallBias='bear'; overallColor='var(--red)'; overallLabel='COGU PERIYOT ASAGI ▼'; }
+  if(allBull){ overallBias='bull'; overallColor='#4ADE80'; overallLabel='TUM PERIYOTLAR YUKARI ▲ ▲'; }
+  else if(allBear){ overallBias='bear'; overallColor='#F87171'; overallLabel='TUM PERIYOTLAR ASAGI ▼ ▼'; }
+  else if(majorityBull){ overallBias='bull'; overallColor='#4ADE80'; overallLabel='COGU PERIYOT YUKARI ▲'; }
+  else if(majorityBear){ overallBias='bear'; overallColor='#F87171'; overallLabel='COGU PERIYOT ASAGI ▼'; }
 
   // SETUP KALITESI
   // En iyi senaryo: HTF (aylik/haftalik) yukari, LTF (gunluk) giris veriyor
@@ -2970,8 +2900,8 @@ async function runMTFConfluence(sym, currentBars){
 
   let setupQuality = '';
   let setupColor = 'var(--txt2)';
-  if(htfBull && ltfBull){ setupQuality='✦ MUKEMMEL ALIS FIRSATI'; setupColor='var(--green)'; }
-  else if(htfBear && ltfBear){ setupQuality='✦ MUKEMMEL SATIS FIRSATI'; setupColor='var(--red)'; }
+  if(htfBull && ltfBull){ setupQuality='✦ MUKEMMEL ALIS FIRSATI'; setupColor='#4ADE80'; }
+  else if(htfBear && ltfBear){ setupQuality='✦ MUKEMMEL SATIS FIRSATI'; setupColor='#F87171'; }
   else if(htfBull && !ltfBull){ setupQuality='◈ YUKARI TREND, DUZELTME BEKLENIYOR'; setupColor='var(--amber)'; }
   else if(htfBear && !ltfBear){ setupQuality='◈ ASAGI TREND, DIP ARAYISI'; setupColor='var(--amber)'; }
   else{ setupQuality='✕ UYUMLU SINYAL YOK'; setupColor='var(--txt2)'; }
@@ -2979,10 +2909,10 @@ async function runMTFConfluence(sym, currentBars){
   // HTML
   const tfHTML = tfArr.map(tf=>{
     const r = tfResults[tf];
-    const color = r.bias==='bull'?'var(--green)':r.bias==='bear'?'var(--red)':'var(--txt2)';
+    const color = r.bias==='bull'?'#4ADE80':r.bias==='bear'?'#F87171':'var(--txt2)';
     const arrow = r.bias==='bull'?'▲':r.bias==='bear'?'▼':'◆';
-    const rsiColor = r.rsi>70?'var(--red)':r.rsi<30?'var(--green)':'var(--txt1)';
-    const chgColor = r.chg>=0?'var(--green)':'var(--red)';
+    const rsiColor = r.rsi>70?'#F87171':r.rsi<30?'#4ADE80':'var(--txt1)';
+    const chgColor = r.chg>=0?'#4ADE80':'#F87171';
     return `
       <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--line)">
         <span style="font-family:var(--mono);font-size:9px;color:var(--txt2);width:55px">${tfLabels[tf]}</span>
@@ -3235,7 +3165,7 @@ function runStrategies(bars){
     const cardClass = {ready:'ready',alert:'alert',forming:'forming',watch:'',invalid:'invalid'}[r.phase]||'';
     const phaseLabel = {ready:'HAZIR',alert:'UYARI',forming:'OLUSUYOR',watch:'IZLE',invalid:'GECERSIZ'}[r.phase]||r.phase;
 
-    const dirColor = r.dir==='bull'?'var(--green)':r.dir==='bear'?'var(--red)':'var(--txt2)';
+    const dirColor = r.dir==='bull'?'#4ADE80':r.dir==='bear'?'#F87171':'var(--txt2)';
     const dirArrow = r.dir==='bull'?'▲':r.dir==='bear'?'▼':'◆';
 
     const levels = (r.sl && r.tp) ? `
@@ -3294,7 +3224,7 @@ function detectElliottWave(bars, swings){
       pts[2].price > pts[0].price &&
       pts[3].price > pts[1].price;
 
-    // Downtrend: H1 L1 H2 L2 H3 L3
+    // Düşüş trendi: H1 L1 H2 L2 H3 L3
     const isImpulsiveDown =
       pts[0].type==='high' && pts[1].type==='low' &&
       pts[2].type==='high' && pts[3].type==='low' &&
@@ -3473,7 +3403,7 @@ function updateElliottPanel(ew){
     el.innerHTML='<div style="font-family:var(--mono);font-size:10px;color:var(--txt2);text-align:center;padding:8px">Dalga sayimi yapilamiyor</div>';
     return;
   }
-  const color = ew.bias==='bull'?'var(--green)':ew.bias==='bear'?'var(--red)':'var(--txt1)';
+  const color = ew.bias==='bull'?'#4ADE80':ew.bias==='bear'?'#F87171':'var(--txt1)';
   const arrow = ew.bias==='bull'?'▲':ew.bias==='bear'?'▼':'◆';
   el.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
@@ -3702,8 +3632,8 @@ function drawSMC(bars){
   const arrowEl = g('biasArrow');
   arrowEl.textContent = bias.bias==='bull'?'▲': bias.bias==='bear'?'▼':'◆';
   arrowEl.className = `bias-arrow ${bias.bias}`;
-  g('biasLabel').textContent = bias.label;
-  g('biasSub').textContent = bias.sub;
+  if(g('biasLabel')) g('biasLabel').textContent = bias.label;
+  if(g('biasSub')) g('biasSub').textContent = bias.sub;
 
   const bosCount = bias.bullBOS + bias.bearBOS;
   const chochCount = bias.bullCHoCH + bias.bearCHoCH;
@@ -3754,7 +3684,7 @@ function render(bars, sym){
   const rv = document.getElementById('rsiVal');
   if(lastRSI!=null){
     rv.textContent = lastRSI.toFixed(1);
-    rv.style.color = lastRSI>70?'var(--red)':lastRSI<30?'var(--green)':'var(--acc)';
+    rv.style.color = lastRSI>70?'#F87171':lastRSI<30?'#4ADE80':'#C9973A';
   }
 
   VS.setData(bars.map(b=>({time:b.time,value:b.volume,color:b.close>=b.open?'rgba(0,230,118,.45)':'rgba(255,61,87,.45)'})));
@@ -3808,7 +3738,7 @@ function render(bars, sym){
       const mv=g('macdVal'), ms=g('macdSig'), mh=g('macdHist');
       if(mv) mv.textContent = lastMACD.toFixed(4);
       if(ms){ ms.textContent = lastSig?.toFixed(4)||'—'; ms.style.color='#818cf8'; }
-      if(mh){ mh.textContent = lastHist?.toFixed(4)||'—'; mh.style.color=lastHist>=0?'var(--green)':'var(--red)'; }
+      if(mh){ mh.textContent = lastHist?.toFixed(4)||'—'; mh.style.color=lastHist>=0?'#4ADE80':'#F87171'; }
     }
 
     if(MACDC){
@@ -3853,7 +3783,7 @@ function render(bars, sym){
   const divMarkers = divs.map(d=>({
     time: d.time,
     position: d.type==='bull'?'belowBar':'aboveBar',
-    color: d.type==='bull'?'var(--green)':'var(--red)',
+    color: d.type==='bull'?'#4ADE80':'#F87171',
     shape: 'circle',
     text: d.type==='bull'?'DIV+':'DIV-',
     size: 0.8,
@@ -3952,10 +3882,10 @@ function analyze(bars, sym){
   // TREND
   let ts='na',td='',tscore=0;
   if(last&&s200){
-    if(last>s200&&s50>s200&&s20>s50){ts='bull';td=`Fiyat SMA20>50>200 ustunde. Guclu uptrend.`;tscore=2;}
-    else if(last>s200){ts='bull';td=`Fiyat SMA200 ustunde. Trend pozitif.`;tscore=1;}
-    else if(last<s200&&s50<s200){ts='bear';td=`Fiyat SMA200 altinda. Downtrend.`;tscore=0;}
-    else{ts='wait';td=`Karisik sinyal. Trend henuz netlesmedi.`;tscore=0;}
+    if(last>s200&&s50>s200&&s20>s50){ts='bull';td=`Fiyat SMA20>50>200 üstünde. Güçlü yükseliş trendi.`;tscore=2;}
+    else if(last>s200){ts='bull';td=`Fiyat SMA200 üstünde. Trend pozitif.`;tscore=1;}
+    else if(last<s200&&s50<s200){ts='bear';td=`Fiyat SMA200 altında. Düşüş trendi.`;tscore=0;}
+    else{ts='wait';td=`Karışık sinyal. Trend netleşmedi.`;tscore=0;}
   }
   score+=tscore; setSig('trend',ts,td);
 
@@ -3965,20 +3895,20 @@ function analyze(bars, sym){
     const s20Up=s20>sma20a[n-5];
     const s50Up=s50>sma50a[n-5];
     const recentUp=closes[n-1]>closes[n-4];
-    if(s20Up&&s50Up&&recentUp){ms='bull';md='SMA20 & 50 yukseliyor. Momentum guclu.';mscore=2;}
-    else if(s20Up){ms='bull';md='Kisa vadeli momentum pozitif.';mscore=1;}
-    else if(!s20Up&&!s50Up){ms='bear';md='SMA20 & 50 dusuyor. Momentum negatif.';mscore=0;}
-    else{ms='wait';md='Momentum notr. Yon bekleniyor.';mscore=0;}
+    if(s20Up&&s50Up&&recentUp){ms='bull';md='SMA20 & 50 yükseliyor. Güçlü momentum.';mscore=2;}
+    else if(s20Up){ms='bull';md='Kısa vadeli momentum pozitif.';mscore=1;}
+    else if(!s20Up&&!s50Up){ms='bear';md='SMA20 & 50 düşüyor. Negatif momentum.';mscore=0;}
+    else{ms='wait';md='Momentum nötr. Yön bekleniyor.';mscore=0;}
   }
   score+=mscore; setSig('mom',ms,md);
 
   // RSI
   let rs='na',rd='',rscore=0;
   if(lastRSI!=null){
-    if(lastRSI<30){rs='bull';rd=`RSI ${lastRSI.toFixed(1)} — Asiri satim. Long firsat yakin.`;rscore=2;}
-    else if(lastRSI>70){rs='bear';rd=`RSI ${lastRSI.toFixed(1)} — Asiri alim. Dikkatli.`;rscore=0;}
-    else if(lastRSI>=45&&lastRSI<=65){rs='bull';rd=`RSI ${lastRSI.toFixed(1)} — Saglikli trend bolgesi.`;rscore=1;}
-    else{rs='wait';rd=`RSI ${lastRSI.toFixed(1)} — Notr bolge.`;rscore=0;}
+    if(lastRSI<30){rs='bull';rd=`RSI ${lastRSI.toFixed(1)} — Aşırı satım — alım fırsatı yakın.`;rscore=2;}
+    else if(lastRSI>70){rs='bear';rd=`RSI ${lastRSI.toFixed(1)} — Aşırı alım — dikkatli ol.`;rscore=0;}
+    else if(lastRSI>=45&&lastRSI<=65){rs='bull';rd=`RSI ${lastRSI.toFixed(1)} — Sağlıklı trend bölgesi.`;rscore=1;}
+    else{rs='wait';rd=`RSI ${lastRSI.toFixed(1)} — Nötr bölge.`;rscore=0;}
   }
   score+=rscore; setSig('rsi',rs,rd);
 
@@ -3989,10 +3919,10 @@ function analyze(bars, sym){
     const lv=vols[n-1];
     const r2=lv/avg;
     const up=bars[n-1].close>=bars[n-2]?.close;
-    if(r2>1.5&&up){vs='bull';vd=`Hacim ${r2.toFixed(1)}× ort. ustunde. Alim baskisi.`;vscore=2;}
-    else if(r2>1.5&&!up){vs='bear';vd=`Hacim ${r2.toFixed(1)}× ort. ustunde. Satis baskisi.`;vscore=0;}
-    else if(r2>1){vs='wait';vd=`Hacim ortalamanin ${r2.toFixed(1)}× ustunde.`;vscore=1;}
-    else{vs='na';vd=`Hacim ortalamanin altinda. Dusuk ilgi.`;vscore=0;}
+    if(r2>1.5&&up){vs='bull';vd=`Hacim ${r2.toFixed(1)}× ort. ustunde. Alım baskısı.`;vscore=2;}
+    else if(r2>1.5&&!up){vs='bear';vd=`Hacim ${r2.toFixed(1)}× ort. ustunde. Satış baskısı.`;vscore=0;}
+    else if(r2>1){vs='wait';vd=`Hacim ortalamanın ${r2.toFixed(1)}× ustunde.`;vscore=1;}
+    else{vs='na';vd=`Hacim ortalamanın altında.`;vscore=0;}
   }
   score+=vscore; setSig('vol',vs,vd);
 
@@ -4048,17 +3978,18 @@ function analyze(bars, sym){
   // Temel skoru 40 puana normalize et
   const baseScore = Math.round(score/8*40);
   const totalRaw = baseScore + smcScore;
-  const totalMax = 40 + (smcMax||70);
-  const pct = Math.min(100, Math.round(totalRaw / totalMax * 100));
+  const totalMax = Math.max(15, (smcMax||25) * 0.4);
+  const pct = Math.min(100, Math.round(totalRaw / totalMax * 100 * 2.2));
 
   let color, msg, grade;
-  if(pct>=80){ color='var(--green)'; msg='✦ Cok Guclu — Islem icin hazir!'; grade='A'; }
-  else if(pct>=65){ color='var(--green)'; msg='✦ Guclu Sinyal — Islem degerlendirin'; grade='B'; }
-  else if(pct>=50){ color='var(--amber)'; msg='◈ Orta Sinyal — Teyit bekleyin'; grade='C'; }
-  else if(pct>=35){ color='var(--amber)'; msg='◈ Zayif Sinyal — Dikkatli olun'; grade='D'; }
-  else{ color='var(--red)'; msg='✕ Sinyal Yok — Islem yapmayin'; grade='F'; }
+  if(pct>=80){ color='#4ADE80'; msg='✦ Çok Güçlü — İşlem için hazır!'; grade='A'; }
+  else if(pct>=65){ color='#4ADE80'; msg='✦ Güçlü Sinyal — İşlem değerlendirin'; grade='B'; }
+  else if(pct>=30){ color='var(--amber)'; msg='◆ Orta Sinyal — Teyit bekleyin'; grade='C'; }
+  else if(pct>=15){ color='var(--amber)'; msg='◈ Zayıf Sinyal — Dikkatli olun'; grade='D'; }
+  else{ color='#F87171'; msg='✕ Sinyal Yok — Islem yapmayin'; grade='F'; }
 
   const sn=g('scoreNum');
+  if(!sn)return;
   sn.textContent=pct; sn.style.color=color;
   // Animasyonlu progress bar
   const fill = g('scoreFill');
@@ -4069,7 +4000,7 @@ function analyze(bars, sym){
   // Skor detayi goster
   const scoreDetail = g('scoreDetail');
   if(scoreDetail){
-    scoreDetail.textContent = `Gostergeler: ${Math.round(score/8*100)}% · Yapi: ${smcMax>0?Math.round(smcScore/smcMax*100):'—'}% · MTF: ${window.mtfBiasGlobal?.quality?.includes('IDEAL')?'IDEAL':window.mtfBiasGlobal?.quality?.includes('HTF')?'KISMI':'—'}`;
+    scoreDetail.textContent = `Göstergeler: ${Math.round(score/8*100)}% · Yapi: ${smcMax>0?Math.round(smcScore/smcMax*100):'—'}% · MTF: ${window.mtfBiasGlobal?.quality?.includes('IDEAL')?'IDEAL':window.mtfBiasGlobal?.quality?.includes('HTF')?'KISMI':'—'}`;
   }
 }
 
@@ -4144,10 +4075,10 @@ function setStatus(on, sym=''){
 }
 
 function setSig(key,sig,detail){
-  const labels={bull:'BOGA',bear:'AYI',wait:'BEKLE',na:'—'};
+  const labels={bull:'▲',bear:'▼',wait:'◆',na:'—'};
   const cls={bull:'b-bull',bear:'b-bear',wait:'b-wait',na:'b-na'};
-  const b=g(`b_${key}`); b.textContent=labels[sig]||'—'; b.className=`badge ${cls[sig]||'b-na'}`;
-  g(`d_${key}`).textContent=detail;
+  const b=g(`b_${key}`); if(b){b.textContent=labels[sig]||'—'; b.className=`badge ${cls[sig]||'b-na'}`;}
+  const d=g(`d_${key}`); if(d) d.textContent=detail;
 }
 
 function toast(msg,type=''){
@@ -4246,7 +4177,7 @@ function fillPositionCalc(entry, sl, tp){
 
 // Tum indikatorleri ac/kapat
 let allIndsOn = true;
-const ALL_INDS = ['sma20','sma50','sma200','rsi','vol','swings','fvg','bos','liq','bb','macd','td9','ew'];
+const ALL_INDS = ['sma20','sma50','sma200','swings','fvg','bos','liq','bb','td9','ew'];
 
 function togAllInd(){
   allIndsOn = !allIndsOn;
@@ -4714,7 +4645,7 @@ function renderScanResults(results, onlyReady){
     return aMin-bMin;
   });
 
-  const phaseColor = {ready:'var(--green)',alert:'var(--acc)',forming:'var(--amber)',watch:'var(--txt2)'};
+  const phaseColor = {ready:'#4ADE80',alert:'#C9973A',forming:'var(--amber)',watch:'var(--txt2)'};
   const phaseLabel = {ready:'HAZIR',alert:'UYARI',forming:'OLUSUYOR',watch:'IZLE'};
 
   container.innerHTML = `
@@ -4722,7 +4653,7 @@ function renderScanResults(results, onlyReady){
       ${results.map(r=>{
         const topSig = r.signals.sort((a,b)=>(order[a.phase]??3)-(order[b.phase]??3))[0];
         const hasReady = r.signals.some(s=>s.phase==='ready');
-        const borderCol = hasReady?'var(--green)':r.signals.some(s=>s.phase==='alert')?'var(--acc)':'var(--line2)';
+        const borderCol = hasReady?'#4ADE80':r.signals.some(s=>s.phase==='alert')?'#C9973A':'var(--line2)';
         
         return `<div style="background:var(--bg2);border:1px solid ${borderCol};border-radius:8px;padding:12px;cursor:pointer"
                   onclick="loadSymFromScanner('${r.sym}')">
@@ -4731,7 +4662,7 @@ function renderScanResults(results, onlyReady){
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
             <span style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--acc)">${r.sym}</span>
             <div style="display:flex;gap:6px;align-items:center">
-              <span style="font-family:var(--mono);font-size:11px;font-weight:600;color:${r.chg>=0?'var(--green)':'var(--red)'}">
+              <span style="font-family:var(--mono);font-size:11px;font-weight:600;color:${r.chg>=0?'#4ADE80':'#F87171'}">
                 ${r.chg>=0?'+':''}${r.chg.toFixed(2)}%
               </span>
               <span style="font-family:var(--mono);font-size:11px;color:var(--txt0)">${fp(r.last.close)}</span>
@@ -4742,7 +4673,7 @@ function renderScanResults(results, onlyReady){
           ${r.signals.length>0
             ? r.signals.map(s=>`
               <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-top:1px solid var(--line)">
-                <span style="font-family:var(--mono);font-size:10px;font-weight:700;color:${s.dir==='bull'?'var(--green)':s.dir==='bear'?'var(--red)':'var(--txt1)'}">
+                <span style="font-family:var(--mono);font-size:10px;font-weight:700;color:${s.dir==='bull'?'#4ADE80':s.dir==='bear'?'#F87171':'var(--txt1)'}">
                   ${s.dir==='bull'?'▲':s.dir==='bear'?'▼':'◆'} ${s.name}
                 </span>
                 <span style="font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;background:${r.last};color:${phaseColor[s.phase]||'var(--txt2)'}">
@@ -4771,7 +4702,7 @@ function startScanner(){
   scanRunning=true;
   prevSignals={};
   const dot=g('scanDot');
-  if(dot){dot.style.background='var(--green)';dot.style.animation='blink 2s infinite';}
+  if(dot){dot.style.background='#4ADE80';dot.style.animation='blink 2s infinite';}
   if(g('scanTxt')) g('scanTxt').textContent='Taraniyor...';
   if(g('scanTFLabel')) g('scanTFLabel').textContent=currentTF.toUpperCase();
 
@@ -4928,11 +4859,11 @@ function runBacktest(){
   };
 
   sv('bv_trades', `${trades.length} islem`);
-  sv('bv_wr', `%${winRate}`, parseFloat(winRate)>=50?'var(--green)':'var(--red)');
-  sv('bv_pf', pf, parseFloat(pf)>=1.5?'var(--green)':parseFloat(pf)>=1?'var(--amber)':'var(--red)');
+  sv('bv_wr', `%${winRate}`, parseFloat(winRate)>=50?'#4ADE80':'#F87171');
+  sv('bv_pf', pf, parseFloat(pf)>=1.5?'#4ADE80':parseFloat(pf)>=1?'var(--amber)':'#F87171');
   sv('bv_avg', `${avgRR}:1`);
-  sv('bv_dd', `%${maxDD.toFixed(1)}`, maxDD>20?'var(--red)':maxDD>10?'var(--amber)':'var(--green)');
-  sv('bv_ret', `${netPct>0?'+':''}${netPct}%`, parseFloat(netPct)>=0?'var(--green)':'var(--red)');
+  sv('bv_dd', `%${maxDD.toFixed(1)}`, maxDD>20?'#F87171':maxDD>10?'var(--amber)':'#4ADE80');
+  sv('bv_ret', `${netPct>0?'+':''}${netPct}%`, parseFloat(netPct)>=0?'#4ADE80':'#F87171');
 
   // Equity curve ciz
   drawEquityCurve(trades);
@@ -4945,11 +4876,11 @@ function runBacktest(){
     ${trades.map(t=>`
     <div class="bt-row ${t.outcome==='win'?'win':t.outcome==='loss'?'loss':''}">
       <span style="color:var(--acc);font-weight:700">${t.strat}</span>
-      <span style="color:${t.dir==='bull'?'var(--green)':'var(--red)'}">${t.dir==='bull'?'LONG':'SHORT'}</span>
+      <span style="color:${t.dir==='bull'?'#4ADE80':'#F87171'}">${t.dir==='bull'?'LONG':'SHORT'}</span>
       <span>${fp(t.entry)}</span>
       <span style="color:var(--red)">${fp(t.sl)}</span>
       <span style="color:var(--green)">${fp(t.tp)}</span>
-      <span style="color:${t.pnlPct>=0?'var(--green)':'var(--red)'}">
+      <span style="color:${t.pnlPct>=0?'#4ADE80':'#F87171'}">
         ${t.pnlPct>=0?'+':''}${t.pnlPct}%
       </span>
       <span style="color:var(--txt2);font-size:9px">${t.entryDate}</span>
@@ -5231,7 +5162,7 @@ function renderWatchlist(){
         <span class="wl-chg ${chgClass}">${chgText}</span>
         <span onclick="event.stopPropagation();removeFromWatchlist('${sym}')"
           style="font-size:11px;color:var(--txt2);cursor:pointer;line-height:1;padding:1px 4px;border-radius:2px;transition:color .1s"
-          onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--txt2)'"
+          onmouseover="this.style.color='#F87171'" onmouseout="this.style.color='var(--txt2)'"
           title="Listeden cikar">×</span>
       </div>
     </div>`;
@@ -5446,9 +5377,9 @@ function startLiveTicker(){
         renderWatchlist();
       }
 
-      // Canli dot
+      // Canlı dot
       const dot = document.getElementById('sDot');
-      if(dot){ dot.style.background='var(--green)'; dot.style.animation='blink 2s infinite'; }
+      if(dot){ dot.style.background='#4ADE80'; dot.style.animation='blink 2s infinite'; }
 
       countdownVal = Math.round(LIVE_INTERVAL/1000);
     }catch(_){
@@ -5465,7 +5396,7 @@ function startLiveTicker(){
     countdownVal--;
     if(countdownVal < 0) countdownVal = Math.round(LIVE_INTERVAL/1000);
     const cd = document.getElementById('sCountdown');
-    if(cd && document.getElementById('sDot')?.style.background === 'var(--green)'){
+    if(cd && document.getElementById('sDot')?.style.background === '#4ADE80'){
       cd.textContent = `·${countdownVal}s`;
     }
   }, 1000);
@@ -5485,10 +5416,87 @@ window.addEventListener('load',()=>{
     fetchData();
     // Watchlist fiyatlarini arka planda cek
     setTimeout(refreshWatchlist, 2000);
-    // Canli ticker baslat
+    // Canlı ticker baslat
     startLiveTicker();
   }, 400);
 });
 </script>
+
+<div style="padding:.75rem 1rem;border-top:1px solid rgba(201,151,58,.1);background:rgba(13,11,8,.98);flex-shrink:0">
+  <p style="font-family:var(--mono);font-size:9px;line-height:1.7;color:rgba(201,151,58,.2)">
+    <strong style="color:rgba(201,151,58,.35)">YASAL UYARI:</strong> Bu platform yalnızca bilgilendirme amaçlıdır. Kaldıraçlı işlemler sermayenizin tamamını kaybetme riski içerir. Apex Trading sorumlu tutulamaz. &copy; 2026 Apex Trading
+  </p>
+</div>
+
+<script>
+var YORUM_MAP = {
+  altin:{yukari:['war','attack','iran','conflict','inflation','tension','risk','rate cut','recession'],asagi:['rate hike','strong dollar','peace','ceasefire','deal'],piyasa:'ALTIN',y:'Yukari baski.',a:'Asagi baski.',n:'Sinirli etki.'},
+  doviz:{yukari:['fed hike','rate hike','nfp beat','dollar rally'],asagi:['fed cut','rate cut','dollar fall','tariff'],piyasa:'DXY',y:'Dolar yukari.',a:'Dolar asagi.',n:'Sinirli.'},
+  petrol:{yukari:['opec cut','iran','hormuz','conflict','war'],asagi:['opec hike','peace','recession','demand drop'],piyasa:'PETROL',y:'Petrol yukari.',a:'Petrol asagi.',n:'Sinirli.'},
+  fed:{yukari:['inflation','cpi','rate hike','strong'],asagi:['recession','rate cut','fed pivot','dovish'],piyasa:'FED',y:'Faiz artisi.',a:'Faiz indirimi.',n:'Sinirli.'},
+  savas:{yukari:['attack','war','missile','conflict'],asagi:['ceasefire','peace','deal'],piyasa:'JEOPOLITIK',y:'Risk yukari.',a:'Risk asagi.',n:'Izleniyor.'}
+};
+function yorumUret(baslik,etiket){
+  var k=YORUM_MAP[etiket];if(!k||!baslik)return null;
+  var bl=(baslik||'').toLowerCase(),ys=0,as=0;
+  k.yukari.forEach(function(w){if(bl.indexOf(w)!==-1)ys++;});
+  k.asagi.forEach(function(w){if(bl.indexOf(w)!==-1)as++;});
+  if(ys>as)return{ok:'▲',metin:k.piyasa+': '+k.y,renk:'#4ADE80'};
+  if(as>ys)return{ok:'▼',metin:k.piyasa+': '+k.a,renk:'#F87171'};
+  return{ok:'◆',metin:k.piyasa+': '+k.n,renk:'#C9973A'};
+}
+function loadTradingHaberler(){
+  var el=document.getElementById('tradingHaberler');
+  if(!el)return;
+  var xhr=new XMLHttpRequest();
+  xhr.open('GET','haber-proxy.php?t='+Date.now(),true);
+  xhr.onreadystatechange=function(){
+    if(xhr.readyState!==4||xhr.status!==200)return;
+    try{
+      var d=JSON.parse(xhr.responseText);
+      var haberler=(d.haberler||[]).slice(0,10);
+      if(!haberler.length){
+        el.innerHTML='<div style="padding:8px 12px;font-size:10px;color:#4A4338">Haber yok.</div>';
+        return;
+      }
+      var html='';
+      haberler.forEach(function(h){
+        var et=h.etiket||[];
+        var renk='#9A8E7A';
+        if(et.indexOf('altin')!==-1)renk='#E8C36A';
+        else if(et.indexOf('savas')!==-1)renk='#F87171';
+        else if(et.indexOf('fed')!==-1)renk='#60A5FA';
+        else if(et.indexOf('doviz')!==-1)renk='#4ADE80';
+        else if(et.indexOf('petrol')!==-1)renk='#FB923C';
+        var yh='';
+        var y=yorumUret(h.baslik,et[0]||'');
+        if(y){
+          yh='<div style="margin-top:4px;padding:3px 6px;border-left:2px solid '+y.renk+'">'
+            +'<span style="font-size:9px;color:'+y.renk+'">'+y.ok+' '+y.metin+'</span>'
+            +'</div>';
+        }
+        var card=document.createElement('a');
+        card.href=h.link||'#';
+        card.target='_blank';
+        card.rel='noopener';
+        card.style.cssText='display:block;padding:8px 12px;border-bottom:1px solid #2A2620;text-decoration:none;transition:background .15s';
+        card.addEventListener('mouseover',function(){this.style.background='#1C1914';});
+        card.addEventListener('mouseout',function(){this.style.background='';});
+        card.innerHTML='<div style="font-size:8px;color:'+renk+';margin-bottom:2px;opacity:.8">'+(h.kaynak||'')+' \u00b7 '+(h.tarih_s||'')+'</div>'
+          +'<div style="font-size:11px;color:#FAF6EE;line-height:1.4">'+(h.baslik||'')+'</div>'
+          +yh;
+        html+=card.outerHTML;
+      });
+      el.innerHTML=html;
+    }catch(e){
+      el.innerHTML='<div style="padding:8px;font-size:10px;color:#4A4338">Hata.</div>';
+    }
+  };
+  xhr.send();
+}
+loadTradingHaberler();
+setInterval(loadTradingHaberler,60000);
+</script>
+
 </body>
 </html>
