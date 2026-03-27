@@ -1143,25 +1143,34 @@ function enterSite(){if(!_cv)return;localStorage.setItem('apex_legal_ok','1');do
     </div>
 
     <div class="sub-charts">
-      <div class="sub-hdr">
-        <span class="sub-lbl">RSI (Aşırı Alım/Satım Göstergesi)</span>
-        <span class="sub-val" id="rsiVal" style="color:var(--acc)">—</span>
-      </div>
-      <div id="rsiChart"></div>
-      <div class="sub-hdr" style="border-top:1px solid var(--line)">
-        <span class="sub-lbl">İşlem Hacmi</span>
-        <span class="sub-val" id="volVal" style="color:var(--txt1)">—</span>
-      </div>
-      <div id="volChart"></div>
-      <div class="sub-hdr" style="border-top:1px solid var(--line)" id="macdHdr">
-        <span class="sub-lbl">MACD (Trend Momentum)</span>
-        <div style="display:flex;gap:10px">
-          <span class="sub-val" id="macdVal" style="color:var(--txt1)">—</span>
-          <span class="sub-val" id="macdSig" style="color:var(--txt2)">—</span>
-          <span class="sub-val" id="macdHist" style="color:var(--txt1)">—</span>
+      <!-- RSI wrapper -->
+      <div id="rsiWrap">
+        <div class="sub-hdr">
+          <span class="sub-lbl">RSI (Aşırı Alım/Satım Göstergesi)</span>
+          <span class="sub-val" id="rsiVal" style="color:var(--acc)">—</span>
         </div>
+        <div id="rsiChart"></div>
       </div>
-      <div id="macdChart"></div>
+      <!-- VOL wrapper -->
+      <div id="volWrap">
+        <div class="sub-hdr" style="border-top:1px solid var(--line)">
+          <span class="sub-lbl">İşlem Hacmi</span>
+          <span class="sub-val" id="volVal" style="color:var(--txt1)">—</span>
+        </div>
+        <div id="volChart"></div>
+      </div>
+      <!-- MACD wrapper -->
+      <div id="macdWrap">
+        <div class="sub-hdr" style="border-top:1px solid var(--line)" id="macdHdr">
+          <span class="sub-lbl">MACD (Trend Momentum)</span>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span class="sub-val" id="macdVal" style="color:var(--acc)">—</span>
+            <span class="sub-val" id="macdSig" style="color:var(--txt2)">—</span>
+            <span class="sub-val" id="macdHist" style="color:var(--txt1)">—</span>
+          </div>
+        </div>
+        <div id="macdChart"></div>
+      </div>
     </div>
   </div>
 
@@ -1467,8 +1476,8 @@ let inds = {sma20:true,sma50:true,sma200:true,rsi:true,vol:true};
 
 function initCharts(){
   const base = {
-    layout:{ background:{color:'#080a0f'}, textColor:'#3d4560' },
-    grid:{ vertLines:{color:'#1e2436'}, horzLines:{color:'#1e2436'} },
+    layout:{ background:{color:'#0D0B08'}, textColor:'#9A8E7A' },
+    grid:{ vertLines:{color:'#2A2620'}, horzLines:{color:'#2A2620'} },
     crosshair:{mode:1},
     rightPriceScale:{borderColor:'#1e2436'},
     timeScale:{borderColor:'#1e2436',timeVisible:true},
@@ -1477,7 +1486,7 @@ function initCharts(){
   const ce = id => document.getElementById(id);
 
   MC = LightweightCharts.createChart(ce('mainChart'),{...base, width:ce('mainChart').clientWidth, height:ce('mainChart').clientHeight});
-  CS = MC.addCandlestickSeries({upColor:'#00e676',downColor:'#ff3d57',borderUpColor:'#00e676',borderDownColor:'#ff3d57',wickUpColor:'#00e676',wickDownColor:'#ff3d57'});
+  CS = MC.addCandlestickSeries({upColor:'#4ADE80',downColor:'#F87171',borderUpColor:'#4ADE80',borderDownColor:'#F87171',wickUpColor:'#4ADE80',wickDownColor:'#F87171'});
   S20  = MC.addLineSeries({color:'#00d4ff',lineWidth:1.5,priceLineVisible:false,lastValueVisible:false});
   S50  = MC.addLineSeries({color:'#ffab00',lineWidth:1.5,priceLineVisible:false,lastValueVisible:false});
   S200 = MC.addLineSeries({color:'#c678dd',lineWidth:2,priceLineVisible:false,lastValueVisible:false});
@@ -1523,6 +1532,21 @@ function initCharts(){
   ro.observe(ce('rsiChart'));
   ro.observe(ce('volChart'));
   const mel2=ce('macdChart'); if(mel2) ro.observe(mel2);
+
+  // Tum sub-chart'lari main chart ile senkronize et
+  MC.timeScale().subscribeVisibleTimeRangeChange(range => {
+    if(!range) return;
+    try { if(RC) RC.timeScale().setVisibleRange(range); } catch(_){}
+    try { if(VC) VC.timeScale().setVisibleRange(range); } catch(_){}
+    try { if(MACDC) MACDC.timeScale().setVisibleRange(range); } catch(_){}
+  });
+  // Sub-chart'lardan scroll edilince main'e de yansit
+  if(RC) RC.timeScale().subscribeVisibleTimeRangeChange(range => {
+    if(!range) return;
+    try { MC.timeScale().setVisibleRange(range); } catch(_){}
+    try { if(VC) VC.timeScale().setVisibleRange(range); } catch(_){}
+    try { if(MACDC) MACDC.timeScale().setVisibleRange(range); } catch(_){}
+  });
 }
 
 // ── DATA FETCH ────────────────────────────────────────────────
@@ -3656,6 +3680,12 @@ function drawSMC(bars){
 
 // Elliott overlay - drawSMC'den sonra cagrilir
 function renderElliott(bars, swings){
+  // Onceki Elliott cizimlerini temizle
+  if(elliottSeries && elliottSeries.length){
+    elliottSeries.forEach(s=>{ try{ MC.removeSeries(s); }catch(_){} });
+    elliottSeries = [];
+  }
+  if(!inds['ew'] && inds['ew'] !== undefined) return;
   try{
     const ew = drawElliott(bars, swings);
     updateElliottPanel(ew);
@@ -3668,6 +3698,7 @@ function render(bars, sym){
   const times  = bars.map(b=>b.time);
   const n = bars.length;
 
+  if(!CS){ console.error("CS null - chart init edilmedi"); return; }
   CS.setData(bars);
 
   const mk = (arr,per) => sma(arr,per).map((v,i)=>v!=null?{time:times[i],value:v}:null).filter(Boolean);
@@ -3808,6 +3839,26 @@ function render(bars, sym){
     const pct = pctEl ? parseInt(pctEl.textContent)||0 : 0;
     runAnalyst(bars, sym, stratResults, htfBiasA, pct);
   }, 400);
+
+  // TD9 Donüs Sayaci
+  try{
+    if(inds['td9'] !== false){
+      const td9res = calcTD9(bars);
+      if(td9res.signals && td9res.signals.length){
+        const existing = CS.markers ? CS.markers() : [];
+        const td9marks = td9res.signals.map(s=>({
+          time: s.time,
+          position: s.type==='buy'?'belowBar':'aboveBar',
+          color: s.type==='buy'?'#4ADE80':'#F87171',
+          shape: s.type==='buy'?'arrowUp':'arrowDown',
+          text: '9',
+          size: 1
+        }));
+        const merged = [...existing, ...td9marks].sort((a,b)=>a.time-b.time);
+        if(CS) CS.setMarkers(merged);
+      }
+    }
+  }catch(e){ console.warn('TD9 error:', e); }
 
   // Dalga Analizi
   try{
@@ -4051,7 +4102,28 @@ function fvol(v){
   return v.toString();
 }
 
-function g(id){return document.getElementById(id);}
+function g(id){
+  var el=document.getElementById(id);
+  if(!el){
+    // Null-safe proxy
+    return {
+      textContent:'',
+      innerHTML:'',
+      style:{},
+      className:'',
+      classList:{add:function(){},remove:function(){},contains:function(){return false;},toggle:function(){}},
+      applyOptions:function(){},
+      setData:function(){},
+      setMarkers:function(){},
+      addEventListener:function(){},
+      getAttribute:function(){return null;},
+      set textContent(v){},
+      set innerHTML(v){},
+      set className(v){}
+    };
+  }
+  return el;
+}
 
 function updateOHLC(b){
   g('oA').textContent=fp(b.open);
@@ -4228,15 +4300,9 @@ function togInd(key){
   if(key==='sma20')S20?.applyOptions({visible:v});
   if(key==='sma50')S50?.applyOptions({visible:v});
   if(key==='sma200')S200?.applyOptions({visible:v});
-  if(key==='rsi'){g('rsiChart').parentElement.style.display=v?'':'none';}
-  if(key==='vol'){g('volChart').parentElement.style.display=v?'':'none';}
-  if(key==='macd'){
-    smcVisible.macd=v;
-    const macdHdr=g('macdHdr');
-    const macdChart=g('macdChart');
-    if(macdHdr) macdHdr.style.display=v?'':'none';
-    if(macdChart) macdChart.style.display=v?'':'none';
-  }
+  if(key==='rsi'){ const w=g('rsiWrap'); if(w) w.style.display=v?'':'none'; }
+  if(key==='vol'){ const w=g('volWrap'); if(w) w.style.display=v?'':'none'; }
+  if(key==='macd'){ smcVisible.macd=v; const w=g('macdWrap'); if(w) w.style.display=v?'':'none'; }
   if(key==='bb'){
     smcVisible.bb=v;
     if(BBU) BBU.applyOptions({visible:v});
@@ -5489,7 +5555,8 @@ function loadTradingHaberler(){
       });
       el.innerHTML=html;
     }catch(e){
-      el.innerHTML='<div style="padding:8px;font-size:10px;color:#4A4338">Hata.</div>';
+      console.error('Haber yukleme hatasi:', e);
+      el.innerHTML='<div style="padding:8px;font-size:10px;color:#4A4338">Veri bekleniyor...</div>';
     }
   };
   xhr.send();
