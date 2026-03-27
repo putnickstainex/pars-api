@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Pars Trading | Teknik Analiz - Apex Trading</title>
+<title>PARS · Trading Intelligence</title>
 <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
 
 :root {
   --bg0: #0D0B08;
@@ -20,10 +20,10 @@
   --acc2: #8A6520;
   --acc-glow: rgba(201,151,58,0.08);
   --acc-dim: rgba(201,151,58,0.15);
-  --green: #00e676;
-  --green-dim: rgba(0,230,118,0.1);
-  --red: #ff3d57;
-  --red-dim: rgba(255,61,87,0.1);
+  --green: #4ADE80;
+  --green-dim: rgba(74,222,128,0.12);
+  --red: #F87171;
+  --red-dim: rgba(248,113,113,0.12);
   --amber: #ffab00;
   --amber-dim: rgba(255,171,0,0.1);
   --txt0: #FAF6EE;
@@ -352,6 +352,71 @@ header {
 #rsiChart { width:100%; height:90px; }
 #volChart { width:100%; height:70px; }
 
+
+/* Pozisyon Hesaplayici */
+.pos-calc {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(135deg, rgba(255,171,0,0.03) 0%, transparent 100%);
+}
+.pos-input-row {
+  display: flex; gap: 5px; margin-bottom: 6px;
+}
+.pos-input {
+  flex: 1;
+  background: var(--bg3);
+  border: 1px solid var(--line2);
+  border-radius: 4px;
+  padding: 5px 7px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--txt0);
+  outline: none;
+  transition: border-color .2s;
+  min-width: 0;
+}
+.pos-input:focus { border-color: var(--acc); }
+.pos-input::placeholder { color: var(--txt2); }
+.pos-label {
+  font-family: var(--mono);
+  font-size: 8px;
+  color: var(--txt2);
+  letter-spacing: .5px;
+  margin-bottom: 2px;
+}
+.pos-result {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-top: 6px;
+}
+.pos-res-item {
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 5px 7px;
+}
+.pos-res-k { font-family: var(--mono); font-size: 8px; color: var(--txt2); margin-bottom: 2px; }
+.pos-res-v { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--txt0); }
+.pos-res-v.green { color: var(--green); }
+.pos-res-v.red { color: var(--red); }
+.pos-res-v.amber { color: var(--amber); }
+.pos-calc-btn {
+  width: 100%;
+  background: var(--amber);
+  color: var(--bg0);
+  border: none;
+  border-radius: 4px;
+  padding: 5px 0;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: .5px;
+  transition: opacity .2s;
+  margin-top: 4px;
+}
+.pos-calc-btn:hover { opacity: .85; }
 
 /* ── RIGHT PANEL ─────────────────────────────────── */
 .right {
@@ -786,23 +851,6 @@ header {
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--line2); border-radius: 2px; }
-
-@media(max-width:768px){
-  body{overflow:hidden auto!important}
-  .layout{flex-direction:column!important;overflow:visible!important;height:auto!important}
-  .left{width:100%!important;height:auto!important;position:relative!important;border-right:none!important;border-bottom:1px solid var(--line)!important;max-height:200px;overflow-y:auto}
-  .center,.chart-area{min-height:60vw!important}
-  .right,.side-panel{display:none!important}
-  header{padding:0 .75rem!important;flex-wrap:wrap;height:auto!important;min-height:48px}
-  .brand-icon{width:32px!important;height:28px!important}
-  .brand-name{font-size:13px!important}
-  .brand-sub{display:none}
-  .search-box{flex:1;min-width:0}
-  #symbolInput{width:60px!important}
-  header > div:last-child{display:none!important}
-  .tf-row{overflow-x:auto;flex-wrap:nowrap!important}
-}
-
 </style>
 </head>
 <body>
@@ -918,7 +966,7 @@ function enterSite(){if(!_cv)return;localStorage.setItem('apex_legal_ok','1');do
 
   <div class="status" id="statusBar">
     <div class="status-dot" id="sDot"></div>
-    <span id="sTxt">hazir</span>
+    <span id="sTxt">hazır</span>
     <span id="sCountdown" style="color:var(--txt2);font-size:9px;margin-left:2px"></span>
   </div>
   <div style="display:flex;align-items:center;gap:.75rem;margin-left:auto">
@@ -1037,15 +1085,15 @@ function enterSite(){if(!_cv)return;localStorage.setItem('apex_legal_ok','1');do
     <div style="padding:2px 8px;display:flex;flex-direction:column;gap:1px;margin-bottom:6px">
       <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 6px;border-radius:3px;background:var(--bg2)">
         <span style="font-family:var(--mono);font-size:9px;color:var(--green)">▲ FVG Birikimi</span>
-        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">▲</span>
+        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">Alış</span>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 6px;border-radius:3px;background:var(--bg2)">
         <span style="font-family:var(--mono);font-size:9px;color:var(--green)">▲ Base Kayması</span>
-        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">▲</span>
+        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">Alış</span>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 6px;border-radius:3px;background:var(--bg2)">
         <span style="font-family:var(--mono);font-size:9px;color:var(--acc)">◆ Çift Yutma</span>
-        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">▲</span>
+        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">Alış</span>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 6px;border-radius:3px;background:var(--bg2)">
         <span style="font-family:var(--mono);font-size:9px;color:var(--acc)">◆ Emir Bloku</span>
@@ -1061,11 +1109,11 @@ function enterSite(){if(!_cv)return;localStorage.setItem('apex_legal_ok','1');do
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 6px;border-radius:3px;background:var(--bg2)">
         <span style="font-family:var(--mono);font-size:9px;color:var(--red)">▼ Trend Kırılışı</span>
-        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">▼</span>
+        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">Satış</span>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 6px;border-radius:3px;background:var(--bg2)">
         <span style="font-family:var(--mono);font-size:9px;color:var(--red)">▼ Güçlü Trend FVG</span>
-        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">▼</span>
+        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">Satış</span>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 6px;border-radius:3px;background:var(--bg2)">
         <span style="font-family:var(--mono);font-size:9px;color:var(--acc)">◆ Swing Başarısız</span>
@@ -1073,11 +1121,11 @@ function enterSite(){if(!_cv)return;localStorage.setItem('apex_legal_ok','1');do
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 6px;border-radius:3px;background:var(--bg2)">
         <span style="font-family:var(--mono);font-size:9px;color:var(--green)">▲ Fitil Mumu</span>
-        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">▲</span>
+        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">Alış</span>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:3px 6px;border-radius:3px;background:var(--bg2)">
         <span style="font-family:var(--mono);font-size:9px;color:var(--green)">▲ Elliott Girişi</span>
-        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">▲</span>
+        <span style="font-family:var(--mono);font-size:8px;color:var(--txt2)">Alış</span>
       </div>
     </div>
 
@@ -1143,7 +1191,7 @@ function enterSite(){if(!_cv)return;localStorage.setItem('apex_legal_ok','1');do
     </div>
 
     <div class="sub-charts">
-      <!-- RSI wrapper -->
+      <!-- RSI -->
       <div id="rsiWrap">
         <div class="sub-hdr">
           <span class="sub-lbl">RSI (Aşırı Alım/Satım Göstergesi)</span>
@@ -1151,7 +1199,7 @@ function enterSite(){if(!_cv)return;localStorage.setItem('apex_legal_ok','1');do
         </div>
         <div id="rsiChart"></div>
       </div>
-      <!-- VOL wrapper -->
+      <!-- VOL -->
       <div id="volWrap">
         <div class="sub-hdr" style="border-top:1px solid var(--line)">
           <span class="sub-lbl">İşlem Hacmi</span>
@@ -1159,12 +1207,12 @@ function enterSite(){if(!_cv)return;localStorage.setItem('apex_legal_ok','1');do
         </div>
         <div id="volChart"></div>
       </div>
-      <!-- MACD wrapper -->
+      <!-- MACD -->
       <div id="macdWrap">
         <div class="sub-hdr" style="border-top:1px solid var(--line)" id="macdHdr">
           <span class="sub-lbl">MACD (Trend Momentum)</span>
-          <div style="display:flex;gap:8px;align-items:center">
-            <span class="sub-val" id="macdVal" style="color:var(--acc)">—</span>
+          <div style="display:flex;gap:10px">
+            <span class="sub-val" id="macdVal" style="color:var(--txt1)">—</span>
             <span class="sub-val" id="macdSig" style="color:var(--txt2)">—</span>
             <span class="sub-val" id="macdHist" style="color:var(--txt1)">—</span>
           </div>
@@ -1386,15 +1434,6 @@ function enterSite(){if(!_cv)return;localStorage.setItem('apex_legal_ok','1');do
   </div>
 </div>
 
-<!-- CANLI HABERLER -->
-<div style="border-top:1px solid var(--line);flex-shrink:0">
-  <div style="padding:8px 12px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)">
-    <span style="font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:var(--acc);text-transform:uppercase">Canlı Haberler</span>
-    <a href="haberler.html" target="_blank" style="font-family:var(--mono);font-size:9px;color:var(--txt2);text-decoration:none">Tümü →</a>
-  </div>
-  <div id="tradingHaberler" style="overflow-y:auto;max-height:300px"></div>
-</div>
-
 <!-- BACKTEST MODAL -->
 <div id="btModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;overflow-y:auto">
   <div style="max-width:900px;margin:30px auto;background:var(--bg1);border:1px solid var(--line2);border-radius:10px;overflow:hidden">
@@ -1412,7 +1451,7 @@ function enterSite(){if(!_cv)return;localStorage.setItem('apex_legal_ok','1');do
           <option value="CHoCH Donus">CHoCH Donus</option>
           <option value="Range Sapma">Range Sapma</option>
           <option value="Trend Kirilisi">Trend Kirilisi</option>
-          <option value="Guclu Trend FVG">Guclu Trend FVG</option>
+          <option value="Güçlü Trend FVG">Güçlü Trend FVG</option>
           <option value="Swing Basarisiz">Swing Basarisiz</option>
           <option value="Fitil Mumu">Fitil Mumu</option>
           <option value="Elliott Giris">Elliott Giris</option>
@@ -1533,20 +1572,18 @@ function initCharts(){
   ro.observe(ce('volChart'));
   const mel2=ce('macdChart'); if(mel2) ro.observe(mel2);
 
-  // Tum sub-chart'lari main chart ile senkronize et
-  MC.timeScale().subscribeVisibleTimeRangeChange(range => {
-    if(!range) return;
-    try { if(RC) RC.timeScale().setVisibleRange(range); } catch(_){}
-    try { if(VC) VC.timeScale().setVisibleRange(range); } catch(_){}
-    try { if(MACDC) MACDC.timeScale().setVisibleRange(range); } catch(_){}
-  });
-  // Sub-chart'lardan scroll edilince main'e de yansit
-  if(RC) RC.timeScale().subscribeVisibleTimeRangeChange(range => {
-    if(!range) return;
-    try { MC.timeScale().setVisibleRange(range); } catch(_){}
-    try { if(VC) VC.timeScale().setVisibleRange(range); } catch(_){}
-    try { if(MACDC) MACDC.timeScale().setVisibleRange(range); } catch(_){}
-  });
+  // Sub-chart zamansal senkronizasyon (sadece logical range, pan/zoom ayrı)
+  let _syncLock = false;
+  function syncSubCharts(range) {
+    if(_syncLock || !range) return;
+    _syncLock = true;
+    try {
+      if(RC) try{ RC.timeScale().setVisibleLogicalRange(range); }catch(_){}
+      if(VC) try{ VC.timeScale().setVisibleLogicalRange(range); }catch(_){}
+      if(MACDC) try{ MACDC.timeScale().setVisibleLogicalRange(range); }catch(_){}
+    } finally { _syncLock = false; }
+  }
+  MC.timeScale().subscribeVisibleLogicalRangeChange(syncSubCharts);
 }
 
 // ── DATA FETCH ────────────────────────────────────────────────
@@ -1749,7 +1786,7 @@ function calcDivergence(bars, rsiVals, lookback=14){
     const rsiLow1   = Math.min(...rsiSlice.slice(0,lookback/2).filter(v=>v!=null));
     const rsiLow2   = Math.min(...rsiSlice.slice(lookback/2).filter(v=>v!=null));
 
-    // Bullish divergence: fiyat dusuk dip, RSI yukari dip
+    // Bullish divergence: fiyat dusuk dip, RSI yukarı dip
     if(priceLow2 < priceLow1 && rsiLow2 > rsiLow1+2){
       divs.push({time:bars[i].time, type:'bull', idx:i});
     }
@@ -1759,7 +1796,7 @@ function calcDivergence(bars, rsiVals, lookback=14){
     const rsiHigh1   = Math.max(...rsiSlice.slice(0,lookback/2).filter(v=>v!=null));
     const rsiHigh2   = Math.max(...rsiSlice.slice(lookback/2).filter(v=>v!=null));
 
-    // Bearish divergence: fiyat yuksek zirve, RSI asagi zirve
+    // Bearish divergence: fiyat yüksek zirve, RSI aşağı zirve
     if(priceHigh2 > priceHigh1 && rsiHigh2 < rsiHigh1-2){
       divs.push({time:bars[i].time, type:'bear', idx:i});
     }
@@ -1774,7 +1811,7 @@ function calcDivergence(bars, rsiVals, lookback=14){
 function calcSwings(bars, length=5){
   const swings = [];
   const n = bars.length;
-  // Dinamik length: az bar varsa daha kisa pencere
+  // Dinamik length: az bar varsa daha kısa pencere
   const L = Math.min(length, Math.floor(n/6));
   if(L < 2) return swings;
   for(let i=L; i<n-L; i++){
@@ -1806,7 +1843,7 @@ function calcBOSCHoCH(bars, swings){
     // Bu high'dan sonra fiyat prevHigh kirdi mi?
     for(let j=prevIdx+1; j<bars.length; j++){
       if(bars[j].close > prevHigh){
-        // Sonraki swing high daha yuksek mi? → BOS, degil mi? → CHoCH
+        // Sonraki swing high daha yüksek mi? → BOS, degil mi? → CHoCH
         const nextHighs = highs.filter(h=>h.idx>prevIdx && h.idx<j);
         const type = nextHighs.length>0 ? 'BOS' : 'CHoCH';
         events.push({
@@ -2014,7 +2051,7 @@ function validSL(entry, sl, atrVal){
 // HTF bias ile uyum kontrolu
 function biasAligned(dir, htfBias){
   if(!htfBias) return true; // bias yoksa filtre uygulama
-  if(htfBias.bias==='neut') return true; // notrde her iki yon de gecerli
+  if(htfBias.bias==='neut') return true; // nötrde her iki yon de gecerli
   if(dir==='bull' && htfBias.bias==='bull') return true;
   if(dir==='bear' && htfBias.bias==='bear') return true;
   return false; // Bias ile celisiyor
@@ -2078,7 +2115,7 @@ function checkS3(bars, swings, htfBias=null){
   const lastClose = bars[n-1].close;
 
   // HTF bias uyum kontrolu
-  if(htfBias && htfBias.bias==='bear') return {name:'Cift Yutma', phase:'watch', detail:'HTF bias asagi - long sinyal gec', dir:'bull'};
+  if(htfBias && htfBias.bias==='bear') return {name:'Cift Yutma', phase:'watch', detail:'HTF bias aşağı - long sinyal gec', dir:'bull'};
 
   // Fiyat blue box'a geldi mi?
   if(lastClose >= boxBot && lastClose <= boxTop){
@@ -2150,7 +2187,7 @@ function checkS5(bars, swings, bosEvents, htfBias=null){
 
     return {
       name:'CHoCH Donus', phase:'ready',
-      detail:`Likidite grab + Fib %50 bolgesinde! ${isBull?'Long':'Short'} setup.`,
+      detail:`Likidite grab + Fib %50 bölgesinde! ${isBull?'Long':'Short'} setup.`,
       dir:isBull?'bull':'bear', sl, tp, rr
     };
   }
@@ -2292,7 +2329,7 @@ function checkS9(bars, swings, htfBias=null){
     const lastClose = bars[n-1].close;
 
     if(lastH.price > prevH.price){
-      // Son high onceki high seviyesini gecti ama kapanis altinda mi?
+      // Son high onceki high seviyesini gecti ama kapanis altında mi?
       const lastBar = bars[n-1];
       if(lastClose < prevH.price){
         // SFP olustu
@@ -2324,11 +2361,11 @@ function checkS9(bars, swings, htfBias=null){
       const sl = lastL.price * 0.997;
       const tp = Math.max(...recentHighs.map(h=>h.price)) * 1.002;
       if(!validRR(lastClose,sl,tp,1.5)) return {name:'Swing Basarisiz', phase:'alert', detail:`Bullish SFP olustu ama RR yetersiz. Low: ${fp(lastL.price)}`, dir:'bull'};
-      if(htfBias?.bias==='bear') return {name:'Swing Basarisiz', phase:'alert', detail:`SFP var ama HTF bias asagi. Dikkatli ol.`, dir:'bull'};
+      if(htfBias?.bias==='bear') return {name:'Swing Basarisiz', phase:'alert', detail:`SFP var ama HTF bias aşağı. Dikkatli ol.`, dir:'bull'};
       const rr = Math.abs((tp-lastClose)/(lastClose-sl)).toFixed(1);
       return {
         name:'Swing Basarisiz', phase:'ready',
-        detail:`Bullish SFP! Low: ${fp(lastL.price)}, Hacim: ${volumeConfirm(bars)?'Guclu':'Zayif'}`,
+        detail:`Bullish SFP! Low: ${fp(lastL.price)}, Hacim: ${volumeConfirm(bars)?'Güçlü':'Zayif'}`,
         dir:'bull', sl, tp, rr
       };
     }
@@ -2356,7 +2393,7 @@ function checkS2(bars, swings, htfBias=null){
   const lastClose = bars[n-1].close;
   const isUptrend = lastClose > (s200||0);
 
-  if(!isUptrend) return {name:'Base Kaymasi', phase:'watch', detail:'Uptrend kosulu yok (fiyat SMA200 altinda)', dir:'bull'};
+  if(!isUptrend) return {name:'Base Kaymasi', phase:'watch', detail:'Uptrend kosulu yok (fiyat SMA200 altında)', dir:'bull'};
 
   // Base bul: birden fazla bounce olan konsolidasyon
   const recentLows = swings.filter(s=>s.type==='low').slice(-5);
@@ -2371,7 +2408,7 @@ function checkS2(bars, swings, htfBias=null){
   const baseLevel = Math.min(l1.price, l2.price);
   const baseTop   = Math.max(...bars.slice(l1.idx, l2.idx+1).map(b=>b.high));
 
-  // Deviation: base altina kisa sureli gecis
+  // Deviation: base altina kısa sureli gecis
   const hasDeviation = bars.slice(l2.idx).some(b=>b.low < baseLevel * 0.997);
 
   if(!hasDeviation)
@@ -2391,7 +2428,7 @@ function checkS2(bars, swings, htfBias=null){
 
   return {
     name:'Base Kaymasi', phase:'alert',
-    detail:`Deviation olustu. Base bolgesine donus bekleniyor: ${fp(baseLevel)}`,
+    detail:`Deviation olustu. Base bölgesine donus bekleniyor: ${fp(baseLevel)}`,
     dir:'bull'
   };
 }
@@ -2432,7 +2469,7 @@ function checkS4(bars, swings, htfBias=null){
       body2 >= body1 * 0.8;
 
     if(isBullEng || isBearEng){
-      // En son ve en guclu engulfing'i sec
+      // En son ve en güçlü engulfing'i sec
       if(!bestEngulf || i > bestEngulf.idx){
         bestEngulf = {
           idx: i,
@@ -2440,7 +2477,7 @@ function checkS4(bars, swings, htfBias=null){
           engulfBar: curr,
           prevBar: prev,
           bodyRatio: body2/body1,
-          // Emir Bolgesi: engulfing oncesindeki son karsi renk mumun govdesi
+          // Emir Bölgesi: engulfing oncesindeki son karsi renk mumun govdesi
           obTop: isBullEng ? prev.open : prev.close,
           obBottom: isBullEng ? prev.close : prev.open,
         };
@@ -2457,17 +2494,17 @@ function checkS4(bars, swings, htfBias=null){
   // HTF bias uyum kontrolu
   if(htfBias){
     if(isBull && htfBias.bias==='bear'){
-      return {name:'Emir Bloku', phase:'watch', detail:'Bullish OB var ama HTF bias asagi - gec', dir:'bull'};
+      return {name:'Emir Bloku', phase:'watch', detail:'Bullish OB var ama HTF bias aşağı - gec', dir:'bull'};
     }
     if(!isBull && htfBias.bias==='bull'){
-      return {name:'Emir Bloku', phase:'watch', detail:'Bearish OB var ama HTF bias yukari - gec', dir:'bear'};
+      return {name:'Emir Bloku', phase:'watch', detail:'Bearish OB var ama HTF bias yukarı - gec', dir:'bear'};
     }
   }
 
   // 2. OB kalite kontrolu
   const obSize = obTop - obBottom;
   const obSizePct = obSize / lastClose * 100;
-  const qualityLabel = bodyRatio >= 1.5 ? 'Guclu' : bodyRatio >= 1.0 ? 'Normal' : 'Zayif';
+  const qualityLabel = bodyRatio >= 1.5 ? 'Güçlü' : bodyRatio >= 1.0 ? 'Normal' : 'Zayif';
 
   // 3. FIYATIN OB'YE GERI DONUSU
   const distAboveOB = (lastClose - obTop) / lastClose * 100;
@@ -2479,10 +2516,10 @@ function checkS4(bars, swings, htfBias=null){
   // 4. 3. MUM TEYIDI - OB'ye geri donusten sonra yon teyidi
   // Son 3 barda yon teyidi var mi?
   const last3 = bars.slice(-3);
-  const bullConfirm = last3.every((b,i)=>i===0||b.low>=last3[i-1].low); // yukseliyor
+  const bullConfirm = last3.every((b,i)=>i===0||b.low>=last3[i-1].low); // yükseliyor
   const bearConfirm = last3.every((b,i)=>i===0||b.high<=last3[i-1].high); // dusiyor
 
-  // 5. FVG UYUMU - OB bolgeside FVG var mi?
+  // 5. FVG UYUMU - OB bölgeside FVG var mi?
   const fvgs = calcFVG(bars);
   const obFVG = fvgs.find(f=>
     !f.mitigated &&
@@ -2516,7 +2553,7 @@ function checkS4(bars, swings, htfBias=null){
 
   if(approachingOB){
     return {name:'Emir Bloku', phase:'alert',
-      detail:`OB'ye yaklasiliyor! ${isBull?'Yukari':'Asagi'} OB: ${fp(obBottom)}-${fp(obTop)} (${qualityLabel}, ${bodyRatio.toFixed(1)}x)`,
+      detail:`OB'ye yaklasiliyor! ${isBull?'Yukarı':'Aşağı'} OB: ${fp(obBottom)}-${fp(obTop)} (${qualityLabel}, ${bodyRatio.toFixed(1)}x)`,
       dir:isBull?'bull':'bear'};
   }
 
@@ -2524,7 +2561,7 @@ function checkS4(bars, swings, htfBias=null){
   const dist = isBull ? distBelowOB : distAboveOB;
   return {
     name:'Emir Bloku', phase:'forming',
-    detail:`${isBull?'Bullish':'Bearish'} OB: ${fp(obBottom)}-${fp(obTop)} (${qualityLabel}). Geri donus bekle. Mesafe: ${dist>0?dist.toFixed(1)+'%':'OB ustunde'}`,
+    detail:`${isBull?'Bullish':'Bearish'} OB: ${fp(obBottom)}-${fp(obTop)} (${qualityLabel}). Geri donus bekle. Mesafe: ${dist>0?dist.toFixed(1)+'%':'OB üstünde'}`,
     dir:isBull?'bull':'bear'
   };
 }
@@ -2534,7 +2571,7 @@ function checkS8(bars, swings, htfBias=null){
   const n = bars.length;
   if(n < 20) return null;
 
-  // Guclu trend tespit - son 20 barda net yonluluk
+  // Güçlü trend tespit - son 20 barda net yonluluk
   const recent = bars.slice(-20);
   const firstClose = recent[0].close;
   const lastClose  = bars[n-1].close;
@@ -2544,7 +2581,7 @@ function checkS8(bars, swings, htfBias=null){
   const isSharpUp   = trendPct > 5;
 
   if(!isSharpDown && !isSharpUp){
-    return {name:'Guclu Trend FVG', phase:'watch', detail:'Guclu trend yok (5% alti hareket)', dir:'neut'};
+    return {name:'Güçlü Trend FVG', phase:'watch', detail:'Güçlü trend yok (5% alti hareket)', dir:'neut'};
   }
 
   // Son swing point ve oncesindeki FVG
@@ -2552,7 +2589,7 @@ function checkS8(bars, swings, htfBias=null){
   const recentLows  = swings.filter(s=>s.type==='low').slice(-3);
   const lastSwing   = isSharpDown ? recentHighs[recentHighs.length-1] : recentLows[recentLows.length-1];
 
-  if(!lastSwing) return {name:'Guclu Trend FVG', phase:'watch', detail:'Swing point bulunamadi', dir:isSharpDown?'bear':'bull'};
+  if(!lastSwing) return {name:'Güçlü Trend FVG', phase:'watch', detail:'Swing point bulunamadi', dir:isSharpDown?'bear':'bull'};
 
   // FVG kontrol - lastSwing oncesinde
   const fvgs = calcFVG(bars);
@@ -2564,7 +2601,7 @@ function checkS8(bars, swings, htfBias=null){
   ).slice(-1)[0];
 
   if(!nearFVG){
-    return {name:'Guclu Trend FVG', phase:'forming', detail:`${isSharpDown?'Dusus':'Yukselis'} trendi var. FVG + swing point bekleniyor.`, dir:isSharpDown?'bear':'bull'};
+    return {name:'Güçlü Trend FVG', phase:'forming', detail:`${isSharpDown?'Dusus':'Yukselis'} trendi var. FVG + swing point bekleniyor.`, dir:isSharpDown?'bear':'bull'};
   }
 
   // Fiyat FVG'ye yaklasiyor mu?
@@ -2583,22 +2620,22 @@ function checkS8(bars, swings, htfBias=null){
       : Math.max(...bars.slice(-10).map(b=>b.high)) * 1.005;
     const rr = Math.abs((tp-lastClose)/(lastClose-sl)).toFixed(1);
     return {
-      name:'Guclu Trend FVG', phase:'ready',
-      detail:`FVG bolgesi! Breaker block giris. FVG: ${fp(nearFVG.bottom)}-${fp(nearFVG.top)}`,
+      name:'Güçlü Trend FVG', phase:'ready',
+      detail:`FVG bölgesi! Breaker block giris. FVG: ${fp(nearFVG.bottom)}-${fp(nearFVG.top)}`,
       dir:isSharpDown?'bear':'bull', sl, tp, rr
     };
   }
 
   if(nearFVG2){
     return {
-      name:'Guclu Trend FVG', phase:'alert',
-      detail:`Guclu trend + FVG tespit. FVG yaklasiliyor: ${fp(nearFVG.bottom)}-${fp(nearFVG.top)}`,
+      name:'Güçlü Trend FVG', phase:'alert',
+      detail:`Güçlü trend + FVG tespit. FVG yaklasiliyor: ${fp(nearFVG.bottom)}-${fp(nearFVG.top)}`,
       dir:isSharpDown?'bear':'bull'
     };
   }
 
   return {
-    name:'Guclu Trend FVG', phase:'forming',
+    name:'Güçlü Trend FVG', phase:'forming',
     detail:`${isSharpDown?'Sharp dusus':'Sharp yukselis'} + FVG: ${fp(nearFVG.bottom)}-${fp(nearFVG.top)}. Yaklasma bekleniyor.`,
     dir:isSharpDown?'bear':'bull'
   };
@@ -2677,7 +2714,7 @@ function checkS10(bars, swings, htfBias=null){
     return {name:'Fitil Mumu', phase:'alert', detail:`FVG'ye yaklasiliyor: ${fp(triggerFVG.bottom)}-${fp(triggerFVG.top)}`, dir:isUptrend?'bull':'bear'};
   }
 
-  return {name:'Fitil Mumu', phase:'forming', detail:`Wick mumu + FVG hazir. Geri donus bekleniyor. FVG: ${fp(triggerFVG.bottom)}-${fp(triggerFVG.top)}`, dir:isUptrend?'bull':'bear'};
+  return {name:'Fitil Mumu', phase:'forming', detail:`Wick mumu + FVG hazır. Geri donus bekleniyor. FVG: ${fp(triggerFVG.bottom)}-${fp(triggerFVG.top)}`, dir:isUptrend?'bull':'bear'};
 }
 
 // S11: Dalga Analizi Giris (Wave 2 sonrasi C ve Wave 4 sonrasi)
@@ -2733,17 +2770,17 @@ function checkS11(bars, swings, htfBias=null){
         dir:'bull', sl, tp, rr
       };
     }
-    return {name:'Elliott Giris', phase:'alert', detail:`Wave 4 duzeltmesi. ${fp(parseFloat(wave4Low))}-${fp(fib382)} bolgesi bekleniyor.`, dir:'bull'};
+    return {name:'Elliott Giris', phase:'alert', detail:`Wave 4 duzeltmesi. ${fp(parseFloat(wave4Low))}-${fp(fib382)} bölgesi bekleniyor.`, dir:'bull'};
   }
 
-  // Düşüş trendi icin
+  // Downtrend icin
   if(ew.waveType==='impulse_down'){
     return {name:'Elliott Giris', phase:'forming', detail:`Impulsive dusus - Dalga ${ew.currentWave}. Short firsatlari izleniyor.`, dir:'bear'};
   }
 
   // ABC duzeltme
   if(ew.waveType==='corrective'){
-    return {name:'Elliott Giris', phase:'forming', detail:`ABC duzeltme tespit edildi. C dalgasi ${ew.bias==='bear'?'aagi':'yukari'} yonlu.`, dir:ew.bias};
+    return {name:'Elliott Giris', phase:'forming', detail:`ABC duzeltme tespit edildi. C dalgasi ${ew.bias==='bear'?'aagi':'yukarı'} yonlu.`, dir:ew.bias};
   }
 
   return {name:'Elliott Giris', phase:'watch', detail:`Elliott: ${ew.description}`, dir:ew.bias};
@@ -2758,7 +2795,7 @@ function checkS1(bars, swings, htfBias=null){
   const lastClose = bars[n-1].close;
   const lastBar = bars[n-1];
 
-  // 1. UPTREND DOGRULAMA: SMA20 > SMA50 > SMA200 ve fiyat SMA20 ustunde
+  // 1. UPTREND DOGRULAMA: SMA20 > SMA50 > SMA200 ve fiyat SMA20 üstünde
   const s20arr = sma(closes, Math.min(20,n-1));
   const s50arr = sma(closes, Math.min(50,n-1));
   const s200arr = sma(closes, Math.min(200,n-1));
@@ -2768,12 +2805,12 @@ function checkS1(bars, swings, htfBias=null){
   const weakUptrend   = s50 && lastClose > s50;
 
   if(!strongUptrend && !weakUptrend){
-    return {name:'FVG Birikimi', phase:'watch', detail:'Uptrend kosulu yok (fiyat SMA50 altinda)', dir:'bull'};
+    return {name:'FVG Birikimi', phase:'watch', detail:'Uptrend kosulu yok (fiyat SMA50 altında)', dir:'bull'};
   }
 
   // HTF bias kontrolu
   if(htfBias && htfBias.bias==='bear'){
-    return {name:'FVG Birikimi', phase:'watch', detail:'HTF yonu asagi - FVG long sinyal gec', dir:'bull'};
+    return {name:'FVG Birikimi', phase:'watch', detail:'HTF yonu aşağı - FVG long sinyal gec', dir:'bull'};
   }
 
   // 2. EN YAKIN AKTIF BULLISH FVG bul
@@ -2783,7 +2820,7 @@ function checkS1(bars, swings, htfBias=null){
     .sort((a,b)=>b.idx-a.idx); // En son FVG oncelikli
 
   if(bullFVGs.length===0){
-    return {name:'FVG Birikimi', phase:'watch', detail:`Uptrend var (${strongUptrend?'guclu':'zayif'}). Bullish FVG bekleniyor.`, dir:'bull'};
+    return {name:'FVG Birikimi', phase:'watch', detail:`Uptrend var (${strongUptrend?'güçlü':'zayif'}). Bullish FVG bekleniyor.`, dir:'bull'};
   }
 
   const bestFVG = bullFVGs[0];
@@ -2834,7 +2871,7 @@ function checkS1(bars, swings, htfBias=null){
     };
   }
 
-  // SENARYO B: Fiyat FVG'ye yaklasiyor (FVG'nin %20 altinda)
+  // SENARYO B: Fiyat FVG'ye yaklasiyor (FVG'nin %20 altında)
   const distToFVG = (bestFVG.bottom - lastClose) / lastClose;
   if(distToFVG > 0 && distToFVG < 0.02){
     return {name:'FVG Birikimi', phase:'alert',
@@ -2843,7 +2880,7 @@ function checkS1(bars, swings, htfBias=null){
   }
 
   // SENARYO C: FVG var ama fiyat uzakta
-  const trendLabel = strongUptrend?'Güçlü yükseliş trendi':'Uptrend';
+  const trendLabel = strongUptrend?'Güçlü uptrend':'Uptrend';
   return {name:'FVG Birikimi', phase:'forming',
     detail:`${trendLabel} + FVG: ${fp(bestFVG.bottom)}-${fp(bestFVG.top)}. ${equalHighLevel?'EqH: '+fp(equalHighLevel)+'.':''} Giris bekleniyor.`,
     dir:'bull'};
@@ -2910,13 +2947,13 @@ async function runMTFConfluence(sym, currentBars){
   let overallBias = 'neut';
   let overallColor = 'var(--txt1)';
   let overallLabel = 'KARISIK';
-  if(allBull){ overallBias='bull'; overallColor='#4ADE80'; overallLabel='TUM PERIYOTLAR YUKARI ▲ ▲'; }
-  else if(allBear){ overallBias='bear'; overallColor='#F87171'; overallLabel='TUM PERIYOTLAR ASAGI ▼ ▼'; }
-  else if(majorityBull){ overallBias='bull'; overallColor='#4ADE80'; overallLabel='COGU PERIYOT YUKARI ▲'; }
-  else if(majorityBear){ overallBias='bear'; overallColor='#F87171'; overallLabel='COGU PERIYOT ASAGI ▼'; }
+  if(allBull){ overallBias='bull'; overallColor='var(--green)'; overallLabel='TUM PERIYOTLAR YUKARI ▲ ▲'; }
+  else if(allBear){ overallBias='bear'; overallColor='var(--red)'; overallLabel='TUM PERIYOTLAR ASAGI ▼ ▼'; }
+  else if(majorityBull){ overallBias='bull'; overallColor='var(--green)'; overallLabel='COGU PERIYOT YUKARI ▲'; }
+  else if(majorityBear){ overallBias='bear'; overallColor='var(--red)'; overallLabel='COGU PERIYOT ASAGI ▼'; }
 
   // SETUP KALITESI
-  // En iyi senaryo: HTF (aylik/haftalik) yukari, LTF (gunluk) giris veriyor
+  // En iyi senaryo: HTF (aylik/haftalik) yukarı, LTF (gunluk) giris veriyor
   const htfBull = tfResults['1mo']?.bias==='bull' || tfResults['1wk']?.bias==='bull';
   const htfBear = tfResults['1mo']?.bias==='bear' || tfResults['1wk']?.bias==='bear';
   const ltfBull = tfResults['1d']?.bias==='bull';
@@ -2924,8 +2961,8 @@ async function runMTFConfluence(sym, currentBars){
 
   let setupQuality = '';
   let setupColor = 'var(--txt2)';
-  if(htfBull && ltfBull){ setupQuality='✦ MUKEMMEL ALIS FIRSATI'; setupColor='#4ADE80'; }
-  else if(htfBear && ltfBear){ setupQuality='✦ MUKEMMEL SATIS FIRSATI'; setupColor='#F87171'; }
+  if(htfBull && ltfBull){ setupQuality='✦ MUKEMMEL ALIS FIRSATI'; setupColor='var(--green)'; }
+  else if(htfBear && ltfBear){ setupQuality='✦ MUKEMMEL SATIS FIRSATI'; setupColor='var(--red)'; }
   else if(htfBull && !ltfBull){ setupQuality='◈ YUKARI TREND, DUZELTME BEKLENIYOR'; setupColor='var(--amber)'; }
   else if(htfBear && !ltfBear){ setupQuality='◈ ASAGI TREND, DIP ARAYISI'; setupColor='var(--amber)'; }
   else{ setupQuality='✕ UYUMLU SINYAL YOK'; setupColor='var(--txt2)'; }
@@ -2933,10 +2970,10 @@ async function runMTFConfluence(sym, currentBars){
   // HTML
   const tfHTML = tfArr.map(tf=>{
     const r = tfResults[tf];
-    const color = r.bias==='bull'?'#4ADE80':r.bias==='bear'?'#F87171':'var(--txt2)';
+    const color = r.bias==='bull'?'var(--green)':r.bias==='bear'?'var(--red)':'var(--txt2)';
     const arrow = r.bias==='bull'?'▲':r.bias==='bear'?'▼':'◆';
-    const rsiColor = r.rsi>70?'#F87171':r.rsi<30?'#4ADE80':'var(--txt1)';
-    const chgColor = r.chg>=0?'#4ADE80':'#F87171';
+    const rsiColor = r.rsi>70?'var(--red)':r.rsi<30?'var(--green)':'var(--txt1)';
+    const chgColor = r.chg>=0?'var(--green)':'var(--red)';
     return `
       <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--line)">
         <span style="font-family:var(--mono);font-size:9px;color:var(--txt2);width:55px">${tfLabels[tf]}</span>
@@ -3004,7 +3041,7 @@ function runAnalyst(bars, sym, stratResults, htfBias, confluencePct){
   // Karar matrisi
   let action='watch', actionClass='watch', mainComment='', steps=[], sl=null, tp=null, entry=null, rr=null;
 
-  // SENARYO 1: Hazir sinyal + yeterli confluence + MTF uyumlu
+  // SENARYO 1: Hazır sinyal + yeterli confluence + MTF uyumlu
   if(bestSignal && bestSignal.phase==='ready' && confluencePct >= 55 && !mtfNoConf){
     const isBuy = bestSignal.dir==='bull';
     action    = isBuy ? 'ALIS FIRSATI — LONG' : 'SATIS FIRSATI — SHORT';
@@ -3015,7 +3052,7 @@ function runAnalyst(bars, sym, stratResults, htfBias, confluencePct){
     rr    = bestSignal.rr;
 
     const mtfComment = mtfIdeal ? 'Tum zaman dilimleri uyumlu.' : 'HTF yonu destekliyor.';
-    const rsiComment = rsiOB ? 'RSI asiri alimda, dikkatli ol.' : rsiOS ? 'RSI asiri satimda, dip olabilir.' : 'RSI normal bolgede.';
+    const rsiComment = rsiOB ? 'RSI aşırı alımda, dikkatli ol.' : rsiOS ? 'RSI aşırı satımda, dip olabilir.' : 'RSI normal bolgede.';
     const stratComment = bestSignal.detail;
 
     mainComment = `${bestSignal.name} stratejisi aktif. ${mtfComment} ${rsiComment}`;
@@ -3026,11 +3063,11 @@ function runAnalyst(bars, sym, stratResults, htfBias, confluencePct){
       { n:'3', txt:`Hedef: ${fp(tp)} — burada karin en az %50sini realize et.` },
       { n:'4', txt:`RR ${rr}:1 — her ${rr} birim kazanc icin 1 birim risk. ${parseFloat(rr)>=2?'Iyi RR.':'RR biraz dar, dikkat.'}` },
     ];
-    if(mtfIdeal) steps.push({n:'✦', txt:'Tum TF uyumlu — yuksek olasilikli setup.'});
-    if(rsiOB && isBuy) steps.push({n:'!', txt:'RSI asiri alimda — giris miktarini azalt.'});
-    if(rsiOS && !isBuy) steps.push({n:'!', txt:'RSI asiri satimda — short risk artmis.'});
+    if(mtfIdeal) steps.push({n:'✦', txt:'Tum TF uyumlu — yüksek olasilikli setup.'});
+    if(rsiOB && isBuy) steps.push({n:'!', txt:'RSI aşırı alımda — giris miktarini azalt.'});
+    if(rsiOS && !isBuy) steps.push({n:'!', txt:'RSI aşırı satımda — short risk artmis.'});
 
-  // SENARYO 2: Hazir sinyal var ama confluence dusuk
+  // SENARYO 2: Hazır sinyal var ama confluence dusuk
   } else if(bestSignal && bestSignal.phase==='ready' && confluencePct < 55){
     const isBuy = bestSignal.dir==='bull';
     action = 'BEKLE — SINYAL ZAYIF';
@@ -3043,13 +3080,13 @@ function runAnalyst(bars, sym, stratResults, htfBias, confluencePct){
       {n:'3', txt:'Diger TF uzerinde teyit bekle, acele etme.'},
     ];
 
-  // SENARYO 3: Alert sinyali - pozisyon hazirligi
+  // SENARYO 3: Alert sinyali - pozisyon hazırligi
   } else if(alertSignals.length > 0 && confluencePct >= 45){
     const sig = alertSignals[0];
     const isBuy = sig.dir==='bull';
     action = isBuy ? 'ALIS HAZIRLIGI YAP' : 'SATIS HAZIRLIGI YAP';
     actionClass = 'wait';
-    mainComment = `${sig.name} sinyali yaklasiyor. Henuz giris yok ama pozisyon hazirla.`;
+    mainComment = `${sig.name} sinyali yaklasiyor. Henuz giris yok ama pozisyon hazırla.`;
     steps = [
       {n:'1', txt:`${sig.detail}`},
       {n:'2', txt:'Sinyal tamamlandiginda hizlica pozisyon ac.'},
@@ -3057,24 +3094,24 @@ function runAnalyst(bars, sym, stratResults, htfBias, confluencePct){
     ];
     if(sig.sl) steps.push({n:'4', txt:`Planlanan SL: ${fp(sig.sl)}`});
 
-  // SENARYO 4: RSI asiri bolge + bias uyumu
+  // SENARYO 4: RSI aşırı bolge + bias uyumu
   } else if(rsiOS && htfBias?.bias==='bull'){
     action = 'DIP FIRSATI YAKLASHIYOR';
     actionClass = 'wait';
-    mainComment = `RSI ${lastRSI?.toFixed(1)} asiri satim bolgesinde ve HTF bias yukari. Dip olusumu izleniyor.`;
+    mainComment = `RSI ${lastRSI?.toFixed(1)} aşırı satım bölgesinde ve HTF bias yukarı. Dip olusumu izleniyor.`;
     steps = [
-      {n:'1', txt:'RSI asiri satimda - bu genellikle geri sekme firsatidir.'},
-      {n:'2', txt:'HTF bias yukari yonde - long tarafta kal.'},
+      {n:'1', txt:'RSI aşırı satımda - bu genellikle geri sekme firsatidir.'},
+      {n:'2', txt:'HTF bias yukarı yonde - long tarafta kal.'},
       {n:'3', txt:'LTF uzerinde MSB veya CHoCH bekle, oradan giris yap.'},
       {n:'4', txt:'Pozisyon acmadan once mumun kapanisini bekle.'},
     ];
   } else if(rsiOB && htfBias?.bias==='bear'){
     action = 'ZIRVE DONUSU IZLE';
     actionClass = 'wait';
-    mainComment = `RSI ${lastRSI?.toFixed(1)} asiri alim bolgesinde ve HTF bias asagi. Short firsat izleniyor.`;
+    mainComment = `RSI ${lastRSI?.toFixed(1)} aşırı alım bölgesinde ve HTF bias aşağı. Short firsat izleniyor.`;
     steps = [
-      {n:'1', txt:'RSI asiri alimda - geri cekilme olasiligi yukseliyor.'},
-      {n:'2', txt:'HTF bias asagi yonde - short tarafta ol.'},
+      {n:'1', txt:'RSI aşırı alımda - geri cekilme olasiligi yükseliyor.'},
+      {n:'2', txt:'HTF bias aşağı yonde - short tarafta ol.'},
       {n:'3', txt:'Bearish engulfing veya BOS bekle, oradan short ac.'},
     ];
 
@@ -3085,8 +3122,8 @@ function runAnalyst(bars, sym, stratResults, htfBias, confluencePct){
     mainComment = `Confluence skoru cok dusuk (%${confluencePct}). Net sinyal yok. Risk almak icin dogru zaman degil.`;
     steps = [
       {n:'1', txt:'Hicbir pozisyon acma, bekle.'},
-      {n:'2', txt:'Daha kisa veya uzun TF sec, net trend ara.'},
-      {n:'3', txt:`${formingSignals.length>0?formingSignals.length+' strateji olusuyor - takip et.':'Aktif setup yok.'}`},
+      {n:'2', txt:'Daha kısa veya uzun TF sec, net trend ara.'},
+      {n:'3', txt:`${formingSignals.length>0?formingSignals.length+' strateji oluşuyor - takip et.':'Aktif setup yok.'}`},
     ];
 
   // SENARYO 6: Forming sinyaller var, sinyal olgunlasmayi bekle
@@ -3094,10 +3131,10 @@ function runAnalyst(bars, sym, stratResults, htfBias, confluencePct){
     const topForming = formingSignals.slice(0,2).map(s=>s.name).join(' + ');
     action = 'SINYAL OLUSUYOR';
     actionClass = 'watch';
-    mainComment = `${topForming} olusuyor. Sinyal tamamlandiginda hazir ol.`;
+    mainComment = `${topForming} oluşuyor. Sinyal tamamlandiginda hazır ol.`;
     const dir = formingSignals[0].dir;
     steps = [
-      {n:'1', txt:`${topForming} setup olusuyor.`},
+      {n:'1', txt:`${topForming} setup oluşuyor.`},
       {n:'2', txt:`Beklenen yon: ${dir==='bull'?'YUKARI (Long)':dir==='bear'?'ASAGI (Short)':'Belirsiz'}.`},
       {n:'3', txt:'Sinyal "HAZIR" oldugunda giris yap.'},
       {n:'4', txt:mtfIdeal?'MTF uyumlu — gelecek sinyal guvenilir olabilir.':'Sinyal oncesi MTF confluence kontrol et.'},
@@ -3107,9 +3144,9 @@ function runAnalyst(bars, sym, stratResults, htfBias, confluencePct){
   } else {
     action = 'PIYASAYI IZLE';
     actionClass = 'watch';
-    mainComment = `${htfBias?'HTF bias: '+(htfBias.label||'Notr')+'. ':''} Net giris sinyali bekleniyor.`;
+    mainComment = `${htfBias?'HTF bias: '+(htfBias.label||'Nötr')+'. ':''} Net giris sinyali bekleniyor.`;
     steps = [
-      {n:'1', txt:'Suanki durumda net islem sinyali yok.'},
+      {n:'1', txt:'Suanki durumda net işlem sinyali yok.'},
       {n:'2', txt:'HTF net trend ve LTF teyit olmadan giris yapma.'},
     ];
   }
@@ -3189,7 +3226,7 @@ function runStrategies(bars){
     const cardClass = {ready:'ready',alert:'alert',forming:'forming',watch:'',invalid:'invalid'}[r.phase]||'';
     const phaseLabel = {ready:'HAZIR',alert:'UYARI',forming:'OLUSUYOR',watch:'IZLE',invalid:'GECERSIZ'}[r.phase]||r.phase;
 
-    const dirColor = r.dir==='bull'?'#4ADE80':r.dir==='bear'?'#F87171':'var(--txt2)';
+    const dirColor = r.dir==='bull'?'var(--green)':r.dir==='bear'?'var(--red)':'var(--txt2)';
     const dirArrow = r.dir==='bull'?'▲':r.dir==='bear'?'▼':'◆';
 
     const levels = (r.sl && r.tp) ? `
@@ -3240,7 +3277,7 @@ function detectElliottWave(bars, swings){
   // Basit impulsive wave tespiti: alternatif HH-HL veya LH-LL
   const pts = allSwings.slice(-6);
   if(pts.length >= 5){
-    // Uptrend: L1 H1 L2 H2 L3 H3 seklinde yukseliyor mu?
+    // Uptrend: L1 H1 L2 H2 L3 H3 seklinde yükseliyor mu?
     const isImpulsiveUp =
       pts[0].type==='low' && pts[1].type==='high' &&
       pts[2].type==='low' && pts[3].type==='high' &&
@@ -3248,7 +3285,7 @@ function detectElliottWave(bars, swings){
       pts[2].price > pts[0].price &&
       pts[3].price > pts[1].price;
 
-    // Düşüş trendi: H1 L1 H2 L2 H3 L3
+    // Downtrend: H1 L1 H2 L2 H3 L3
     const isImpulsiveDown =
       pts[0].type==='high' && pts[1].type==='low' &&
       pts[2].type==='high' && pts[3].type==='low' &&
@@ -3347,7 +3384,7 @@ function buildWaveDescription(type, wave, bias){
     return labels[wave]||`Impulsive dusus - Dalga ${wave}`;
   }
   if(type==='corrective'){
-    return bias==='bear'?'ABC duzeltme - Asagi yonlu':'ABC duzeltme - Yukari yonlu';
+    return bias==='bear'?'ABC duzeltme - Aşağı yonlu':'ABC duzeltme - Yukarı yonlu';
   }
   return 'Dalga sayimi belirsiz';
 }
@@ -3427,7 +3464,7 @@ function updateElliottPanel(ew){
     el.innerHTML='<div style="font-family:var(--mono);font-size:10px;color:var(--txt2);text-align:center;padding:8px">Dalga sayimi yapilamiyor</div>';
     return;
   }
-  const color = ew.bias==='bull'?'#4ADE80':ew.bias==='bear'?'#F87171':'var(--txt1)';
+  const color = ew.bias==='bull'?'var(--green)':ew.bias==='bear'?'var(--red)':'var(--txt1)';
   const arrow = ew.bias==='bull'?'▲':ew.bias==='bear'?'▼':'◆';
   el.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
@@ -3604,7 +3641,7 @@ function drawSMC(bars){
     });
   }
 
-  // ── Emir BolgesiS
+  // ── Emir BölgesiS
   if(smcVisible.fvg){ // FVG toggle ile birlikte
     const obs = calcOrderBlocks(bars, swings);
     const activeOBs = obs.filter(o=>!o.mitigated).slice(-6);
@@ -3656,8 +3693,8 @@ function drawSMC(bars){
   const arrowEl = g('biasArrow');
   arrowEl.textContent = bias.bias==='bull'?'▲': bias.bias==='bear'?'▼':'◆';
   arrowEl.className = `bias-arrow ${bias.bias}`;
-  if(g('biasLabel')) g('biasLabel').textContent = bias.label;
-  if(g('biasSub')) g('biasSub').textContent = bias.sub;
+  g('biasLabel').textContent = bias.label;
+  g('biasSub').textContent = bias.sub;
 
   const bosCount = bias.bullBOS + bias.bearBOS;
   const chochCount = bias.bullCHoCH + bias.bearCHoCH;
@@ -3680,12 +3717,13 @@ function drawSMC(bars){
 
 // Elliott overlay - drawSMC'den sonra cagrilir
 function renderElliott(bars, swings){
-  // Onceki Elliott cizimlerini temizle
-  if(elliottSeries && elliottSeries.length){
-    elliottSeries.forEach(s=>{ try{ MC.removeSeries(s); }catch(_){} });
+  // Her render öncesi önceki çizimleri sil
+  if(Array.isArray(elliottSeries) && elliottSeries.length){
+    elliottSeries.forEach(s=>{ try{ if(MC) MC.removeSeries(s); }catch(_){} });
     elliottSeries = [];
   }
-  if(!inds['ew'] && inds['ew'] !== undefined) return;
+  // EW kapalıysa çizme
+  if(inds['ew'] === false) return;
   try{
     const ew = drawElliott(bars, swings);
     updateElliottPanel(ew);
@@ -3698,7 +3736,6 @@ function render(bars, sym){
   const times  = bars.map(b=>b.time);
   const n = bars.length;
 
-  if(!CS){ console.error("CS null - chart init edilmedi"); return; }
   CS.setData(bars);
 
   const mk = (arr,per) => sma(arr,per).map((v,i)=>v!=null?{time:times[i],value:v}:null).filter(Boolean);
@@ -3715,7 +3752,7 @@ function render(bars, sym){
   const rv = document.getElementById('rsiVal');
   if(lastRSI!=null){
     rv.textContent = lastRSI.toFixed(1);
-    rv.style.color = lastRSI>70?'#F87171':lastRSI<30?'#4ADE80':'#C9973A';
+    rv.style.color = lastRSI>70?'var(--red)':lastRSI<30?'var(--green)':'var(--acc)';
   }
 
   VS.setData(bars.map(b=>({time:b.time,value:b.volume,color:b.close>=b.open?'rgba(0,230,118,.45)':'rgba(255,61,87,.45)'})));
@@ -3769,7 +3806,7 @@ function render(bars, sym){
       const mv=g('macdVal'), ms=g('macdSig'), mh=g('macdHist');
       if(mv) mv.textContent = lastMACD.toFixed(4);
       if(ms){ ms.textContent = lastSig?.toFixed(4)||'—'; ms.style.color='#818cf8'; }
-      if(mh){ mh.textContent = lastHist?.toFixed(4)||'—'; mh.style.color=lastHist>=0?'#4ADE80':'#F87171'; }
+      if(mh){ mh.textContent = lastHist?.toFixed(4)||'—'; mh.style.color=lastHist>=0?'var(--green)':'var(--red)'; }
     }
 
     if(MACDC){
@@ -3814,7 +3851,7 @@ function render(bars, sym){
   const divMarkers = divs.map(d=>({
     time: d.time,
     position: d.type==='bull'?'belowBar':'aboveBar',
-    color: d.type==='bull'?'#4ADE80':'#F87171',
+    color: d.type==='bull'?'var(--green)':'var(--red)',
     shape: 'circle',
     text: d.type==='bull'?'DIV+':'DIV-',
     size: 0.8,
@@ -3840,22 +3877,27 @@ function render(bars, sym){
     runAnalyst(bars, sym, stratResults, htfBiasA, pct);
   }, 400);
 
-  // TD9 Donüs Sayaci
+  // TD9 - Donüs Sayaci markerları
   try{
+    // Önce mevcut TD9 markerlarını temizle
+    const existing = (CS && CS.markers) ? CS.markers() : [];
+    const withoutTD9 = existing.filter(m => m._td9 !== true);
+    if(CS) CS.setMarkers(withoutTD9);
+    // Yeni TD9 markerları ekle
     if(inds['td9'] !== false){
       const td9res = calcTD9(bars);
-      if(td9res.signals && td9res.signals.length){
-        const existing = CS.markers ? CS.markers() : [];
+      if(td9res && td9res.signals && td9res.signals.length){
         const td9marks = td9res.signals.map(s=>({
           time: s.time,
           position: s.type==='buy'?'belowBar':'aboveBar',
           color: s.type==='buy'?'#4ADE80':'#F87171',
-          shape: s.type==='buy'?'arrowUp':'arrowDown',
+          shape: 'text',
           text: '9',
-          size: 1
+          size: 1,
+          _td9: true
         }));
-        const merged = [...existing, ...td9marks].sort((a,b)=>a.time-b.time);
-        if(CS) CS.setMarkers(merged);
+        const base = (CS && CS.markers) ? CS.markers() : [];
+        if(CS) CS.setMarkers([...base, ...td9marks].sort((a,b)=>a.time-b.time));
       }
     }
   }catch(e){ console.warn('TD9 error:', e); }
@@ -3933,10 +3975,10 @@ function analyze(bars, sym){
   // TREND
   let ts='na',td='',tscore=0;
   if(last&&s200){
-    if(last>s200&&s50>s200&&s20>s50){ts='bull';td=`Fiyat SMA20>50>200 üstünde. Güçlü yükseliş trendi.`;tscore=2;}
+    if(last>s200&&s50>s200&&s20>s50){ts='bull';td=`Fiyat SMA20>50>200 üstünde. Güçlü uptrend.`;tscore=2;}
     else if(last>s200){ts='bull';td=`Fiyat SMA200 üstünde. Trend pozitif.`;tscore=1;}
-    else if(last<s200&&s50<s200){ts='bear';td=`Fiyat SMA200 altında. Düşüş trendi.`;tscore=0;}
-    else{ts='wait';td=`Karışık sinyal. Trend netleşmedi.`;tscore=0;}
+    else if(last<s200&&s50<s200){ts='bear';td=`Fiyat SMA200 altında. Downtrend.`;tscore=0;}
+    else{ts='wait';td=`Karisik sinyal. Trend henuz netleşmedi.`;tscore=0;}
   }
   score+=tscore; setSig('trend',ts,td);
 
@@ -3946,20 +3988,20 @@ function analyze(bars, sym){
     const s20Up=s20>sma20a[n-5];
     const s50Up=s50>sma50a[n-5];
     const recentUp=closes[n-1]>closes[n-4];
-    if(s20Up&&s50Up&&recentUp){ms='bull';md='SMA20 & 50 yükseliyor. Güçlü momentum.';mscore=2;}
+    if(s20Up&&s50Up&&recentUp){ms='bull';md='SMA20 & 50 yükseliyor. Momentum güçlü.';mscore=2;}
     else if(s20Up){ms='bull';md='Kısa vadeli momentum pozitif.';mscore=1;}
-    else if(!s20Up&&!s50Up){ms='bear';md='SMA20 & 50 düşüyor. Negatif momentum.';mscore=0;}
-    else{ms='wait';md='Momentum nötr. Yön bekleniyor.';mscore=0;}
+    else if(!s20Up&&!s50Up){ms='bear';md='SMA20 & 50 düşüyor. Momentum negatif.';mscore=0;}
+    else{ms='wait';md='Momentum nötr. Yon bekleniyor.';mscore=0;}
   }
   score+=mscore; setSig('mom',ms,md);
 
   // RSI
   let rs='na',rd='',rscore=0;
   if(lastRSI!=null){
-    if(lastRSI<30){rs='bull';rd=`RSI ${lastRSI.toFixed(1)} — Aşırı satım — alım fırsatı yakın.`;rscore=2;}
-    else if(lastRSI>70){rs='bear';rd=`RSI ${lastRSI.toFixed(1)} — Aşırı alım — dikkatli ol.`;rscore=0;}
+    if(lastRSI<30){rs='bull';rd=`RSI ${lastRSI.toFixed(1)} — Aşırı satım. Long firsat yakin.`;rscore=2;}
+    else if(lastRSI>70){rs='bear';rd=`RSI ${lastRSI.toFixed(1)} — Aşırı alım. Dikkatli.`;rscore=0;}
     else if(lastRSI>=45&&lastRSI<=65){rs='bull';rd=`RSI ${lastRSI.toFixed(1)} — Sağlıklı trend bölgesi.`;rscore=1;}
-    else{rs='wait';rd=`RSI ${lastRSI.toFixed(1)} — Nötr bölge.`;rscore=0;}
+    else{rs='wait';rd=`RSI ${lastRSI.toFixed(1)} — Nötr bolge.`;rscore=0;}
   }
   score+=rscore; setSig('rsi',rs,rd);
 
@@ -3970,10 +4012,10 @@ function analyze(bars, sym){
     const lv=vols[n-1];
     const r2=lv/avg;
     const up=bars[n-1].close>=bars[n-2]?.close;
-    if(r2>1.5&&up){vs='bull';vd=`Hacim ${r2.toFixed(1)}× ort. ustunde. Alım baskısı.`;vscore=2;}
-    else if(r2>1.5&&!up){vs='bear';vd=`Hacim ${r2.toFixed(1)}× ort. ustunde. Satış baskısı.`;vscore=0;}
-    else if(r2>1){vs='wait';vd=`Hacim ortalamanın ${r2.toFixed(1)}× ustunde.`;vscore=1;}
-    else{vs='na';vd=`Hacim ortalamanın altında.`;vscore=0;}
+    if(r2>1.5&&up){vs='bull';vd=`Hacim ${r2.toFixed(1)}× ort. üstünde. Alim baskısı.`;vscore=2;}
+    else if(r2>1.5&&!up){vs='bear';vd=`Hacim ${r2.toFixed(1)}× ort. üstünde. Satis baskısı.`;vscore=0;}
+    else if(r2>1){vs='wait';vd=`Hacim ortalamanin ${r2.toFixed(1)}× üstünde.`;vscore=1;}
+    else{vs='na';vd=`Hacim ortalamanin altında. Dusuk ilgi.`;vscore=0;}
   }
   score+=vscore; setSig('vol',vs,vd);
 
@@ -4029,18 +4071,17 @@ function analyze(bars, sym){
   // Temel skoru 40 puana normalize et
   const baseScore = Math.round(score/8*40);
   const totalRaw = baseScore + smcScore;
-  const totalMax = Math.max(15, (smcMax||25) * 0.4);
-  const pct = Math.min(100, Math.round(totalRaw / totalMax * 100 * 2.2));
+  const totalMax = 40 + (smcMax||70);
+  const pct = Math.min(100, Math.round(totalRaw / totalMax * 100));
 
   let color, msg, grade;
-  if(pct>=80){ color='#4ADE80'; msg='✦ Çok Güçlü — İşlem için hazır!'; grade='A'; }
-  else if(pct>=65){ color='#4ADE80'; msg='✦ Güçlü Sinyal — İşlem değerlendirin'; grade='B'; }
-  else if(pct>=30){ color='var(--amber)'; msg='◆ Orta Sinyal — Teyit bekleyin'; grade='C'; }
-  else if(pct>=15){ color='var(--amber)'; msg='◈ Zayıf Sinyal — Dikkatli olun'; grade='D'; }
-  else{ color='#F87171'; msg='✕ Sinyal Yok — Islem yapmayin'; grade='F'; }
+  if(pct>=80){ color='var(--green)'; msg='✦ Cok Güçlü — İşlem icin hazır!'; grade='A'; }
+  else if(pct>=65){ color='var(--green)'; msg='✦ Güçlü Sinyal — İşlem degerlendirin'; grade='B'; }
+  else if(pct>=50){ color='var(--amber)'; msg='◈ Orta Sinyal — Teyit bekleyin'; grade='C'; }
+  else if(pct>=35){ color='var(--amber)'; msg='◈ Zayif Sinyal — Dikkatli olun'; grade='D'; }
+  else{ color='var(--red)'; msg='✕ Sinyal Yok — İşlem yapmayin'; grade='F'; }
 
   const sn=g('scoreNum');
-  if(!sn)return;
   sn.textContent=pct; sn.style.color=color;
   // Animasyonlu progress bar
   const fill = g('scoreFill');
@@ -4102,28 +4143,7 @@ function fvol(v){
   return v.toString();
 }
 
-function g(id){
-  var el=document.getElementById(id);
-  if(!el){
-    // Null-safe proxy
-    return {
-      textContent:'',
-      innerHTML:'',
-      style:{},
-      className:'',
-      classList:{add:function(){},remove:function(){},contains:function(){return false;},toggle:function(){}},
-      applyOptions:function(){},
-      setData:function(){},
-      setMarkers:function(){},
-      addEventListener:function(){},
-      getAttribute:function(){return null;},
-      set textContent(v){},
-      set innerHTML(v){},
-      set className(v){}
-    };
-  }
-  return el;
-}
+function g(id){return document.getElementById(id);}
 
 function updateOHLC(b){
   g('oA').textContent=fp(b.open);
@@ -4143,14 +4163,14 @@ function loading(on, txt=''){
 
 function setStatus(on, sym=''){
   g('sDot').className='status-dot'+(on?' on':'');
-  g('sTxt').textContent=on?sym:'hazir';
+  g('sTxt').textContent=on?sym:'hazır';
 }
 
 function setSig(key,sig,detail){
-  const labels={bull:'▲',bear:'▼',wait:'◆',na:'—'};
+  const labels={bull:'BOGA',bear:'AYI',wait:'BEKLE',na:'—'};
   const cls={bull:'b-bull',bear:'b-bear',wait:'b-wait',na:'b-na'};
-  const b=g(`b_${key}`); if(b){b.textContent=labels[sig]||'—'; b.className=`badge ${cls[sig]||'b-na'}`;}
-  const d=g(`d_${key}`); if(d) d.textContent=detail;
+  const b=g(`b_${key}`); b.textContent=labels[sig]||'—'; b.className=`badge ${cls[sig]||'b-na'}`;
+  g(`d_${key}`).textContent=detail;
 }
 
 function toast(msg,type=''){
@@ -4294,22 +4314,54 @@ function togAllInd(){
 
 function togInd(key){
   inds[key]=!inds[key];
-  const t=g(`t_${key}`);
-  inds[key]?t.classList.add('on'):t.classList.remove('on');
+  const t=g('t_'+key);
+  if(t){ inds[key]?t.classList.add('on'):t.classList.remove('on'); }
   const v=inds[key];
-  if(key==='sma20')S20?.applyOptions({visible:v});
-  if(key==='sma50')S50?.applyOptions({visible:v});
-  if(key==='sma200')S200?.applyOptions({visible:v});
-  if(key==='rsi'){ const w=g('rsiWrap'); if(w) w.style.display=v?'':'none'; }
-  if(key==='vol'){ const w=g('volWrap'); if(w) w.style.display=v?'':'none'; }
-  if(key==='macd'){ smcVisible.macd=v; const w=g('macdWrap'); if(w) w.style.display=v?'':'none'; }
+  if(key==='sma20'  && S20)  S20.applyOptions({visible:v});
+  if(key==='sma50'  && S50)  S50.applyOptions({visible:v});
+  if(key==='sma200' && S200) S200.applyOptions({visible:v});
+  if(key==='rsi'){
+    const w=document.getElementById('rsiWrap');
+    if(w) w.style.display=v?'':'none';
+  }
+  if(key==='vol'){
+    const w=document.getElementById('volWrap');
+    if(w) w.style.display=v?'':'none';
+  }
+  if(key==='macd'){
+    smcVisible.macd=v;
+    const w=document.getElementById('macdWrap');
+    if(w) w.style.display=v?'':'none';
+  }
   if(key==='bb'){
     smcVisible.bb=v;
     if(BBU) BBU.applyOptions({visible:v});
     if(BBM) BBM.applyOptions({visible:v});
     if(BBL) BBL.applyOptions({visible:v});
   }
-  if(key==='td9'){ smcVisible.td9=v; }
+  if(key==='td9'){
+    smcVisible.td9=v;
+    if(CS){
+      const all = CS.markers ? CS.markers() : [];
+      if(!v){
+        CS.setMarkers(all.filter(m=>m._td9 !== true));
+      } else if(btBars && btBars.length){
+        try{
+          const td9res = calcTD9(btBars);
+          if(td9res && td9res.signals){
+            const td9m = td9res.signals.map(s=>({
+              time:s.time,
+              position:s.type==='buy'?'belowBar':'aboveBar',
+              color:s.type==='buy'?'#4ADE80':'#F87171',
+              shape:'text', text:'9', size:1, _td9:true
+            }));
+            const base = all.filter(m=>m._td9 !== true);
+            CS.setMarkers([...base,...td9m].sort((a,b)=>a.time-b.time));
+          }
+        }catch(_){}
+      }
+    }
+  }
   if(key==='ew'){
     smcVisible.ew=v;
     elliottSeries.forEach(s=>{try{MC.removeSeries(s);}catch(_){}});
@@ -4711,7 +4763,7 @@ function renderScanResults(results, onlyReady){
     return aMin-bMin;
   });
 
-  const phaseColor = {ready:'#4ADE80',alert:'#C9973A',forming:'var(--amber)',watch:'var(--txt2)'};
+  const phaseColor = {ready:'var(--green)',alert:'var(--acc)',forming:'var(--amber)',watch:'var(--txt2)'};
   const phaseLabel = {ready:'HAZIR',alert:'UYARI',forming:'OLUSUYOR',watch:'IZLE'};
 
   container.innerHTML = `
@@ -4719,7 +4771,7 @@ function renderScanResults(results, onlyReady){
       ${results.map(r=>{
         const topSig = r.signals.sort((a,b)=>(order[a.phase]??3)-(order[b.phase]??3))[0];
         const hasReady = r.signals.some(s=>s.phase==='ready');
-        const borderCol = hasReady?'#4ADE80':r.signals.some(s=>s.phase==='alert')?'#C9973A':'var(--line2)';
+        const borderCol = hasReady?'var(--green)':r.signals.some(s=>s.phase==='alert')?'var(--acc)':'var(--line2)';
         
         return `<div style="background:var(--bg2);border:1px solid ${borderCol};border-radius:8px;padding:12px;cursor:pointer"
                   onclick="loadSymFromScanner('${r.sym}')">
@@ -4728,7 +4780,7 @@ function renderScanResults(results, onlyReady){
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
             <span style="font-family:var(--mono);font-size:13px;font-weight:700;color:var(--acc)">${r.sym}</span>
             <div style="display:flex;gap:6px;align-items:center">
-              <span style="font-family:var(--mono);font-size:11px;font-weight:600;color:${r.chg>=0?'#4ADE80':'#F87171'}">
+              <span style="font-family:var(--mono);font-size:11px;font-weight:600;color:${r.chg>=0?'var(--green)':'var(--red)'}">
                 ${r.chg>=0?'+':''}${r.chg.toFixed(2)}%
               </span>
               <span style="font-family:var(--mono);font-size:11px;color:var(--txt0)">${fp(r.last.close)}</span>
@@ -4739,7 +4791,7 @@ function renderScanResults(results, onlyReady){
           ${r.signals.length>0
             ? r.signals.map(s=>`
               <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-top:1px solid var(--line)">
-                <span style="font-family:var(--mono);font-size:10px;font-weight:700;color:${s.dir==='bull'?'#4ADE80':s.dir==='bear'?'#F87171':'var(--txt1)'}">
+                <span style="font-family:var(--mono);font-size:10px;font-weight:700;color:${s.dir==='bull'?'var(--green)':s.dir==='bear'?'var(--red)':'var(--txt1)'}">
                   ${s.dir==='bull'?'▲':s.dir==='bear'?'▼':'◆'} ${s.name}
                 </span>
                 <span style="font-family:var(--mono);font-size:9px;font-weight:700;padding:1px 6px;border-radius:3px;background:${r.last};color:${phaseColor[s.phase]||'var(--txt2)'}">
@@ -4768,7 +4820,7 @@ function startScanner(){
   scanRunning=true;
   prevSignals={};
   const dot=g('scanDot');
-  if(dot){dot.style.background='#4ADE80';dot.style.animation='blink 2s infinite';}
+  if(dot){dot.style.background='var(--green)';dot.style.animation='blink 2s infinite';}
   if(g('scanTxt')) g('scanTxt').textContent='Taraniyor...';
   if(g('scanTFLabel')) g('scanTFLabel').textContent=currentTF.toUpperCase();
 
@@ -4828,7 +4880,7 @@ function runBacktest(){
 
   const stratSel = g('btStrategy').value;
   const strategies = stratSel==='all'
-    ? ['FVG Birikimi','Base Kaymasi','Cift Yutma','Emir Bloku','CHoCH Donus','Range Sapma','Trend Kirilisi','Guclu Trend FVG','Swing Basarisiz','Fitil Mumu','Elliott Giris']
+    ? ['FVG Birikimi','Base Kaymasi','Cift Yutma','Emir Bloku','CHoCH Donus','Range Sapma','Trend Kirilisi','Güçlü Trend FVG','Swing Basarisiz','Fitil Mumu','Elliott Giris']
     : [stratSel];
 
   const trades = [];
@@ -4924,12 +4976,12 @@ function runBacktest(){
     if(el){ el.textContent=val; if(cls) el.style.color=cls; }
   };
 
-  sv('bv_trades', `${trades.length} islem`);
-  sv('bv_wr', `%${winRate}`, parseFloat(winRate)>=50?'#4ADE80':'#F87171');
-  sv('bv_pf', pf, parseFloat(pf)>=1.5?'#4ADE80':parseFloat(pf)>=1?'var(--amber)':'#F87171');
+  sv('bv_trades', `${trades.length} işlem`);
+  sv('bv_wr', `%${winRate}`, parseFloat(winRate)>=50?'var(--green)':'var(--red)');
+  sv('bv_pf', pf, parseFloat(pf)>=1.5?'var(--green)':parseFloat(pf)>=1?'var(--amber)':'var(--red)');
   sv('bv_avg', `${avgRR}:1`);
-  sv('bv_dd', `%${maxDD.toFixed(1)}`, maxDD>20?'#F87171':maxDD>10?'var(--amber)':'#4ADE80');
-  sv('bv_ret', `${netPct>0?'+':''}${netPct}%`, parseFloat(netPct)>=0?'#4ADE80':'#F87171');
+  sv('bv_dd', `%${maxDD.toFixed(1)}`, maxDD>20?'var(--red)':maxDD>10?'var(--amber)':'var(--green)');
+  sv('bv_ret', `${netPct>0?'+':''}${netPct}%`, parseFloat(netPct)>=0?'var(--green)':'var(--red)');
 
   // Equity curve ciz
   drawEquityCurve(trades);
@@ -4942,11 +4994,11 @@ function runBacktest(){
     ${trades.map(t=>`
     <div class="bt-row ${t.outcome==='win'?'win':t.outcome==='loss'?'loss':''}">
       <span style="color:var(--acc);font-weight:700">${t.strat}</span>
-      <span style="color:${t.dir==='bull'?'#4ADE80':'#F87171'}">${t.dir==='bull'?'LONG':'SHORT'}</span>
+      <span style="color:${t.dir==='bull'?'var(--green)':'var(--red)'}">${t.dir==='bull'?'LONG':'SHORT'}</span>
       <span>${fp(t.entry)}</span>
       <span style="color:var(--red)">${fp(t.sl)}</span>
       <span style="color:var(--green)">${fp(t.tp)}</span>
-      <span style="color:${t.pnlPct>=0?'#4ADE80':'#F87171'}">
+      <span style="color:${t.pnlPct>=0?'var(--green)':'var(--red)'}">
         ${t.pnlPct>=0?'+':''}${t.pnlPct}%
       </span>
       <span style="color:var(--txt2);font-size:9px">${t.entryDate}</span>
@@ -5033,7 +5085,7 @@ function drawEquityCurve(trades){
 
 // ── WATCHLIST MOTORU ─────────────────────────────────────────────────────────
 
-// Tam arama veritabani - {yahoo_sembol, kisaad, tam_isim, etiketler}
+// Tam arama veritabani - {yahoo_sembol, kısaad, tam_isim, etiketler}
 const SYMBOL_DB = [
   // METALLER
   {sym:'GC=F',     short:'ALTIN',   name:'Altin (Gold)',        tags:['altin','gold','xau','xauusd','au','metal']},
@@ -5228,7 +5280,7 @@ function renderWatchlist(){
         <span class="wl-chg ${chgClass}">${chgText}</span>
         <span onclick="event.stopPropagation();removeFromWatchlist('${sym}')"
           style="font-size:11px;color:var(--txt2);cursor:pointer;line-height:1;padding:1px 4px;border-radius:2px;transition:color .1s"
-          onmouseover="this.style.color='#F87171'" onmouseout="this.style.color='var(--txt2)'"
+          onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--txt2)'"
           title="Listeden cikar">×</span>
       </div>
     </div>`;
@@ -5443,9 +5495,9 @@ function startLiveTicker(){
         renderWatchlist();
       }
 
-      // Canlı dot
+      // Canli dot
       const dot = document.getElementById('sDot');
-      if(dot){ dot.style.background='#4ADE80'; dot.style.animation='blink 2s infinite'; }
+      if(dot){ dot.style.background='var(--green)'; dot.style.animation='blink 2s infinite'; }
 
       countdownVal = Math.round(LIVE_INTERVAL/1000);
     }catch(_){
@@ -5462,7 +5514,7 @@ function startLiveTicker(){
     countdownVal--;
     if(countdownVal < 0) countdownVal = Math.round(LIVE_INTERVAL/1000);
     const cd = document.getElementById('sCountdown');
-    if(cd && document.getElementById('sDot')?.style.background === '#4ADE80'){
+    if(cd && document.getElementById('sDot')?.style.background === 'var(--green)'){
       cd.textContent = `·${countdownVal}s`;
     }
   }, 1000);
@@ -5482,7 +5534,7 @@ window.addEventListener('load',()=>{
     fetchData();
     // Watchlist fiyatlarini arka planda cek
     setTimeout(refreshWatchlist, 2000);
-    // Canlı ticker baslat
+    // Canli ticker baslat
     startLiveTicker();
   }, 400);
 });
@@ -5490,27 +5542,22 @@ window.addEventListener('load',()=>{
 
 <div style="padding:.75rem 1rem;border-top:1px solid rgba(201,151,58,.1);background:rgba(13,11,8,.98);flex-shrink:0">
   <p style="font-family:var(--mono);font-size:9px;line-height:1.7;color:rgba(201,151,58,.2)">
-    <strong style="color:rgba(201,151,58,.35)">YASAL UYARI:</strong> Bu platform yalnızca bilgilendirme amaçlıdır. Kaldıraçlı işlemler sermayenizin tamamını kaybetme riski içerir. Apex Trading sorumlu tutulamaz. &copy; 2026 Apex Trading
+    <strong style="color:rgba(201,151,58,.35)">YASAL UYARI:</strong> Bu platform yalnızca bilgilendirme amaçlıdır. Kaldıraçlı işlemler sermayenizin tamamını kaybetme riski içerir. Apex Trading bu platformdaki bilgilere dayanarak alınan kararlar sonucunda oluşan kayıplardan sorumlu tutulamaz. &copy; 2026 Apex Trading
   </p>
 </div>
 
+<div style="position:fixed;bottom:0;right:0;width:220px;background:var(--bg1);border-top:1px solid var(--line);border-left:1px solid var(--line);z-index:50;max-height:240px;display:flex;flex-direction:column">
+  <div style="padding:7px 12px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+    <span style="font-family:var(--mono);font-size:9px;letter-spacing:1.5px;color:var(--acc);text-transform:uppercase">Canlı Haberler</span>
+    <a href="haberler.html" style="font-family:var(--mono);font-size:9px;color:var(--txt2);text-decoration:none">Tümü →</a>
+  </div>
+  <div id="tradingHaberler" style="overflow-y:auto;flex:1"></div>
+</div>
+
+
 <script>
-var YORUM_MAP = {
-  altin:{yukari:['war','attack','iran','conflict','inflation','tension','risk','rate cut','recession'],asagi:['rate hike','strong dollar','peace','ceasefire','deal'],piyasa:'ALTIN',y:'Yukari baski.',a:'Asagi baski.',n:'Sinirli etki.'},
-  doviz:{yukari:['fed hike','rate hike','nfp beat','dollar rally'],asagi:['fed cut','rate cut','dollar fall','tariff'],piyasa:'DXY',y:'Dolar yukari.',a:'Dolar asagi.',n:'Sinirli.'},
-  petrol:{yukari:['opec cut','iran','hormuz','conflict','war'],asagi:['opec hike','peace','recession','demand drop'],piyasa:'PETROL',y:'Petrol yukari.',a:'Petrol asagi.',n:'Sinirli.'},
-  fed:{yukari:['inflation','cpi','rate hike','strong'],asagi:['recession','rate cut','fed pivot','dovish'],piyasa:'FED',y:'Faiz artisi.',a:'Faiz indirimi.',n:'Sinirli.'},
-  savas:{yukari:['attack','war','missile','conflict'],asagi:['ceasefire','peace','deal'],piyasa:'JEOPOLITIK',y:'Risk yukari.',a:'Risk asagi.',n:'Izleniyor.'}
-};
-function yorumUret(baslik,etiket){
-  var k=YORUM_MAP[etiket];if(!k||!baslik)return null;
-  var bl=(baslik||'').toLowerCase(),ys=0,as=0;
-  k.yukari.forEach(function(w){if(bl.indexOf(w)!==-1)ys++;});
-  k.asagi.forEach(function(w){if(bl.indexOf(w)!==-1)as++;});
-  if(ys>as)return{ok:'▲',metin:k.piyasa+': '+k.y,renk:'#4ADE80'};
-  if(as>ys)return{ok:'▼',metin:k.piyasa+': '+k.a,renk:'#F87171'};
-  return{ok:'◆',metin:k.piyasa+': '+k.n,renk:'#C9973A'};
-}
+var YORUM_MAP={altin:{yukari:['war','attack','iran','conflict','inflation','tension','risk','rate cut','recession'],asagi:['rate hike','strong dollar','peace','ceasefire','deal'],piyasa:'ALTIN',y:'Yukarı yönlü baskı.',a:'Aşağı yönlü baskı.',n:'Sınırlı etki.'},doviz:{yukari:['fed hike','rate hike','nfp beat','dollar rally'],asagi:['fed cut','rate cut','dollar fall','tariff'],piyasa:'DXY',y:'Dolar yukarı.',a:'Dolar aşağı.',n:'Sınırlı.'},petrol:{yukari:['opec cut','iran','hormuz','conflict','war'],asagi:['opec hike','peace','recession'],piyasa:'PETROL',y:'Petrol yukarı.',a:'Petrol aşağı.',n:'Sınırlı.'},fed:{yukari:['inflation','cpi','rate hike'],asagi:['recession','rate cut','dovish'],piyasa:'FED',y:'Faiz artışı.',a:'Faiz indirimi.',n:'Sınırlı.'},savas:{yukari:['attack','war','missile'],asagi:['ceasefire','peace'],piyasa:'JEOPOLİTİK',y:'Risk artışı.',a:'Risk azalışı.',n:'İzleniyor.'}};
+function yorumUret(baslik,etiket){var k=YORUM_MAP[etiket];if(!k||!baslik)return null;var bl=(baslik||'').toLowerCase(),ys=0,as=0;k.yukari.forEach(function(w){if(bl.indexOf(w)!==-1)ys++;});k.asagi.forEach(function(w){if(bl.indexOf(w)!==-1)as++;});if(ys>as)return{ok:'▲',metin:k.piyasa+': '+k.y,renk:'#4ADE80'};if(as>ys)return{ok:'▼',metin:k.piyasa+': '+k.a,renk:'#F87171'};return{ok:'◆',metin:k.piyasa+': '+k.n,renk:'#C9973A'};}
 function loadTradingHaberler(){
   var el=document.getElementById('tradingHaberler');
   if(!el)return;
@@ -5521,11 +5568,8 @@ function loadTradingHaberler(){
     try{
       var d=JSON.parse(xhr.responseText);
       var haberler=(d.haberler||[]).slice(0,10);
-      if(!haberler.length){
-        el.innerHTML='<div style="padding:8px 12px;font-size:10px;color:#4A4338">Haber yok.</div>';
-        return;
-      }
-      var html='';
+      if(!haberler.length){el.innerHTML='<div style="padding:8px 12px;font-size:10px;color:#4A4338">Haber yok.</div>';return;}
+      var frag=document.createDocumentFragment();
       haberler.forEach(function(h){
         var et=h.etiket||[];
         var renk='#9A8E7A';
@@ -5534,13 +5578,7 @@ function loadTradingHaberler(){
         else if(et.indexOf('fed')!==-1)renk='#60A5FA';
         else if(et.indexOf('doviz')!==-1)renk='#4ADE80';
         else if(et.indexOf('petrol')!==-1)renk='#FB923C';
-        var yh='';
         var y=yorumUret(h.baslik,et[0]||'');
-        if(y){
-          yh='<div style="margin-top:4px;padding:3px 6px;border-left:2px solid '+y.renk+'">'
-            +'<span style="font-size:9px;color:'+y.renk+'">'+y.ok+' '+y.metin+'</span>'
-            +'</div>';
-        }
         var card=document.createElement('a');
         card.href=h.link||'#';
         card.target='_blank';
@@ -5548,16 +5586,13 @@ function loadTradingHaberler(){
         card.style.cssText='display:block;padding:8px 12px;border-bottom:1px solid #2A2620;text-decoration:none;transition:background .15s';
         card.addEventListener('mouseover',function(){this.style.background='#1C1914';});
         card.addEventListener('mouseout',function(){this.style.background='';});
-        card.innerHTML='<div style="font-size:8px;color:'+renk+';margin-bottom:2px;opacity:.8">'+(h.kaynak||'')+' \u00b7 '+(h.tarih_s||'')+'</div>'
-          +'<div style="font-size:11px;color:#FAF6EE;line-height:1.4">'+(h.baslik||'')+'</div>'
-          +yh;
-        html+=card.outerHTML;
+        var yhtml=y?'<div style="margin-top:3px;padding:2px 6px;border-left:2px solid '+y.renk+'"><span style="font-size:9px;color:'+y.renk+'">'+y.ok+' '+y.metin+'</span></div>':'';
+        card.innerHTML='<div style="font-size:8px;color:'+renk+';margin-bottom:2px;opacity:.8">'+(h.kaynak||'')+' · '+(h.tarih_s||'')+'</div>'+'<div style="font-size:11px;color:#FAF6EE;line-height:1.4">'+(h.baslik||'')+'</div>'+yhtml;
+        frag.appendChild(card);
       });
-      el.innerHTML=html;
-    }catch(e){
-      console.error('Haber yukleme hatasi:', e);
-      el.innerHTML='<div style="padding:8px;font-size:10px;color:#4A4338">Veri bekleniyor...</div>';
-    }
+      el.innerHTML='';
+      el.appendChild(frag);
+    }catch(e){el.innerHTML='<div style="padding:8px;font-size:10px;color:#4A4338">Veri bekleniyor...</div>';}
   };
   xhr.send();
 }
